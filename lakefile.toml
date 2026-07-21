@@ -1,0 +1,18 @@
+name = "ado"
+version = "0.1.0"
+keywords = ["math"]
+defaultTargets = ["Ado"]
+
+[leanOptions]
+pp.unicode.fun = true
+relaxedAutoImplicit = false
+maxSynthPendingDepth = 3
+weak.linter.mathlibStandardSet = true
+
+[[require]]
+name = "mathlib"
+scope = "leanprover-community"
+rev = "master"
+
+[[lean_lib]]
+name = "Ado"
