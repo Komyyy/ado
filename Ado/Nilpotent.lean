@@ -10,8 +10,99 @@ public import Mathlib
 ## 冪零 Lie 代数に対する Ado の定理
 -/
 
-open Function Set
-open Module
+section ForMathlib
+
+section LieModuleTransferInstance
+
+variable (R L : Type*) {M₁ M₂ : Type*}
+
+@[instance_reducible]
+protected def Function.Injective.lieRingModule
+    [LieRing L] [Bracket L M₁] [AddCommGroup M₁] [AddCommGroup M₂] [LieRingModule L M₂]
+    (f : M₁ →+ M₂) (hf : Function.Injective f) (bracket : ∀ (x : L) (m : M₁), f ⁅x, m⁆ = ⁅x, f m⁆) :
+    LieRingModule L M₁ where
+  add_lie x y m := hf <| by simp [*]
+  lie_add x m n := hf <| by simp [*]
+  leibniz_lie x y m := hf <| by simp [*]
+
+protected lemma Function.Injective.lieModule
+    [CommRing R] [LieRing L] [LieAlgebra R L] [AddCommGroup M₁] [AddCommGroup M₂]
+    [Module R M₁] [Module R M₂] [LieRingModule L M₁] [LieRingModule L M₂] [LieModule R L M₂]
+    (f : M₁ →ₗ[R] M₂) (hf : Function.Injective f)
+    (bracket : ∀ (x : L) (m : M₁), f ⁅x, m⁆ = ⁅x, f m⁆) : LieModule R L M₁ where
+  smul_lie t x m := hf <| by simp [*]
+  lie_smul t x m := hf <| by simp [*]
+
+@[instance_reducible]
+protected def Equiv.lieRingModule [LieRing L] [AddCommGroup M₂] [LieRingModule L M₂] (e : M₁ ≃ M₂) :
+    letI := e.addCommGroup
+    LieRingModule L M₁ :=
+  letI := e.addCommGroup
+  letI := { bracket x m := e.symm ⁅x, e m⁆ : Bracket L M₁ }
+  e.injective.lieRingModule L e.addEquiv.toAddMonoidHom (by unfold_projs; simp)
+
+@[simp]
+lemma linearEquiv_coe {α β : Type*} [Semiring R] [AddCommMonoid β] [Module R β] (e : α ≃ β) :
+    ⇑(e.linearEquiv R) = e :=
+  rfl
+
+protected lemma Equiv.lieModule
+    [CommRing R] [LieRing L] [LieAlgebra R L] [AddCommGroup M₂] [Module R M₂] [LieRingModule L M₂]
+    [LieModule R L M₂] (e : M₁ ≃ M₂) :
+    letI := e.addCommGroup
+    letI := e.module R
+    letI := e.lieRingModule L
+    LieModule R L M₁ :=
+  letI := e.addCommGroup
+  letI := e.module R
+  letI := e.lieRingModule L
+  e.injective.lieModule R L (e.linearEquiv R).toLinearMap (by unfold_projs; simp)
+
+def Equiv.lieModuleEquiv
+    [CommRing R] [LieRing L] [LieAlgebra R L] [AddCommGroup M₂] [Module R M₂] [LieRingModule L M₂]
+    [LieModule R L M₂] (e : M₁ ≃ M₂) :
+    letI := e.addCommGroup
+    letI := e.module R
+    letI := e.lieRingModule L
+    letI := e.lieModule R L
+    M₁ ≃ₗ⁅R,L⁆ M₂ :=
+  letI := e.addCommGroup
+  letI := e.module R
+  letI := e.lieRingModule L
+  letI := e.lieModule R L
+  { e.linearEquiv R with
+    map_lie' {x m} := by unfold_projs; simp }
+
+end LieModuleTransferInstance
+
+noncomputable section LieModuleShrink
+
+universe u
+
+variable (R L : Type*) {M : Type*} [Small.{u} M]
+
+namespace Shrink
+
+instance [LieRing L] [AddCommGroup M] [LieRingModule L M] : LieRingModule L (Shrink.{u} M) :=
+  (equivShrink M).symm.lieRingModule L
+
+instance [CommRing R] [LieRing L] [LieAlgebra R L] [AddCommGroup M] [Module R M]
+    [LieRingModule L M] [LieModule R L M] : LieModule R L (Shrink.{u} M) :=
+  (equivShrink M).symm.lieModule R L
+
+variable [CommRing R] [LieRing L] [LieAlgebra R L] [AddCommGroup M] [Module R M]
+    [LieRingModule L M] [LieModule R L M]
+
+def lieModuleEquiv : Shrink.{u} M ≃ₗ⁅R,L⁆ M :=
+  (equivShrink M).symm.lieModuleEquiv R L
+
+end Shrink
+
+end LieModuleShrink
+
+end ForMathlib
+
+open Function Set Module LieAlgebra LieModule
 open scoped Pointwise
 
 namespace LieAlgebra
@@ -27,58 +118,8 @@ attribute [local instance 100] LieRing.ofAssociativeRing
 
 public theorem ado_of_isNilpotent :
     ∃ (V : Type u) (_ : AddCommGroup V) (_ : Module K V) (_ : FiniteDimensional K V)
-      (ρ : 𝔤 →ₗ⁅K⁆ End K V), Injective ρ ∧ ∃ k : ℕ, Set.range ρ ^ k = {0} := by
-  -- まず最初に宇宙の階層を下げる (大変すぎ！ `equiv_rw` 復刻して欲しい！)
-  rsuffices ⟨V, _, _, _, ρ, hρi, hρz⟩ :
-      ∃ (V : Type u) (_ : AddCommGroup V) (_ : Module K V) (_ : FiniteDimensional K V)
-        (ρ : 𝔤 →ₗ⁅K⁆ End K (𝔤 × V)), Injective ρ ∧ ∃ k : ℕ, Set.range ρ ^ k = {0}
-  · haveI : Small.{u} 𝔤 := Module.Finite.small K 𝔤
-    existsi Shrink.{u} 𝔤 × V, by infer_instance, by infer_instance, by infer_instance
-    existsi ((Shrink.linearEquiv K 𝔤).symm.prodCongr (LinearEquiv.refl K V)).conjAlgEquiv K
-      |>.toLieEquiv.toLieHom.comp ρ
-    constructor
-    · simp [hρi]
-    · conv =>
-        enter [1, k]
-        conv =>
-          lhs
-          rw [LieHom.coe_comp, LieEquiv.coe_coe, range_comp]
-          -- ここ補題にしたい
-          conv => enter [1, 1]; ext x; rw [AlgEquiv.toLieEquiv_apply]
-          rw [← image_pow]
-          conv => enter [1]; rw [← AlgEquiv.coe_toEquiv]
-        rw [← Equiv.eq_preimage_iff_image_eq, ← Equiv.image_symm_eq_preimage]
-      simp [hρz]
-  -- 次に、直積表現を使って単射性条件を中心に弱める。
-  rsuffices ⟨V, _, _, _, ρ, hρi, hρz⟩ :
-      ∃ (V : Type u) (_ : AddCommGroup V) (_ : Module K V) (_ : FiniteDimensional K V)
-        (ρ : 𝔤 →ₗ⁅K⁆ End K V), InjOn ρ (center K 𝔤) ∧ ∃ k : ℕ, Set.range ρ ^ k = {0}
-  · existsi V, by infer_instance, by infer_instance, by infer_instance
-    existsi (LinearMap.prodMapAlgHom K 𝔤 V).toLieHom.comp (LieHom.prod (ad K 𝔤) ρ)
-    simp only [LieHom.coe_comp, AlgHom.coe_toLieHom, LieHom.coe_prod]
-    conv =>
-      enter [1]
-      tactic =>
-        rw [Injective.of_comp_iff ?_]
-        rintro ⟨x₁, x₂⟩ ⟨y₁, y₂⟩
-        simp [DFunLike.ext_iff, forall_and]
-    conv =>
-      enter [2, 1, k]
-      conv =>
-        rw [range_comp, ← image_pow]
-        tactic =>
-          rw [← Set.Nonempty.subset_singleton_iff ?_]
-          -- `Set.Nonempty.pow` を改良したら `simp` で一発
-          exact image_nonempty.mpr <| Set.Nonempty.pow <| range_nonempty _
-      conv =>
-        rw [image_subset_iff]
-        rhs
-        equals {0} => ext ⟨x₁, x₂⟩; simp [DFunLike.ext_iff, forall_and]
-      conv =>
-        tactic =>
-          rw [Set.Nonempty.subset_singleton_iff ?_]
-          exact Set.Nonempty.pow <| range_nonempty _
-    sorry
+      (_ : LieRingModule 𝔤 V) (_ : LieModule K 𝔤 V),
+      IsFaithful K 𝔤 V ∧ LieModule.IsNilpotent 𝔤 V := by
   sorry
 
 end LieAlgebra
