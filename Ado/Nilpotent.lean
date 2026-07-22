@@ -12,7 +12,7 @@ public import Mathlib
 
 section ForMathlib
 
-section LieModuleTransferInstance
+public section LieModuleTransferInstance
 
 variable (R L : Type*) {M₁ M₂ : Type*}
 
@@ -75,7 +75,7 @@ def Equiv.lieModuleEquiv
 
 end LieModuleTransferInstance
 
-noncomputable section LieModuleShrink
+public noncomputable section LieModuleShrink
 
 universe u
 
