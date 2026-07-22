@@ -22,9 +22,6 @@ variable {K 𝔫 : Type*}
 variable [Field K] [CharZero K] [LieRing 𝔫] [LieAlgebra K 𝔫] [FiniteDimensional K 𝔫]
 variable [LieRing.IsNilpotent 𝔫]
 
--- TODO: 後でインスタンスにする
-attribute [local instance 100] LieRing.ofAssociativeRing
-
 public theorem ado_of_isNilpotent : IsAdo K 𝔫 := by
   sorry
 
