@@ -48,10 +48,15 @@ noncomputable def BundledAdoSpace.mk {K : Type u} {𝔤 : Type*}
   haveI : Small.{u} V := Module.Finite.small K V
   { V := Shrink.{u} V }
 
-class IsAdo (K : Type u) (𝔤 : Type*) [Field K] [CharZero K] [LieRing 𝔤] [LieAlgebra K 𝔤]
-    : Prop where
-  intro ::
+class IsAdo (K : Type u) (𝔤 : Type*) [Field K] [CharZero K] [LieRing 𝔤] [LieAlgebra K 𝔤] :
+    Prop where
   nonempty_bundledAdoSpace : Nonempty (BundledAdoSpace K 𝔤)
+
+lemma IsAdo.intro {K 𝔤 : Type*}
+    [Field K] [CharZero K] [LieRing 𝔤] [LieAlgebra K 𝔤]
+    (V : Type*) [AddCommGroup V] [Module K V] [FiniteDimensional K V] [LieRingModule 𝔤 V]
+    [LieModule K 𝔤 V] [IsFaithful K 𝔤 V] [IsNilpotent (maxNilpotentIdeal K 𝔤) V] : IsAdo K 𝔤 :=
+  ⟨⟨.mk V⟩⟩
 
 end LieAlgebra
 
