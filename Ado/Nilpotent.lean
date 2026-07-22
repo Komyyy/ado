@@ -18,14 +18,14 @@ namespace LieAlgebra
 
 universe u
 
-variable {K 𝔤 : Type*}
-variable [Field K] [CharZero K] [LieRing 𝔤] [LieAlgebra K 𝔤] [FiniteDimensional K 𝔤]
-variable [LieRing.IsNilpotent 𝔤]
+variable {K 𝔫 : Type*}
+variable [Field K] [CharZero K] [LieRing 𝔫] [LieAlgebra K 𝔫] [FiniteDimensional K 𝔫]
+variable [LieRing.IsNilpotent 𝔫]
 
 -- TODO: 後でインスタンスにする
 attribute [local instance 100] LieRing.ofAssociativeRing
 
-public theorem ado_of_isNilpotent : IsAdo K 𝔤 := by
+public theorem ado_of_isNilpotent : IsAdo K 𝔫 := by
   sorry
 
 end LieAlgebra
