@@ -18,8 +18,7 @@ open LieAlgebra LieModule
 
 namespace LieAlgebra
 
-structure BundledAdoSpace (K : Type u) (𝔤 : Type*)
-    [Field K] [CharZero K] [LieRing 𝔤] [LieAlgebra K 𝔤] where
+structure BundledAdoSpace (K : Type u) (𝔤 : Type*) [Field K] [LieRing 𝔤] [LieAlgebra K 𝔤] where
   mk' ::
   (V : Type u)
   [instAddCommGroup : AddCommGroup V]
@@ -40,20 +39,18 @@ attribute [instance]
   BundledAdoSpace.instIsNilpotentMaxNilpotentIdeal
 
 @[expose]
-noncomputable def BundledAdoSpace.mk {K : Type u} {𝔤 : Type*}
-    [Field K] [CharZero K] [LieRing 𝔤] [LieAlgebra K 𝔤]
+noncomputable def BundledAdoSpace.mk {K : Type u} {𝔤 : Type*} [Field K] [LieRing 𝔤] [LieAlgebra K 𝔤]
     (V : Type*) [AddCommGroup V] [Module K V] [FiniteDimensional K V] [LieRingModule 𝔤 V]
     [LieModule K 𝔤 V] [IsFaithful K 𝔤 V] [IsNilpotent (maxNilpotentIdeal K 𝔤) V] :
     BundledAdoSpace K 𝔤 :=
   haveI : Small.{u} V := Module.Finite.small K V
   { V := Shrink.{u} V }
 
-class IsAdo (K : Type u) (𝔤 : Type*) [Field K] [CharZero K] [LieRing 𝔤] [LieAlgebra K 𝔤] :
+class IsAdo (K : Type u) (𝔤 : Type*) [Field K] [LieRing 𝔤] [LieAlgebra K 𝔤] :
     Prop where
   nonempty_bundledAdoSpace : Nonempty (BundledAdoSpace K 𝔤)
 
-lemma IsAdo.intro {K 𝔤 : Type*}
-    [Field K] [CharZero K] [LieRing 𝔤] [LieAlgebra K 𝔤]
+lemma IsAdo.intro {K 𝔤 : Type*} [Field K] [LieRing 𝔤] [LieAlgebra K 𝔤]
     (V : Type*) [AddCommGroup V] [Module K V] [FiniteDimensional K V] [LieRingModule 𝔤 V]
     [LieModule K 𝔤 V] [IsFaithful K 𝔤 V] [IsNilpotent (maxNilpotentIdeal K 𝔤) V] : IsAdo K 𝔤 :=
   ⟨⟨.mk V⟩⟩
@@ -61,11 +58,11 @@ lemma IsAdo.intro {K 𝔤 : Type*}
 end LieAlgebra
 
 def AdoSpace (K : Type u) (𝔤 : Type*)
-    [Field K] [CharZero K] [LieRing 𝔤] [LieAlgebra K 𝔤] [ia : IsAdo K 𝔤] : Type u :=
+    [Field K] [LieRing 𝔤] [LieAlgebra K 𝔤] [ia : IsAdo K 𝔤] : Type u :=
   ia.nonempty_bundledAdoSpace.some.V
 
 variable (K : Type u) (𝔤 : Type*)
-variable [Field K] [CharZero K] [LieRing 𝔤] [LieAlgebra K 𝔤] [ia : IsAdo K 𝔤]
+variable [Field K] [LieRing 𝔤] [LieAlgebra K 𝔤] [ia : IsAdo K 𝔤]
 
 @[no_expose]
 noncomputable instance : AddCommGroup (AdoSpace K 𝔤) :=
