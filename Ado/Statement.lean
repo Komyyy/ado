@@ -84,3 +84,6 @@ instance : LieModule K 𝔤 (AdoSpace K 𝔤) :=
 
 instance : IsFaithful K 𝔤 (AdoSpace K 𝔤) :=
   inferInstanceAs (IsFaithful K 𝔤 ia.nonempty_bundledAdoSpace.some.V)
+
+instance : IsNilpotent (maxNilpotentIdeal K 𝔤) (AdoSpace K 𝔤) :=
+  inferInstanceAs (IsNilpotent (maxNilpotentIdeal K 𝔤) ia.nonempty_bundledAdoSpace.some.V)
