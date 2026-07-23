@@ -23,8 +23,8 @@ instance [CommRing R] [LieRing L] [LieAlgebra R L] [AddCommGroup M] [Module R M]
     [LieRingModule L M] [LieModule R L M] : LieModule R L (Shrink.{u} M) :=
   (equivShrink M).symm.lieModule R L
 
-variable [CommRing R] [LieRing L] [LieAlgebra R L] [AddCommGroup M] [Module R M]
-    [LieRingModule L M] [LieModule R L M]
+variable [CommRing R] [LieRing L] [LieAlgebra R L]
+variable [AddCommGroup M] [Module R M] [LieRingModule L M] [LieModule R L M]
 
 def lieModuleEquiv : Shrink.{u} M ≃ₗ⁅R,L⁆ M :=
   (equivShrink M).symm.lieModuleEquiv R L

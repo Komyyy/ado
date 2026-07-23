@@ -6,6 +6,8 @@ Authors: Miyahara Kō
 module
 public import Mathlib
 public import Ado.Statement
+public import Ado.ForMathlib.LieModulePUnit
+public import Ado.ForMathlib.LieModuleSubsingleton
 
 /-!
 ## 冪零 Lie 代数に対する Ado の定理
@@ -25,10 +27,7 @@ variable [LieRing.IsNilpotent 𝔫]
 public theorem ado_of_isNilpotent : IsAdo K 𝔫 := by
   generalize hn : finrank K 𝔫 = n
   induction n generalizing K 𝔫 with
-  | zero =>
-    rw [finrank_zero_iff] at hn
-    fail_if_success exact .intro Unit
-    sorry
+  | zero => rw [finrank_zero_iff] at hn; exact .intro Unit
   | succ n hin => sorry
 
 end LieAlgebra
