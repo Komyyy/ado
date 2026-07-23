@@ -5,6 +5,7 @@ Authors: Miyahara Kō
 -/
 module
 public import Ado.ForMathlib.LieModuleShrink
+public import Ado.ForMathlib.LieModuleNilpotent
 
 /-!
 ## Ado の定理の主張
@@ -87,3 +88,6 @@ instance : IsFaithful K 𝔤 (AdoSpace K 𝔤) :=
 
 instance : IsNilpotent (maxNilpotentIdeal K 𝔤) (AdoSpace K 𝔤) :=
   inferInstanceAs (IsNilpotent (maxNilpotentIdeal K 𝔤) ia.nonempty_bundledAdoSpace.some.V)
+
+instance [LieRing.IsNilpotent 𝔤] : IsNilpotent 𝔤 (AdoSpace K 𝔤) := by
+  simpa using (inferInstance : IsNilpotent (maxNilpotentIdeal K 𝔤) (AdoSpace K 𝔤))
