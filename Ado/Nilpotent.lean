@@ -19,8 +19,6 @@ open scoped Pointwise
 
 namespace LieAlgebra
 
-universe u
-
 variable {K 𝔫 : Type*}
 variable [Field K] [LieRing 𝔫] [LieAlgebra K 𝔫] [FiniteDimensional K 𝔫]
 variable [LieRing.IsNilpotent 𝔫]
