@@ -5,7 +5,7 @@ Authors: Miyahara Kō
 -/
 module
 public import Mathlib
-public import Ado.Statement
+public import Ado.LieAbelian
 public import Ado.ForMathlib.LieModulePUnit
 public import Ado.ForMathlib.LieModuleSubsingleton
 public import Ado.ForMathlib.LieModuleKer
@@ -36,6 +36,9 @@ public lemma IsAdo.of_isNilpotent : IsAdo K 𝔫 := by
   generalize hn : finrank K 𝔫 = n
   induction n generalizing K 𝔫 with
   | zero => rw [finrank_zero_iff] at hn; exact .intro Unit
-  | succ n hin => sorry
+  | succ n hin =>
+    by_cases h𝔫 : IsLieAbelian 𝔫
+    case pos => exact .of_isLieAbelian
+    sorry
 
 end LieAlgebra
