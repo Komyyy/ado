@@ -23,6 +23,12 @@ variable [Field K] [CharZero K] [LieRing 𝔫] [LieAlgebra K 𝔫] [FiniteDimens
 variable [LieRing.IsNilpotent 𝔫]
 
 public theorem ado_of_isNilpotent : IsAdo K 𝔫 := by
-  sorry
+  generalize hn : finrank K 𝔫 = n
+  induction n generalizing K 𝔫 with
+  | zero =>
+    rw [finrank_zero_iff] at hn
+    fail_if_success exact .intro Unit
+    sorry
+  | succ n hin => sorry
 
 end LieAlgebra
