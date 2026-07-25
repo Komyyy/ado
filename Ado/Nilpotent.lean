@@ -113,6 +113,7 @@ def lieIdealOfEquivOfLe {R L : Type*} [CommRing R] [LieRing L] [LieAlgebra R L]
   map_smul' x y := rfl
   map_lie' {x y} := rfl
 
+@[simp]
 lemma finrank_lieIdealOf {R L : Type*} [CommRing R] [LieRing L] [LieAlgebra R L]
     (p q : LieIdeal R L) (h : p ≤ q) : finrank R (lieIdealOf p q) = finrank R p :=
   (lieIdealOfEquivOfLe h).toLinearEquiv.finrank_eq
