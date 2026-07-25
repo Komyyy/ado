@@ -217,7 +217,6 @@ end LieFinrank
 end ForMathlib
 
 open Function Set Module LieAlgebra LieModule LieSubmodule LieIdeal LieHom
-open scoped Pointwise
 
 namespace LieAlgebra
 
