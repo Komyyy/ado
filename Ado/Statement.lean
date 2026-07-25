@@ -21,7 +21,7 @@ namespace LieAlgebra
 
 structure BundledAdoSpace (K : Type u) (𝔤 : Type*) [Field K] [LieRing 𝔤] [LieAlgebra K 𝔤] where
   mk' ::
-  (V : Type u)
+  protected V : Type u
   [instAddCommGroup : AddCommGroup V]
   [instModule : Module K V]
   [instFiniteDimentional : FiniteDimensional K V]
