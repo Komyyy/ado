@@ -59,4 +59,7 @@ instance (I : LieIdeal R L) [IsNilpotent L M] : IsNilpotent I M :=
   Function.Injective.lieModuleIsNilpotent (f := LieIdeal.incl I) (g := LinearMap.id)
     (by simp) injective_id
 
+instance [LieRing.IsNilpotent L] (s : LieIdeal R L) : LieRing.IsNilpotent s :=
+  s.incl_injective.lieAlgebra_isNilpotent
+
 end LieModule
