@@ -44,6 +44,58 @@ end DirectSum
 
 end DirectSum
 
+public section TensorAlgebra
+
+open TensorPower
+
+namespace TensorAlgebra
+
+variable {R : Type*} [CommSemiring R]
+variable {M : Type*} [AddCommMonoid M] [Module R M]
+variable {N : Type*} [AddCommMonoid N] [Module R N]
+
+@[ext high]
+lemma hom_ext_tprod
+    (f g : TensorAlgebra R M →ₗ[R] N)
+    (h : ∀ n x, f (TensorAlgebra.tprod R M n x) = g (TensorAlgebra.tprod R M n x)) :
+    f = g := by
+  suffices h₂ :
+      f ∘ₗ TensorAlgebra.ofDirectSum.toLinearMap = g ∘ₗ TensorAlgebra.ofDirectSum.toLinearMap by
+    ext x
+    replace h₂ := DFunLike.congr_fun h₂
+    specialize h₂ x.toDirectSum
+    simpa using h₂
+  ext n x
+  simp [DirectSum.lof_eq_of, - TensorAlgebra.tprod_apply, h]
+
+@[simp]
+lemma tprod_mul_tprod {m n} (x : Fin m → M) (y : Fin n → M) :
+    TensorAlgebra.tprod R M m x * TensorAlgebra.tprod R M n y =
+      TensorAlgebra.tprod R M (m + n) (Fin.append x y) := by
+  conv_lhs => tactic =>
+    simp_rw [← toTensorAlgebra_tprod, ← toTensorAlgebra_gMul, TensorPower.tprod_mul_tprod,
+      toTensorAlgebra_tprod]
+
+end TensorAlgebra
+
+end TensorAlgebra
+
+public section FinAdd
+
+namespace Fin
+
+@[simp]
+lemma castAdd_ne_natAdd {m n} (i : Fin m) (j : Fin n) : castAdd n i ≠ natAdd m j := by
+  apply_fun addCases (fun _ ↦ false) (fun _ ↦ true); simp
+
+@[simp]
+lemma natAdd_ne_castAdd {m n} (i : Fin n) (j : Fin m) : natAdd m i ≠ castAdd n j :=
+  castAdd_ne_natAdd j i |>.symm
+
+end Fin
+
+end FinAdd
+
 end ForMathlib
 
 open Function Set Module LieAlgebra LieModule LieSubmodule LieIdeal LieHom
@@ -184,24 +236,23 @@ lemma bracketAux_smul_left (t : K) (x : D.𝔥) (a) :
 
 lemma bracketAux_mul (x : D.𝔥) (a b) : D.bracketAux x (a * b) =
     mkAlgHom K D.𝔞 a * D.bracketAux x b + D.bracketAux x a * mkAlgHom K D.𝔞 b := by
-  obtain ⟨y, rfl⟩ := TensorAlgebra.equivDirectSum.symm.surjective a
-  obtain ⟨z, rfl⟩ := TensorAlgebra.equivDirectSum.symm.surjective b
-  simp_rw [TensorAlgebra.equivDirectSum_symm_apply]
-  induction y using DirectSum.induction_on with
-  | zero => simp
-  | add y₁ y₂ hy₁ hy₂ =>
-    conv_lhs => simp only [map_add, add_mul, hy₁, hy₂]
-    conv_rhs => simp only [map_add]
-    noncomm_ring
-  | of m a =>
-  induction z using DirectSum.induction_on with
-  | zero => simp
-  | add z₁ z₂ hz₁ hz₂ =>
-    conv_lhs => simp only [map_add, mul_add, hz₁, hz₂]
-    conv_rhs => simp only [map_add]
-    noncomm_ring
-  | of n b =>
-  sorry
+  revert a b
+  suffices h :
+      (LinearMap.mul K (TensorAlgebra K D.𝔞)).compr₂ (D.bracketAux x) =
+        (LinearMap.mul K (UniversalEnvelopingAlgebra K D.𝔞)).compl₁₂
+            (mkAlgHom K D.𝔞) (D.bracketAux x) +
+          (LinearMap.mul K (UniversalEnvelopingAlgebra K D.𝔞)).compl₁₂
+            (D.bracketAux x) (mkAlgHom K D.𝔞) by
+    simpa [DFunLike.ext_iff] using h
+  conv_rhs => apply add_comm
+  ext m y n z
+  simp only [LinearMap.compr₂_apply, LinearMap.mul_apply_apply, TensorAlgebra.tprod_mul_tprod,
+    bracketAux_tprod, LieSubalgebra.coe_bracket_of_module, Fin.sum_univ_add, Fin.append_left,
+    Fin.append_right, LinearMap.add_apply, LinearMap.compl₁₂_apply, coe_toLinearMap,
+    AlgHom.coe_toLieHom, map_sum, LinearMap.coe_sum, Finset.sum_apply]
+  conv => enter [2, 1, 2, x]; rw [← map_mul, TensorAlgebra.tprod_mul_tprod]
+  conv => enter [2, 2, 2, x]; rw [← map_mul, TensorAlgebra.tprod_mul_tprod]
+  congr! with i _ i _ <;> ext j <;> cases j using Fin.addCases <;> simp [update_apply]
 
 lemma bracketAux_eq_of_ringCon (x : D.𝔥) (a b) (h : ringCon K D.𝔞 a b) :
     D.bracketAux x a = D.bracketAux x b := by
