@@ -124,12 +124,86 @@ structure NilStepAdoData (K 𝔫 : Type*)
 
 attribute [instance] NilStepAdoData.instIsAdo𝔞
 
-def NilStepAdoData.bracketAux (D : NilStepAdoData K 𝔫) (x : D.𝔥) :
-    TensorAlgebra K D.𝔞 →ₗ[K] UniversalEnvelopingAlgebra K D.𝔞 :=
+namespace NilStepAdoData
+
+variable (D : NilStepAdoData K 𝔫)
+
+attribute [local instance 100] LieRing.ofAssociativeRing
+
+def bracketAux (x : D.𝔥) : TensorAlgebra K D.𝔞 →ₗ[K] UniversalEnvelopingAlgebra K D.𝔞 :=
   mkAlgHom K D.𝔞 ∘ₗ LinearEquiv.conj TensorAlgebra.equivDirectSum.toLinearEquiv.symm
     (DirectSum.lmap (fun n ↦
-      ∑ i : Fin n,
-        PiTensorProduct.map (update (fun _ ↦ LinearMap.id) i (toEnd K D.𝔥 D.𝔞 x))))
+      ∑ i : Fin n, PiTensorProduct.map (update (fun _ ↦ LinearMap.id) i (toEnd K D.𝔥 D.𝔞 x))))
+
+@[simp]
+lemma bracketAux_ι (x : D.𝔥) (y : D.𝔞) : D.bracketAux x (TensorAlgebra.ι K y) = ι K ⁅x, y⁆ := by
+  simp [bracketAux]
+
+@[simp]
+lemma bracketAux_tprod (x : D.𝔥) {n} (f : Fin n → D.𝔞) :
+    D.bracketAux x (TensorAlgebra.tprod K D.𝔞 n f) =
+      ∑ i : Fin n, mkAlgHom K D.𝔞 (TensorAlgebra.tprod K D.𝔞 n (update f i ⁅x, f i⁆)) := by
+  simp [bracketAux, - TensorAlgebra.tprod_apply, TensorAlgebra.toDirectSum_tensorPower_tprod,
+    apply_update (f := fun (i : Fin n) (F : D.𝔞 →ₗ[K] D.𝔞) ↦ F (f i))]
+
+lemma bracketAux_mul (x : D.𝔥) (a b) : D.bracketAux x (a * b) =
+    mkAlgHom K D.𝔞 a * D.bracketAux x b + D.bracketAux x a * mkAlgHom K D.𝔞 b := by
+  obtain ⟨y, rfl⟩ := TensorAlgebra.equivDirectSum.symm.surjective a
+  obtain ⟨z, rfl⟩ := TensorAlgebra.equivDirectSum.symm.surjective b
+  simp_rw [TensorAlgebra.equivDirectSum_symm_apply]
+  induction y using DirectSum.induction_on with
+  | zero => simp
+  | add y₁ y₂ hy₁ hy₂ =>
+    conv_lhs => simp only [map_add, add_mul, hy₁, hy₂]
+    conv_rhs => simp only [map_add]
+    noncomm_ring
+  | of m a =>
+  induction z using DirectSum.induction_on with
+  | zero => simp
+  | add z₁ z₂ hz₁ hz₂ =>
+    conv_lhs => simp only [map_add, mul_add, hz₁, hz₂]
+    conv_rhs => simp only [map_add]
+    noncomm_ring
+  | of n b =>
+  sorry
+
+lemma bracketAux_eq_of_ringCon (x : D.𝔥) (a b) (h : ringCon K D.𝔞 a b) :
+    D.bracketAux x a = D.bracketAux x b := by
+  induction h using ringCon_induction with
+  | refl | symm | trans | add => grind only [= map_add]
+  | mul a b c d h₁ h₂ hi₁ hi₂ =>
+    rw [← mkAlgHom_eq_mkAlgHom] at h₁ h₂; simp only [bracketAux_mul, *]
+  | lie_compat a b =>
+    rw [map_add, ← eq_sub_iff_add_eq]
+    conv_rhs => simp only [bracketAux_mul, bracketAux_ι, ← ι_apply]
+    conv_lhs =>
+      rw [bracketAux_ι, D.𝔥.coe_bracket_of_module, leibniz_lie, ← D.𝔥.coe_bracket_of_module,
+        ← D.𝔥.coe_bracket_of_module, map_add, map_lie, map_lie,
+        LieRing.of_associative_ring_bracket, LieRing.of_associative_ring_bracket]
+    noncomm_ring
+
+instance : LieRingModule D.𝔥 (UniversalEnvelopingAlgebra K D.𝔞) where
+  bracket x := tensorLift (D.bracketAux x) (D.bracketAux_eq_of_ringCon x)
+  add_lie := sorry
+  lie_add x a b := by
+    cases a with | mkAlgHom a
+    cases b with | mkAlgHom b
+    conv_lhs => rw [← map_add, tensorLift_mkAlgHom, map_add]
+    conv_rhs => rw [tensorLift_mkAlgHom, tensorLift_mkAlgHom]
+  leibniz_lie := sorry
+
+lemma bracket_𝔥_def (x : D.𝔥) (a : UniversalEnvelopingAlgebra K D.𝔞) :
+    ⁅x, a⁆ = tensorLift (D.bracketAux x) (D.bracketAux_eq_of_ringCon x) a :=
+  rfl
+
+instance : LieModule K D.𝔥 (UniversalEnvelopingAlgebra K D.𝔞) where
+  smul_lie := sorry
+  lie_smul t x a := by
+    cases a with | mkAlgHom a
+    conv_lhs => rw [bracket_𝔥_def, ← map_smul, tensorLift_mkAlgHom, map_smul]
+    conv_rhs => rw [bracket_𝔥_def, tensorLift_mkAlgHom]
+
+end NilStepAdoData
 
 lemma NilStepAdoData.isAdo (D : NilStepAdoData K 𝔫) : IsAdo K 𝔫 :=
   sorry
