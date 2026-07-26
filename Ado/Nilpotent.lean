@@ -18,6 +18,34 @@ public import Ado.UniversalEnvelopingAlgebraTrick
 ## 冪零 Lie 代数に対する Ado の定理
 -/
 
+section ForMathlib
+
+public section DirectSum
+
+namespace DirectSum
+
+@[to_fun (attr := simp) lmap_fun_add]
+lemma lmap_add
+    {R : Type*} [Semiring R]
+    {ι : Type*} {M : ι → Type*} [(i : ι) → AddCommMonoid (M i)] [(i : ι) → Module R (M i)]
+    {N : ι → Type*} [(i : ι) → AddCommMonoid (N i)] [(i : ι) → Module R (N i)]
+    (f g : (i : ι) → M i →ₗ[R] N i) : lmap (f + g) = lmap f + lmap g := by
+  ext; simp
+
+@[to_fun (attr := simp) lmap_fun_smul]
+lemma lmap_smul
+    {R : Type*} [CommSemiring R]
+    {ι : Type*} {M : ι → Type*} [(i : ι) → AddCommMonoid (M i)] [(i : ι) → Module R (M i)]
+    {N : ι → Type*} [(i : ι) → AddCommMonoid (N i)] [(i : ι) → Module R (N i)]
+    (c : R) (f : (i : ι) → M i →ₗ[R] N i) : lmap (c • f) = c • lmap f := by
+  ext; simp [smul_apply]
+
+end DirectSum
+
+end DirectSum
+
+end ForMathlib
+
 open Function Set Module LieAlgebra LieModule LieSubmodule LieIdeal LieHom
 open UniversalEnvelopingAlgebra
 
@@ -146,6 +174,14 @@ lemma bracketAux_tprod (x : D.𝔥) {n} (f : Fin n → D.𝔞) :
   simp [bracketAux, - TensorAlgebra.tprod_apply, TensorAlgebra.toDirectSum_tensorPower_tprod,
     apply_update (f := fun (i : Fin n) (F : D.𝔞 →ₗ[K] D.𝔞) ↦ F (f i))]
 
+lemma bracketAux_add_left (x y : D.𝔥) (a) :
+    D.bracketAux (x + y) a = D.bracketAux x a + D.bracketAux y a := by
+  simp [bracketAux, PiTensorProduct.map_update_add, Finset.sum_add_distrib]
+
+lemma bracketAux_smul_left (t : K) (x : D.𝔥) (a) :
+    D.bracketAux (t • x) a = t • D.bracketAux x a := by
+  simp [bracketAux, PiTensorProduct.map_update_smul, ← Finset.smul_sum]
+
 lemma bracketAux_mul (x : D.𝔥) (a b) : D.bracketAux x (a * b) =
     mkAlgHom K D.𝔞 a * D.bracketAux x b + D.bracketAux x a * mkAlgHom K D.𝔞 b := by
   obtain ⟨y, rfl⟩ := TensorAlgebra.equivDirectSum.symm.surjective a
@@ -184,7 +220,9 @@ lemma bracketAux_eq_of_ringCon (x : D.𝔥) (a b) (h : ringCon K D.𝔞 a b) :
 
 instance : LieRingModule D.𝔥 (UniversalEnvelopingAlgebra K D.𝔞) where
   bracket x := tensorLift (D.bracketAux x) (D.bracketAux_eq_of_ringCon x)
-  add_lie := sorry
+  add_lie x y a := by
+    cases a with | mkAlgHom a
+    simp_rw [tensorLift_mkAlgHom, bracketAux_add_left]
   lie_add x a b := by
     cases a with | mkAlgHom a
     cases b with | mkAlgHom b
@@ -197,7 +235,9 @@ lemma bracket_𝔥_def (x : D.𝔥) (a : UniversalEnvelopingAlgebra K D.𝔞) :
   rfl
 
 instance : LieModule K D.𝔥 (UniversalEnvelopingAlgebra K D.𝔞) where
-  smul_lie := sorry
+  smul_lie t x a := by
+    cases a with | mkAlgHom a
+    simp_rw [bracket_𝔥_def, tensorLift_mkAlgHom, bracketAux_smul_left]
   lie_smul t x a := by
     cases a with | mkAlgHom a
     conv_lhs => rw [bracket_𝔥_def, ← map_smul, tensorLift_mkAlgHom, map_smul]
