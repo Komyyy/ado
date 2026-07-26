@@ -19,6 +19,7 @@ public import Ado.UniversalEnvelopingAlgebraTrick
 -/
 
 open Function Set Module LieAlgebra LieModule LieSubmodule LieIdeal LieHom
+open UniversalEnvelopingAlgebra
 
 variable {K 𝔫 : Type*}
 variable [Field K] [LieRing 𝔫] [LieAlgebra K 𝔫] [FiniteDimensional K 𝔫]
@@ -122,6 +123,13 @@ structure NilStepAdoData (K 𝔫 : Type*)
   [instIsAdo𝔞 : IsAdo K 𝔞]
 
 attribute [instance] NilStepAdoData.instIsAdo𝔞
+
+def NilStepAdoData.bracketAux (D : NilStepAdoData K 𝔫) (x : D.𝔥) :
+    TensorAlgebra K D.𝔞 →ₗ[K] UniversalEnvelopingAlgebra K D.𝔞 :=
+  mkAlgHom K D.𝔞 ∘ₗ LinearEquiv.conj TensorAlgebra.equivDirectSum.toLinearEquiv.symm
+    (DirectSum.lmap (fun n ↦
+      ∑ i : Fin n,
+        PiTensorProduct.map (update (fun _ ↦ LinearMap.id) i (toEnd K D.𝔥 D.𝔞 x))))
 
 lemma NilStepAdoData.isAdo (D : NilStepAdoData K 𝔫) : IsAdo K 𝔫 :=
   sorry
