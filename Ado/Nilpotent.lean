@@ -5,13 +5,14 @@ Authors: Miyahara Kō
 -/
 module
 public import Mathlib
-public import Ado.LieAbelian
 public import Ado.ForMathlib.LieModulePUnit
 public import Ado.ForMathlib.LieModuleSubsingleton
 public import Ado.ForMathlib.LieModuleKer
 public import Ado.ForMathlib.LieFinrank
 public import Ado.ForMathlib.LieQuotient
 public import Ado.ForMathlib.LieHom
+public import Ado.LieAbelian
+public import Ado.UniversalEnvelopingAlgebraTrick
 
 /-!
 ## 冪零 Lie 代数に対する Ado の定理
