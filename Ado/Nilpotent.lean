@@ -82,6 +82,8 @@ end TensorAlgebra
 
 public section FinAdd
 
+open Function
+
 namespace Fin
 
 @[simp]
@@ -91,6 +93,16 @@ lemma castAdd_ne_natAdd {m n} (i : Fin m) (j : Fin n) : castAdd n i ≠ natAdd m
 @[simp]
 lemma natAdd_ne_castAdd {m n} (i : Fin n) (j : Fin m) : natAdd m i ≠ castAdd n j :=
   castAdd_ne_natAdd j i |>.symm
+
+@[simp]
+lemma update_append_castAdd {α m n} (x : Fin m → α) (y : Fin n → α) (i : Fin m) (a : α) :
+    update (append x y) (castAdd n i) a = append (update x i a) y := by
+  ext j; cases j using addCases <;> simp [update_apply]
+
+@[simp]
+lemma update_append_natAdd {α m n} (x : Fin m → α) (y : Fin n → α) (i : Fin n) (a : α) :
+    update (append x y) (natAdd m i) a = append x (update y i a) := by
+  ext j; cases j using addCases <;> simp [update_apply]
 
 end Fin
 
@@ -245,11 +257,7 @@ lemma bracketAux_mul (x : D.𝔥) (a b) : D.bracketAux x (a * b) =
     simpa [DFunLike.ext_iff] using h
   conv_rhs => apply add_comm
   ext m y n z
-  simp only [LinearMap.compr₂_apply, LinearMap.mul_apply_apply, tprod_mul_tprod, bracketAux_tprod,
-    LieSubalgebra.coe_bracket_of_module, Fin.sum_univ_add, Fin.append_left, Fin.append_right,
-    LinearMap.add_apply, LinearMap.compl₁₂_apply, map_sum, LinearMap.id_coe, id_eq,
-    LinearMap.coe_sum, Finset.sum_apply]
-  congr! with i _ i _ <;> ext j <;> cases j using Fin.addCases <;> simp [update_apply]
+  simp [Fin.sum_univ_add, - LieSubalgebra.coe_bracket_of_module, - TensorAlgebra.tprod_apply]
 
 lemma mkAlgHom_bracketAux_eq_of_ringCon (x : D.𝔥) (a b) (h : ringCon K D.𝔞 a b) :
     mkAlgHom K D.𝔞 (D.bracketAux x a) = mkAlgHom K D.𝔞 (D.bracketAux x b) := by
