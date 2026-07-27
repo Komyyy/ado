@@ -11,104 +11,15 @@ public import Ado.ForMathlib.LieModuleKer
 public import Ado.ForMathlib.LieFinrank
 public import Ado.ForMathlib.LieQuotient
 public import Ado.ForMathlib.LieHom
+public import Ado.ForMathlib.DirectSum
+public import Ado.ForMathlib.FinAdd
+public import Ado.ForMathlib.TensorAlgebra
 public import Ado.LieAbelian
 public import Ado.UniversalEnvelopingAlgebraTrick
 
 /-!
 ## 冪零 Lie 代数に対する Ado の定理
 -/
-
-section ForMathlib
-
-public section DirectSum
-
-namespace DirectSum
-
-@[to_fun (attr := simp) lmap_fun_add]
-lemma lmap_add
-    {R : Type*} [Semiring R]
-    {ι : Type*} {M : ι → Type*} [(i : ι) → AddCommMonoid (M i)] [(i : ι) → Module R (M i)]
-    {N : ι → Type*} [(i : ι) → AddCommMonoid (N i)] [(i : ι) → Module R (N i)]
-    (f g : (i : ι) → M i →ₗ[R] N i) : lmap (f + g) = lmap f + lmap g := by
-  ext; simp
-
-@[to_fun (attr := simp) lmap_fun_smul]
-lemma lmap_smul
-    {R : Type*} [CommSemiring R]
-    {ι : Type*} {M : ι → Type*} [(i : ι) → AddCommMonoid (M i)] [(i : ι) → Module R (M i)]
-    {N : ι → Type*} [(i : ι) → AddCommMonoid (N i)] [(i : ι) → Module R (N i)]
-    (c : R) (f : (i : ι) → M i →ₗ[R] N i) : lmap (c • f) = c • lmap f := by
-  ext; simp [smul_apply]
-
-end DirectSum
-
-end DirectSum
-
-public section TensorAlgebra
-
-open TensorPower
-
-namespace TensorAlgebra
-
-variable {R : Type*} [CommSemiring R]
-variable {M : Type*} [AddCommMonoid M] [Module R M]
-variable {N : Type*} [AddCommMonoid N] [Module R N]
-
-@[ext high]
-lemma hom_ext_tprod
-    (f g : TensorAlgebra R M →ₗ[R] N)
-    (h : ∀ n x, f (TensorAlgebra.tprod R M n x) = g (TensorAlgebra.tprod R M n x)) :
-    f = g := by
-  suffices h₂ :
-      f ∘ₗ TensorAlgebra.ofDirectSum.toLinearMap = g ∘ₗ TensorAlgebra.ofDirectSum.toLinearMap by
-    ext x
-    replace h₂ := DFunLike.congr_fun h₂
-    specialize h₂ x.toDirectSum
-    simpa using h₂
-  ext n x
-  simp [DirectSum.lof_eq_of, - TensorAlgebra.tprod_apply, h]
-
-@[simp]
-lemma tprod_mul_tprod {m n} (x : Fin m → M) (y : Fin n → M) :
-    TensorAlgebra.tprod R M m x * TensorAlgebra.tprod R M n y =
-      TensorAlgebra.tprod R M (m + n) (Fin.append x y) := by
-  conv_lhs => tactic =>
-    simp_rw [← toTensorAlgebra_tprod, ← toTensorAlgebra_gMul, TensorPower.tprod_mul_tprod,
-      toTensorAlgebra_tprod]
-
-end TensorAlgebra
-
-end TensorAlgebra
-
-public section FinAdd
-
-open Function
-
-namespace Fin
-
-@[simp]
-lemma castAdd_ne_natAdd {m n} (i : Fin m) (j : Fin n) : castAdd n i ≠ natAdd m j := by
-  apply_fun addCases (fun _ ↦ false) (fun _ ↦ true); simp
-
-@[simp]
-lemma natAdd_ne_castAdd {m n} (i : Fin n) (j : Fin m) : natAdd m i ≠ castAdd n j :=
-  castAdd_ne_natAdd j i |>.symm
-
-@[simp]
-lemma update_append_castAdd {α m n} (x : Fin m → α) (y : Fin n → α) (i : Fin m) (a : α) :
-    update (append x y) (castAdd n i) a = append (update x i a) y := by
-  ext j; cases j using addCases <;> simp [update_apply]
-
-@[simp]
-lemma update_append_natAdd {α m n} (x : Fin m → α) (y : Fin n → α) (i : Fin n) (a : α) :
-    update (append x y) (natAdd m i) a = append x (update y i a) := by
-  ext j; cases j using addCases <;> simp [update_apply]
-
-end Fin
-
-end FinAdd
-
-end ForMathlib
 
 open Function Set Finset Module LieAlgebra LieModule LieSubmodule LieIdeal LieHom
 open TensorAlgebra hiding ringCon
