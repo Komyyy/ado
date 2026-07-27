@@ -110,7 +110,7 @@ end FinAdd
 
 end ForMathlib
 
-open Function Set Module LieAlgebra LieModule LieSubmodule LieIdeal LieHom
+open Function Set Finset Module LieAlgebra LieModule LieSubmodule LieIdeal LieHom
 open TensorAlgebra hiding ringCon
 open UniversalEnvelopingAlgebra hiding ι
 
@@ -239,6 +239,54 @@ lemma bracketAux_tprod (x : D.𝔥) {n} (f : Fin n → D.𝔞) :
   simp [bracketAux, - TensorAlgebra.tprod_apply, TensorAlgebra.toDirectSum_tensorPower_tprod,
     apply_update (f := fun (i : Fin n) (F : D.𝔞 →ₗ[K] D.𝔞) ↦ F (f i))]
 
+lemma bracketAux_bracketAux_tprod (x y : D.𝔥) {n} (f : Fin n → D.𝔞) :
+    D.bracketAux x (D.bracketAux y (TensorAlgebra.tprod K D.𝔞 n f)) =
+      (∑ i : Fin n, TensorAlgebra.tprod K D.𝔞 n (update f i ⁅x, ⁅y, f i⁆⁆)) +
+        (∑ p ∈ offDiag (univ : Finset (Fin n)),
+          TensorAlgebra.tprod K D.𝔞 n (update (update f p.1 ⁅y, f p.1⁆) p.2 ⁅x, f p.2⁆)) :=
+  calc _
+    _ = ∑ i : Fin n, D.bracketAux x (TensorAlgebra.tprod K D.𝔞 n (update f i ⁅y, f i⁆)) := by
+      conv_lhs => rw [bracketAux_tprod, map_sum]
+    _ = ∑ i : Fin n, ∑ j : Fin n,
+        TensorAlgebra.tprod K D.𝔞 n
+          (update (update f i ⁅y, f i⁆) j (⁅x, update f i ⁅y, f i⁆ j⁆)) := by
+      simp only [bracketAux_tprod]
+    _ = (∑ i : Fin n, TensorAlgebra.tprod K D.𝔞 n (update f i ⁅x, ⁅y, f i⁆⁆)) +
+          (∑ i : Fin n, ∑ j ∈ ({i}ᶜ : Finset (Fin n)),
+            TensorAlgebra.tprod K D.𝔞 n (update (update f i ⁅y, f i⁆) j (⁅x, f j⁆))) := by
+      conv_lhs =>
+        conv => enter [2, i]; rw [Fintype.sum_eq_add_sum_compl i]
+        rw [sum_add_distrib]
+      congr! 3 with i _ i _ j hj <;> [simp; (congr! 3; apply update_of_ne; simpa using hj)]
+    _ = _ := by
+      congr! 1
+      symm
+      apply sum_finset_product
+      simp [not_iff_not, iff_true_intro eq_comm]
+
+lemma bracketAux_lie_left (x y : D.𝔥) (a) : D.bracketAux ⁅x, y⁆ a =
+    D.bracketAux x (D.bracketAux y a) - D.bracketAux y (D.bracketAux x a) := by
+  revert a
+  suffices h : D.bracketAux ⁅x, y⁆ =
+      D.bracketAux x * D.bracketAux y - D.bracketAux y * D.bracketAux x by
+    simpa [DFunLike.ext_iff] using h
+  ext n f
+  conv_lhs => tactic =>
+    simp_rw [bracketAux_tprod, lie_lie, MultilinearMap.map_update_sub, sum_sub_distrib]
+  conv_rhs =>
+    simp only [LinearMap.sub_apply, End.mul_apply, bracketAux_bracketAux_tprod]
+    enter [2, 2]
+    conv =>
+      apply_congr
+      next => rfl
+      tactic => rename_i p hp; rw [update_comm (by simpa using hp)]
+    tactic =>
+      symm
+      apply sum_equiv (s := offDiag (univ : Finset (Fin n))) (Equiv.prodComm (Fin n) (Fin n))
+      · simp [not_iff_not, iff_true_intro eq_comm]
+      · intro i hi; simp only [Equiv.prodComm_apply, Prod.snd_swap, Prod.fst_swap]; rfl
+  noncomm_ring
+
 lemma bracketAux_add_left (x y : D.𝔥) (a) :
     D.bracketAux (x + y) a = D.bracketAux x a + D.bracketAux y a := by
   simp [bracketAux, PiTensorProduct.map_update_add, Finset.sum_add_distrib]
@@ -288,7 +336,10 @@ instance : LieRingModule D.𝔥 (UniversalEnvelopingAlgebra K D.𝔞) where
     cases b with | mkAlgHom b
     conv_lhs => rw [← map_add, tensorLift_mkAlgHom, comp_apply, map_add, map_add]
     conv_rhs => rw [tensorLift_mkAlgHom, tensorLift_mkAlgHom, comp_apply, comp_apply]
-  leibniz_lie := sorry
+  leibniz_lie x y a := by
+    cases a with | mkAlgHom a
+    simp only [tensorLift_mkAlgHom, comp_apply, bracketAux_lie_left, map_sub]
+    noncomm_ring
 
 lemma bracket_𝔥_def (x : D.𝔥) (a : UniversalEnvelopingAlgebra K D.𝔞) :
     ⁅x, a⁆ =
