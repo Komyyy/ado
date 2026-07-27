@@ -268,6 +268,58 @@ instance : LieModule K D.𝔥 (UniversalEnvelopingAlgebra K D.𝔞) where
 
 end NilStepAdoData
 
+def PreNilStepAdoSpace (D : NilStepAdoData K 𝔫) :=
+  UniversalEnvelopingAlgebra K D.𝔞
+deriving AddCommGroup, Module K
+
+namespace PreNilStepAdoSpace
+
+variable {D : NilStepAdoData K 𝔫}
+
+def equiv : UniversalEnvelopingAlgebra K D.𝔞 ≃ₗ[K] PreNilStepAdoSpace D :=
+  LinearEquiv.refl K (UniversalEnvelopingAlgebra K D.𝔞)
+
+@[ext]
+lemma ext {p q : PreNilStepAdoSpace D} (h : equiv.symm p = equiv.symm q) : p = q := by
+  simpa using h
+
+@[elab_as_elim, induction_eliminator, cases_eliminator]
+protected def rec {motive : PreNilStepAdoSpace D → Sort*} :
+    (equiv : Π a, motive (equiv a)) → Π a, motive a :=
+  fun equiv' a ↦ equiv' (equiv.symm a)
+
+noncomputable instance : LieRingModule 𝔫 (PreNilStepAdoSpace D) where
+  bracket x := LinearEquiv.conj equiv
+    (LinearMap.ofIsCompl D.isCompl_toSubmodule
+      (toEnd K D.𝔞 (UniversalEnvelopingAlgebra K D.𝔞))
+        (toEnd K D.𝔥 (UniversalEnvelopingAlgebra K D.𝔞)) x)
+  add_lie x y a := by simp
+  lie_add x a b := by simp
+  leibniz_lie x y a := by
+    obtain ⟨⟨x₁, x₂⟩, (rfl : (x₁ : 𝔫) + x₂ = x)⟩ :=
+      Submodule.existsUnique_add_of_isCompl_prod D.isCompl_toSubmodule x |>.exists
+    obtain ⟨⟨y₁, y₂⟩, (rfl : (y₁ : 𝔫) + y₂ = y)⟩ :=
+      Submodule.existsUnique_add_of_isCompl_prod D.isCompl_toSubmodule y |>.exists
+    cases a with | equiv a
+    sorry
+
+example : ↥D.𝔞 = ↥D.𝔞.toSubmodule := by
+  fail_if_success with_reducible rfl
+  with_reducible_and_instances rfl
+
+lemma bracket_def (x : 𝔫) (a : PreNilStepAdoSpace D) :
+    ⁅x, a⁆ = LinearEquiv.conj equiv
+      (LinearMap.ofIsCompl D.isCompl_toSubmodule
+        (toEnd K D.𝔞 (UniversalEnvelopingAlgebra K D.𝔞))
+          (toEnd K D.𝔥 (UniversalEnvelopingAlgebra K D.𝔞)) x) a :=
+  rfl
+
+instance : LieModule K 𝔫 (PreNilStepAdoSpace D) where
+  smul_lie t x a := by simp [bracket_def]
+  lie_smul t x a := by simp [bracket_def]
+
+end PreNilStepAdoSpace
+
 lemma NilStepAdoData.isAdo (D : NilStepAdoData K 𝔫) : IsAdo K 𝔫 :=
   sorry
 
