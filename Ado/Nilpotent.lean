@@ -99,7 +99,8 @@ end FinAdd
 end ForMathlib
 
 open Function Set Module LieAlgebra LieModule LieSubmodule LieIdeal LieHom
-open UniversalEnvelopingAlgebra
+open TensorAlgebra hiding ringCon
+open UniversalEnvelopingAlgebra hiding ι
 
 variable {K 𝔫 : Type*}
 variable [Field K] [LieRing 𝔫] [LieAlgebra K 𝔫] [FiniteDimensional K 𝔫]
@@ -210,19 +211,19 @@ variable (D : NilStepAdoData K 𝔫)
 
 attribute [local instance 100] LieRing.ofAssociativeRing
 
-def bracketAux (x : D.𝔥) : TensorAlgebra K D.𝔞 →ₗ[K] UniversalEnvelopingAlgebra K D.𝔞 :=
-  mkAlgHom K D.𝔞 ∘ₗ LinearEquiv.conj TensorAlgebra.equivDirectSum.toLinearEquiv.symm
+def bracketAux (x : D.𝔥) : End K (TensorAlgebra K D.𝔞) :=
+  LinearEquiv.conj TensorAlgebra.equivDirectSum.toLinearEquiv.symm
     (DirectSum.lmap (fun n ↦
       ∑ i : Fin n, PiTensorProduct.map (update (fun _ ↦ LinearMap.id) i (toEnd K D.𝔥 D.𝔞 x))))
 
 @[simp]
-lemma bracketAux_ι (x : D.𝔥) (y : D.𝔞) : D.bracketAux x (TensorAlgebra.ι K y) = ι K ⁅x, y⁆ := by
+lemma bracketAux_ι (x : D.𝔥) (y : D.𝔞) : D.bracketAux x (ι K y) = ι K ⁅x, y⁆ := by
   simp [bracketAux]
 
 @[simp]
 lemma bracketAux_tprod (x : D.𝔥) {n} (f : Fin n → D.𝔞) :
     D.bracketAux x (TensorAlgebra.tprod K D.𝔞 n f) =
-      ∑ i : Fin n, mkAlgHom K D.𝔞 (TensorAlgebra.tprod K D.𝔞 n (update f i ⁅x, f i⁆)) := by
+      ∑ i : Fin n, TensorAlgebra.tprod K D.𝔞 n (update f i ⁅x, f i⁆) := by
   simp [bracketAux, - TensorAlgebra.tprod_apply, TensorAlgebra.toDirectSum_tensorPower_tprod,
     apply_update (f := fun (i : Fin n) (F : D.𝔞 →ₗ[K] D.𝔞) ↦ F (f i))]
 
@@ -235,64 +236,65 @@ lemma bracketAux_smul_left (t : K) (x : D.𝔥) (a) :
   simp [bracketAux, PiTensorProduct.map_update_smul, ← Finset.smul_sum]
 
 lemma bracketAux_mul (x : D.𝔥) (a b) : D.bracketAux x (a * b) =
-    mkAlgHom K D.𝔞 a * D.bracketAux x b + D.bracketAux x a * mkAlgHom K D.𝔞 b := by
+    a * D.bracketAux x b + D.bracketAux x a * b := by
   revert a b
   suffices h :
       (LinearMap.mul K (TensorAlgebra K D.𝔞)).compr₂ (D.bracketAux x) =
-        (LinearMap.mul K (UniversalEnvelopingAlgebra K D.𝔞)).compl₁₂
-            (mkAlgHom K D.𝔞) (D.bracketAux x) +
-          (LinearMap.mul K (UniversalEnvelopingAlgebra K D.𝔞)).compl₁₂
-            (D.bracketAux x) (mkAlgHom K D.𝔞) by
+        (LinearMap.mul K (TensorAlgebra K D.𝔞)).compl₁₂ LinearMap.id (D.bracketAux x) +
+          (LinearMap.mul K (TensorAlgebra K D.𝔞)).compl₁₂ (D.bracketAux x) LinearMap.id by
     simpa [DFunLike.ext_iff] using h
   conv_rhs => apply add_comm
   ext m y n z
-  simp only [LinearMap.compr₂_apply, LinearMap.mul_apply_apply, TensorAlgebra.tprod_mul_tprod,
-    bracketAux_tprod, LieSubalgebra.coe_bracket_of_module, Fin.sum_univ_add, Fin.append_left,
-    Fin.append_right, LinearMap.add_apply, LinearMap.compl₁₂_apply, coe_toLinearMap,
-    AlgHom.coe_toLieHom, map_sum, LinearMap.coe_sum, Finset.sum_apply]
-  conv => enter [2, 1, 2, x]; rw [← map_mul, TensorAlgebra.tprod_mul_tprod]
-  conv => enter [2, 2, 2, x]; rw [← map_mul, TensorAlgebra.tprod_mul_tprod]
+  simp only [LinearMap.compr₂_apply, LinearMap.mul_apply_apply, tprod_mul_tprod, bracketAux_tprod,
+    LieSubalgebra.coe_bracket_of_module, Fin.sum_univ_add, Fin.append_left, Fin.append_right,
+    LinearMap.add_apply, LinearMap.compl₁₂_apply, map_sum, LinearMap.id_coe, id_eq,
+    LinearMap.coe_sum, Finset.sum_apply]
   congr! with i _ i _ <;> ext j <;> cases j using Fin.addCases <;> simp [update_apply]
 
-lemma bracketAux_eq_of_ringCon (x : D.𝔥) (a b) (h : ringCon K D.𝔞 a b) :
-    D.bracketAux x a = D.bracketAux x b := by
+lemma mkAlgHom_bracketAux_eq_of_ringCon (x : D.𝔥) (a b) (h : ringCon K D.𝔞 a b) :
+    mkAlgHom K D.𝔞 (D.bracketAux x a) = mkAlgHom K D.𝔞 (D.bracketAux x b) := by
   induction h using ringCon_induction with
   | refl | symm | trans | add => grind only [= map_add]
   | mul a b c d h₁ h₂ hi₁ hi₂ =>
-    rw [← mkAlgHom_eq_mkAlgHom] at h₁ h₂; simp only [bracketAux_mul, *]
+    rw [← mkAlgHom_eq_mkAlgHom] at h₁ h₂; simp [bracketAux_mul, *]
   | lie_compat a b =>
-    rw [map_add, ← eq_sub_iff_add_eq]
-    conv_rhs => simp only [bracketAux_mul, bracketAux_ι, ← ι_apply]
+    simp_rw [map_add, ← eq_sub_iff_add_eq]
+    conv_rhs => simp only [bracketAux_mul, map_add, map_mul, bracketAux_ι, ← ι_apply]
     conv_lhs =>
-      rw [bracketAux_ι, D.𝔥.coe_bracket_of_module, leibniz_lie, ← D.𝔥.coe_bracket_of_module,
-        ← D.𝔥.coe_bracket_of_module, map_add, map_lie, map_lie,
+      rw [bracketAux_ι, ← ι_apply, D.𝔥.coe_bracket_of_module, leibniz_lie,
+        ← D.𝔥.coe_bracket_of_module, ← D.𝔥.coe_bracket_of_module, map_add, map_lie, map_lie,
         LieRing.of_associative_ring_bracket, LieRing.of_associative_ring_bracket]
     noncomm_ring
 
+lemma ringCon_bracketAux_of_ringCon (x : D.𝔥) (a b) (h : ringCon K D.𝔞 a b) :
+    ringCon K D.𝔞 (D.bracketAux x a) (D.bracketAux x b) :=
+  mkAlgHom_eq_mkAlgHom.mp (D.mkAlgHom_bracketAux_eq_of_ringCon x a b h)
+
 instance : LieRingModule D.𝔥 (UniversalEnvelopingAlgebra K D.𝔞) where
-  bracket x := tensorLift (D.bracketAux x) (D.bracketAux_eq_of_ringCon x)
+  bracket x := tensorLift (mkAlgHom K D.𝔞 ∘ D.bracketAux x) (D.mkAlgHom_bracketAux_eq_of_ringCon x)
   add_lie x y a := by
     cases a with | mkAlgHom a
-    simp_rw [tensorLift_mkAlgHom, bracketAux_add_left]
+    simp_rw [tensorLift_mkAlgHom, comp_apply, bracketAux_add_left, map_add]
   lie_add x a b := by
     cases a with | mkAlgHom a
     cases b with | mkAlgHom b
-    conv_lhs => rw [← map_add, tensorLift_mkAlgHom, map_add]
-    conv_rhs => rw [tensorLift_mkAlgHom, tensorLift_mkAlgHom]
+    conv_lhs => rw [← map_add, tensorLift_mkAlgHom, comp_apply, map_add, map_add]
+    conv_rhs => rw [tensorLift_mkAlgHom, tensorLift_mkAlgHom, comp_apply, comp_apply]
   leibniz_lie := sorry
 
 lemma bracket_𝔥_def (x : D.𝔥) (a : UniversalEnvelopingAlgebra K D.𝔞) :
-    ⁅x, a⁆ = tensorLift (D.bracketAux x) (D.bracketAux_eq_of_ringCon x) a :=
+    ⁅x, a⁆ =
+      tensorLift (mkAlgHom K D.𝔞 ∘ D.bracketAux x) (D.mkAlgHom_bracketAux_eq_of_ringCon x) a :=
   rfl
 
 instance : LieModule K D.𝔥 (UniversalEnvelopingAlgebra K D.𝔞) where
   smul_lie t x a := by
     cases a with | mkAlgHom a
-    simp_rw [bracket_𝔥_def, tensorLift_mkAlgHom, bracketAux_smul_left]
+    simp_rw [bracket_𝔥_def, tensorLift_mkAlgHom, comp_apply, bracketAux_smul_left, map_smul]
   lie_smul t x a := by
     cases a with | mkAlgHom a
-    conv_lhs => rw [bracket_𝔥_def, ← map_smul, tensorLift_mkAlgHom, map_smul]
-    conv_rhs => rw [bracket_𝔥_def, tensorLift_mkAlgHom]
+    conv_lhs => rw [bracket_𝔥_def, ← map_smul, tensorLift_mkAlgHom, comp_apply, map_smul, map_smul]
+    conv_rhs => rw [bracket_𝔥_def, tensorLift_mkAlgHom, comp_apply]
 
 end NilStepAdoData
 
