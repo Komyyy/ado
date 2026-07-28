@@ -21,6 +21,59 @@ public import Ado.UniversalEnvelopingAlgebraTrick
 ## 冪零 Lie 代数に対する Ado の定理
 -/
 
+section ForMathlib
+
+@[expose] public section LieCoe
+
+/-!
+## `reducible` レベル下での型の不一致への対応策
+
+```lean4
+variable {R L : Type*} [CommRing R] [LieRing L] [LieAlgebra R L]
+
+example (s : LieIdeal R L) : ↥s = ↥s.toSubmodule := by
+  fail_if_success with_reducible rfl
+  with_reducible_and_instances rfl
+```
+
+本来これは `reducible` 下で defeq となって欲しいが、`↥s := { x // x ∈ s }` と定義されており、
+`Membership` インスタンスが `reducible` 下で defeq にならず、構造体の射影に本来ある `reducible` 下での
+defeq が享受できていない。このため、インスタンス合成が絡む箇所で問題を起こしている。修正されるまで、以下の
+補助定義を用いる。
+-/
+
+variable {R L : Type*} [CommRing R] [LieRing L] [LieAlgebra R L]
+
+example (s : LieIdeal R L) : ↥s = ↥s.toSubmodule := by
+  fail_if_success with_reducible rfl
+  with_reducible_and_instances rfl
+
+namespace LieSubalgebra
+
+@[simps]
+def toSubmoduleEquiv (s : LieSubalgebra R L) : s.toSubmodule ≃ₗ[R] s where
+  toFun x := ⟨x.1, x.2⟩
+  invFun x := ⟨x.1, x.2⟩
+  map_add' _ _ := rfl
+  map_smul' _ _ := rfl
+
+end LieSubalgebra
+
+namespace LieIdeal
+
+@[simps]
+def toSubmoduleEquiv (s : LieIdeal R L) : s.toSubmodule ≃ₗ[R] s where
+  toFun x := ⟨x.1, x.2⟩
+  invFun x := ⟨x.1, x.2⟩
+  map_add' _ _ := rfl
+  map_smul' _ _ := rfl
+
+end LieIdeal
+
+end LieCoe
+
+end ForMathlib
+
 open Function Set Finset Module LieAlgebra LieModule LieSubmodule LieIdeal LieHom
 open TensorAlgebra hiding ringCon
 open UniversalEnvelopingAlgebra hiding ι
@@ -291,21 +344,22 @@ protected def rec {motive : PreNilStepAdoSpace D → Sort*} :
 noncomputable instance : LieRingModule 𝔫 (PreNilStepAdoSpace D) where
   bracket x := LinearEquiv.conj equiv
     (LinearMap.ofIsCompl D.isCompl_toSubmodule
-      (toEnd K D.𝔞 (UniversalEnvelopingAlgebra K D.𝔞))
-        (toEnd K D.𝔥 (UniversalEnvelopingAlgebra K D.𝔞)) x)
+      (toEnd K D.𝔞 (UniversalEnvelopingAlgebra K D.𝔞) ∘ₗ D.𝔞.toSubmoduleEquiv.toLinearMap)
+        (toEnd K D.𝔥 (UniversalEnvelopingAlgebra K D.𝔞) ∘ₗ D.𝔥.toSubmoduleEquiv.toLinearMap) x)
   add_lie x y a := by simp
   lie_add x a b := by simp
   leibniz_lie x y a := by
     obtain ⟨⟨x₁, x₂⟩, (rfl : (x₁ : 𝔫) + x₂ = x)⟩ :=
       Submodule.existsUnique_add_of_isCompl_prod D.isCompl_toSubmodule x |>.exists
+    obtain ⟨x₁, rfl⟩ := D.𝔞.toSubmoduleEquiv.symm.surjective x₁
+    obtain ⟨x₂, rfl⟩ := D.𝔥.toSubmoduleEquiv.symm.surjective x₂
     obtain ⟨⟨y₁, y₂⟩, (rfl : (y₁ : 𝔫) + y₂ = y)⟩ :=
       Submodule.existsUnique_add_of_isCompl_prod D.isCompl_toSubmodule y |>.exists
+    obtain ⟨y₁, rfl⟩ := D.𝔞.toSubmoduleEquiv.symm.surjective y₁
+    obtain ⟨y₂, rfl⟩ := D.𝔥.toSubmoduleEquiv.symm.surjective y₂
     cases a with | equiv a
+    simp
     sorry
-
-example : ↥D.𝔞 = ↥D.𝔞.toSubmodule := by
-  fail_if_success with_reducible rfl
-  with_reducible_and_instances rfl
 
 lemma bracket_def (x : 𝔫) (a : PreNilStepAdoSpace D) :
     ⁅x, a⁆ = LinearEquiv.conj equiv
