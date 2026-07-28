@@ -23,7 +23,7 @@ public import Ado.UniversalEnvelopingAlgebraTrick
 
 section ForMathlib
 
-@[expose] public section LieCoe
+@[expose] public section LieCoeEquiv
 
 /-!
 ## `reducible` レベル下での型の不一致への対応策
@@ -70,12 +70,25 @@ def toSubmoduleEquiv (s : LieIdeal R L) : s.toSubmodule ≃ₗ[R] s where
 
 end LieIdeal
 
-end LieCoe
+end LieCoeEquiv
+
+public section LieIdealCoe
+
+namespace LieIdeal
+
+variable {R L : Type*} [CommRing R] [LieRing L] [LieAlgebra R L]
+
+lemma coe_bracket (I : LieIdeal R L) (x y : I) : (↑⁅x, y⁆ : L) = ⁅(↑x : L), (↑y : L)⁆ := by
+  simp
+
+end LieIdeal
+
+end LieIdealCoe
 
 end ForMathlib
 
 open Function Set Finset Module LieAlgebra LieModule LieSubmodule LieIdeal LieHom
-open TensorAlgebra hiding ringCon
+open TensorAlgebra hiding ringCon ι
 open UniversalEnvelopingAlgebra hiding ι
 
 variable {K 𝔫 : Type*}
@@ -182,6 +195,8 @@ structure NilStepAdoData (K 𝔫 : Type*)
 attribute [instance] NilStepAdoData.instIsAdo𝔞
 
 namespace NilStepAdoData
+
+open TensorAlgebra (ι)
 
 variable (D : NilStepAdoData K 𝔫)
 
@@ -290,34 +305,51 @@ lemma ringCon_bracketAux_of_ringCon (x : D.𝔥) (a b) (h : ringCon K D.𝔞 a b
     ringCon K D.𝔞 (D.bracketAux x a) (D.bracketAux x b) :=
   mkAlgHom_eq_mkAlgHom.mp (D.mkAlgHom_bracketAux_eq_of_ringCon x a b h)
 
-instance : LieRingModule D.𝔥 (UniversalEnvelopingAlgebra K D.𝔞) where
+instance : Bracket D.𝔥 (UniversalEnvelopingAlgebra K D.𝔞) where
   bracket x := tensorLift (mkAlgHom K D.𝔞 ∘ D.bracketAux x) (D.mkAlgHom_bracketAux_eq_of_ringCon x)
-  add_lie x y a := by
-    cases a with | mkAlgHom a
-    simp_rw [tensorLift_mkAlgHom, comp_apply, bracketAux_add_left, map_add]
-  lie_add x a b := by
-    cases a with | mkAlgHom a
-    cases b with | mkAlgHom b
-    conv_lhs => rw [← map_add, tensorLift_mkAlgHom, comp_apply, map_add, map_add]
-    conv_rhs => rw [tensorLift_mkAlgHom, tensorLift_mkAlgHom, comp_apply, comp_apply]
-  leibniz_lie x y a := by
-    cases a with | mkAlgHom a
-    simp only [tensorLift_mkAlgHom, comp_apply, bracketAux_lie_left, map_sub]
-    noncomm_ring
 
 lemma bracket_𝔥_def (x : D.𝔥) (a : UniversalEnvelopingAlgebra K D.𝔞) :
     ⁅x, a⁆ =
       tensorLift (mkAlgHom K D.𝔞 ∘ D.bracketAux x) (D.mkAlgHom_bracketAux_eq_of_ringCon x) a :=
   rfl
 
+lemma bracket_𝔥_mkAlgHom (x : D.𝔥) (a : TensorAlgebra K D.𝔞) :
+    ⁅x, mkAlgHom K D.𝔞 a⁆ = mkAlgHom K D.𝔞 (D.bracketAux x a) := by
+  simp [bracket_𝔥_def]
+
+instance : LieRingModule D.𝔥 (UniversalEnvelopingAlgebra K D.𝔞) where
+  add_lie x y a := by
+    cases a with | mkAlgHom a; simp [bracket_𝔥_mkAlgHom, bracketAux_add_left]
+  lie_add x a b := by
+    cases a with | mkAlgHom a
+    cases b with | mkAlgHom b
+    simp_rw [← map_add, bracket_𝔥_mkAlgHom, map_add]
+  leibniz_lie x y a := by
+    cases a with | mkAlgHom a; simp [bracket_𝔥_mkAlgHom, bracketAux_lie_left]
+
 instance : LieModule K D.𝔥 (UniversalEnvelopingAlgebra K D.𝔞) where
   smul_lie t x a := by
-    cases a with | mkAlgHom a
-    simp_rw [bracket_𝔥_def, tensorLift_mkAlgHom, comp_apply, bracketAux_smul_left, map_smul]
+    cases a with | mkAlgHom a; simp [bracket_𝔥_mkAlgHom, bracketAux_smul_left]
   lie_smul t x a := by
     cases a with | mkAlgHom a
-    conv_lhs => rw [bracket_𝔥_def, ← map_smul, tensorLift_mkAlgHom, comp_apply, map_smul, map_smul]
-    conv_rhs => rw [bracket_𝔥_def, tensorLift_mkAlgHom, comp_apply]
+    simp_rw [← map_smul, bracket_𝔥_mkAlgHom, map_smul]
+
+@[simp]
+lemma bracket_𝔥_mul (x : D.𝔥) (a b : UniversalEnvelopingAlgebra K D.𝔞) :
+    ⁅x, a * b⁆ = a * ⁅x, b⁆ + ⁅x, a⁆ * b := by
+  cases a with | mkAlgHom a
+  cases b with | mkAlgHom b
+  simp_rw [← map_mul, bracket_𝔥_mkAlgHom, bracketAux_mul]
+  simp
+
+@[simp]
+lemma bracket_𝔥_ι (x : D.𝔥) (y : D.𝔞) :
+    ⁅x, UniversalEnvelopingAlgebra.ι K y⁆ = UniversalEnvelopingAlgebra.ι K ⁅x, y⁆ := by
+  simp [bracket_𝔥_mkAlgHom]
+
+-- encapsulate the type defeq hell in this lemma
+lemma existsUnique_add_prod (x : 𝔫) : ∃! p : D.𝔞 × D.𝔥, (p.1 : 𝔫) + p.2 = x :=
+  Submodule.existsUnique_add_of_isCompl_prod D.isCompl_toSubmodule x
 
 end NilStepAdoData
 
@@ -326,6 +358,8 @@ def PreNilStepAdoSpace (D : NilStepAdoData K 𝔫) :=
 deriving AddCommGroup, Module K
 
 namespace PreNilStepAdoSpace
+
+open UniversalEnvelopingAlgebra (ι)
 
 variable {D : NilStepAdoData K 𝔫}
 
@@ -341,25 +375,11 @@ protected def rec {motive : PreNilStepAdoSpace D → Sort*} :
     (equiv : Π a, motive (equiv a)) → Π a, motive a :=
   fun equiv' a ↦ equiv' (equiv.symm a)
 
-noncomputable instance : LieRingModule 𝔫 (PreNilStepAdoSpace D) where
+noncomputable instance : Bracket 𝔫 (PreNilStepAdoSpace D) where
   bracket x := LinearEquiv.conj equiv
     (LinearMap.ofIsCompl D.isCompl_toSubmodule
       (toEnd K D.𝔞 (UniversalEnvelopingAlgebra K D.𝔞) ∘ₗ D.𝔞.toSubmoduleEquiv.toLinearMap)
         (toEnd K D.𝔥 (UniversalEnvelopingAlgebra K D.𝔞) ∘ₗ D.𝔥.toSubmoduleEquiv.toLinearMap) x)
-  add_lie x y a := by simp
-  lie_add x a b := by simp
-  leibniz_lie x y a := by
-    obtain ⟨⟨x₁, x₂⟩, (rfl : (x₁ : 𝔫) + x₂ = x)⟩ :=
-      Submodule.existsUnique_add_of_isCompl_prod D.isCompl_toSubmodule x |>.exists
-    obtain ⟨x₁, rfl⟩ := D.𝔞.toSubmoduleEquiv.symm.surjective x₁
-    obtain ⟨x₂, rfl⟩ := D.𝔥.toSubmoduleEquiv.symm.surjective x₂
-    obtain ⟨⟨y₁, y₂⟩, (rfl : (y₁ : 𝔫) + y₂ = y)⟩ :=
-      Submodule.existsUnique_add_of_isCompl_prod D.isCompl_toSubmodule y |>.exists
-    obtain ⟨y₁, rfl⟩ := D.𝔞.toSubmoduleEquiv.symm.surjective y₁
-    obtain ⟨y₂, rfl⟩ := D.𝔥.toSubmoduleEquiv.symm.surjective y₂
-    cases a with | equiv a
-    simp
-    sorry
 
 lemma bracket_def (x : 𝔫) (a : PreNilStepAdoSpace D) :
     ⁅x, a⁆ = LinearEquiv.conj equiv
@@ -369,8 +389,78 @@ lemma bracket_def (x : 𝔫) (a : PreNilStepAdoSpace D) :
             a :=
   rfl
 
+-- encapsulate the type defeq hell in this lemma
+@[simp]
+lemma bracket_𝔞 (x : D.𝔞) (a : PreNilStepAdoSpace D) : ⁅(x : 𝔫), a⁆ = equiv ⁅x, equiv.symm a⁆ := by
+  simp only [bracket_def, LinearMap.ofIsCompl_apply_left, LinearMap.coe_comp, coe_toLinearMap,
+    LinearEquiv.coe_coe, Function.comp_apply, LinearEquiv.conj_apply_apply, toEnd_apply_apply,
+    bracket_eq, ι_apply, EmbeddingLike.apply_eq_iff_eq]
+  rfl
+
+-- encapsulate the type defeq hell in this lemma
+@[simp]
+lemma bracket_𝔥 (x : D.𝔥) (a : PreNilStepAdoSpace D) : ⁅(x : 𝔫), a⁆ = equiv ⁅x, equiv.symm a⁆ := by
+  simp only [bracket_def, LinearMap.ofIsCompl_apply_right, LinearMap.coe_comp, coe_toLinearMap,
+    LinearEquiv.coe_coe, Function.comp_apply, LinearEquiv.conj_apply_apply, toEnd_apply_apply,
+    EmbeddingLike.apply_eq_iff_eq]
+  rfl
+
+protected lemma add_lie (x y : 𝔫) (a : PreNilStepAdoSpace D) : ⁅x + y, a⁆ = ⁅x, a⁆ + ⁅y, a⁆ := by
+  simp [bracket_def]
+
+protected lemma smul_lie (t : K) (x : 𝔫) (a : PreNilStepAdoSpace D) : ⁅t • x, a⁆ = t • ⁅x, a⁆ := by
+  simp [bracket_def]
+
+protected lemma neg_lie (x : 𝔫) (a : PreNilStepAdoSpace D) : ⁅-x, a⁆ = -⁅x, a⁆ := by
+  simpa using smul_lie (-1 : K) x a
+
+noncomputable instance : LieRingModule 𝔫 (PreNilStepAdoSpace D) where
+  add_lie := PreNilStepAdoSpace.add_lie
+  lie_add x a b := by simp [bracket_def]
+  leibniz_lie x y a := by
+    conv => equals ⁅⁅x, y⁆, a⁆ = ⁅x, ⁅y, a⁆⁆ - ⁅y, ⁅x, a⁆⁆ => grind only
+    obtain ⟨⟨x₁, x₂⟩, rfl⟩ := D.existsUnique_add_prod x |>.exists
+    obtain ⟨⟨y₁, y₂⟩, rfl⟩ := D.existsUnique_add_prod y |>.exists
+    cases a with | equiv a
+    conv => equals
+        ⁅⁅(x₁ : 𝔫), (y₁ : 𝔫)⁆, equiv a⁆ + ⁅⁅(x₂ : 𝔫), (y₁ : 𝔫)⁆, equiv a⁆ +
+          ⁅⁅(x₁ : 𝔫), (y₂ : 𝔫)⁆, equiv a⁆ + ⁅⁅(x₂ : 𝔫), (y₂ : 𝔫)⁆, equiv a⁆ =
+          equiv ⁅x₁, ⁅y₁, a⁆⁆ + equiv ⁅x₁, ⁅y₂, a⁆⁆ + equiv ⁅x₂, ⁅y₁, a⁆⁆ + equiv ⁅x₂, ⁅y₂, a⁆⁆ -
+          (equiv ⁅y₁, ⁅x₁, a⁆⁆ + equiv ⁅y₁, ⁅x₂, a⁆⁆ + equiv ⁅y₂, ⁅x₁, a⁆⁆ + equiv ⁅y₂, ⁅x₂, a⁆⁆) =>
+      simp [PreNilStepAdoSpace.add_lie, - ι_apply, - bracket_eq, ← add_assoc]
+    conv_lhs =>
+      conv =>
+        enter [1, 1, 1]
+        equals equiv ⁅x₁, ⁅y₁, a⁆⁆ - equiv ⁅y₁, ⁅x₁, a⁆⁆ =>
+          simp_rw [← LieIdeal.coe_bracket, bracket_𝔞, lie_lie]; simp
+      conv =>
+        enter [2]
+        equals equiv ⁅x₂, ⁅y₂, a⁆⁆ - equiv ⁅y₂, ⁅x₂, a⁆⁆ =>
+          simp_rw [← LieSubalgebra.coe_bracket, bracket_𝔥, lie_lie]; simp
+    conv => equals
+        ⁅⁅(x₂ : 𝔫), (y₁ : 𝔫)⁆, equiv a⁆ + ⁅⁅(x₁ : 𝔫), (y₂ : 𝔫)⁆, equiv a⁆ =
+          equiv ⁅x₁, ⁅y₂, a⁆⁆ + equiv ⁅x₂, ⁅y₁, a⁆⁆ - (equiv ⁅y₁, ⁅x₂, a⁆⁆ + equiv ⁅y₂, ⁅x₁, a⁆⁆) =>
+      grind only
+    conv_lhs =>
+      conv =>
+        enter [1]
+        rw [← LieSubmodule.coe_bracket, bracket_𝔞, LinearEquiv.symm_apply_apply, bracket_eq]
+      conv =>
+        enter [2]
+        rw [← lie_skew, PreNilStepAdoSpace.neg_lie, ← LieSubmodule.coe_bracket, bracket_𝔞,
+          LinearEquiv.symm_apply_apply, bracket_eq]
+    conv_rhs =>
+      simp only [bracket_eq]
+      conv =>
+        enter [1, 2]
+        rw [D.bracket_𝔥_mul, map_add, D.bracket_𝔥_ι, LieSubalgebra.coe_bracket_of_module]
+      conv =>
+        enter [2, 2]
+        rw [D.bracket_𝔥_mul, map_add, D.bracket_𝔥_ι, LieSubalgebra.coe_bracket_of_module]
+    noncomm_ring
+
 instance : LieModule K 𝔫 (PreNilStepAdoSpace D) where
-  smul_lie t x a := by simp [bracket_def]
+  smul_lie := PreNilStepAdoSpace.smul_lie
   lie_smul t x a := by simp [bracket_def]
 
 end PreNilStepAdoSpace
