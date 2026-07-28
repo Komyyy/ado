@@ -14,29 +14,13 @@ public import Ado.ForMathlib.LieHom
 public import Ado.ForMathlib.DirectSum
 public import Ado.ForMathlib.FinAdd
 public import Ado.ForMathlib.TensorAlgebra
+public import Ado.ForMathlib.LieIdealCoe
 public import Ado.LieAbelian
 public import Ado.UniversalEnvelopingAlgebraTrick
 
 /-!
 ## 冪零 Lie 代数に対する Ado の定理
 -/
-
-section ForMathlib
-
-public section LieIdealCoe
-
-namespace LieIdeal
-
-variable {R L : Type*} [CommRing R] [LieRing L] [LieAlgebra R L]
-
-lemma coe_bracket (I : LieIdeal R L) (x y : I) : (↑⁅x, y⁆ : L) = ⁅(↑x : L), (↑y : L)⁆ := by
-  simp
-
-end LieIdeal
-
-end LieIdealCoe
-
-end ForMathlib
 
 open Function Set Finset Module LieAlgebra LieModule LieSubmodule LieIdeal LieHom
 open TensorAlgebra hiding ringCon ι
