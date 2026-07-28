@@ -23,55 +23,6 @@ public import Ado.UniversalEnvelopingAlgebraTrick
 
 section ForMathlib
 
-@[expose] public section LieCoeEquiv
-
-/-!
-## `reducible` レベル下での型の不一致への対応策
-
-```lean4
-variable {R L : Type*} [CommRing R] [LieRing L] [LieAlgebra R L]
-
-example (s : LieIdeal R L) : ↥s = ↥s.toSubmodule := by
-  fail_if_success with_reducible rfl
-  with_reducible_and_instances rfl
-```
-
-本来これは `reducible` 下で defeq となって欲しいが、`↥s := { x // x ∈ s }` と定義されており、
-`Membership` インスタンスが `reducible` 下で defeq にならず、構造体の射影に本来ある `reducible` 下での
-defeq が享受できていない。このため、インスタンス合成が絡む箇所で問題を起こしている。修正されるまで、以下の
-補助定義を用いる。
--/
-
-variable {R L : Type*} [CommRing R] [LieRing L] [LieAlgebra R L]
-
-example (s : LieIdeal R L) : ↥s = ↥s.toSubmodule := by
-  fail_if_success with_reducible rfl
-  with_reducible_and_instances rfl
-
-namespace LieSubalgebra
-
-@[simps]
-def toSubmoduleEquiv (s : LieSubalgebra R L) : s.toSubmodule ≃ₗ[R] s where
-  toFun x := ⟨x.1, x.2⟩
-  invFun x := ⟨x.1, x.2⟩
-  map_add' _ _ := rfl
-  map_smul' _ _ := rfl
-
-end LieSubalgebra
-
-namespace LieIdeal
-
-@[simps]
-def toSubmoduleEquiv (s : LieIdeal R L) : s.toSubmodule ≃ₗ[R] s where
-  toFun x := ⟨x.1, x.2⟩
-  invFun x := ⟨x.1, x.2⟩
-  map_add' _ _ := rfl
-  map_smul' _ _ := rfl
-
-end LieIdeal
-
-end LieCoeEquiv
-
 public section LieIdealCoe
 
 namespace LieIdeal
@@ -347,6 +298,28 @@ lemma bracket_𝔥_ι (x : D.𝔥) (y : D.𝔞) :
     ⁅x, UniversalEnvelopingAlgebra.ι K y⁆ = UniversalEnvelopingAlgebra.ι K ⁅x, y⁆ := by
   simp [bracket_𝔥_mkAlgHom]
 
+/-!
+## `reducible` レベル下での型の不一致への対応策
+
+```lean4
+variable {R L : Type*} [CommRing R] [LieRing L] [LieAlgebra R L]
+
+example (s : LieIdeal R L) : ↥s = ↥s.toSubmodule := by
+  fail_if_success with_reducible rfl
+  with_reducible_and_instances rfl
+```
+
+本来これは `reducible` 下で defeq となって欲しいが、`↥s := { x // x ∈ s }` と定義されており、
+`Membership` インスタンスが `reducible` 下で defeq にならず、構造体の射影に本来ある `reducible` 下での
+defeq が享受できていない。このため、インスタンス合成が絡む箇所で問題を起こしている。修正されるまで、以下の
+補助補題を用いる。
+-/
+
+variable {R L : Type*} [CommRing R] [LieRing L] [LieAlgebra R L] in
+example (s : LieIdeal R L) : ↥s = ↥s.toSubmodule := by
+  fail_if_success with_reducible rfl
+  with_reducible_and_instances rfl
+
 -- encapsulate the type defeq hell in this lemma
 lemma existsUnique_add_prod (x : 𝔫) : ∃! p : D.𝔞 × D.𝔥, (p.1 : 𝔫) + p.2 = x :=
   Submodule.existsUnique_add_of_isCompl_prod D.isCompl_toSubmodule x
@@ -378,31 +351,28 @@ protected def rec {motive : PreNilStepAdoSpace D → Sort*} :
 noncomputable instance : Bracket 𝔫 (PreNilStepAdoSpace D) where
   bracket x := LinearEquiv.conj equiv
     (LinearMap.ofIsCompl D.isCompl_toSubmodule
-      (toEnd K D.𝔞 (UniversalEnvelopingAlgebra K D.𝔞) ∘ₗ D.𝔞.toSubmoduleEquiv.toLinearMap)
-        (toEnd K D.𝔥 (UniversalEnvelopingAlgebra K D.𝔞) ∘ₗ D.𝔥.toSubmoduleEquiv.toLinearMap) x)
+      (toEnd K D.𝔞 (UniversalEnvelopingAlgebra K D.𝔞))
+        (toEnd K D.𝔥 (UniversalEnvelopingAlgebra K D.𝔞)) x)
 
 lemma bracket_def (x : 𝔫) (a : PreNilStepAdoSpace D) :
     ⁅x, a⁆ = LinearEquiv.conj equiv
       (LinearMap.ofIsCompl D.isCompl_toSubmodule
-        (toEnd K D.𝔞 (UniversalEnvelopingAlgebra K D.𝔞) ∘ₗ D.𝔞.toSubmoduleEquiv.toLinearMap)
-          (toEnd K D.𝔥 (UniversalEnvelopingAlgebra K D.𝔞) ∘ₗ D.𝔥.toSubmoduleEquiv.toLinearMap) x)
-            a :=
+        (toEnd K D.𝔞 (UniversalEnvelopingAlgebra K D.𝔞))
+          (toEnd K D.𝔥 (UniversalEnvelopingAlgebra K D.𝔞)) x) a :=
   rfl
 
 -- encapsulate the type defeq hell in this lemma
 @[simp]
 lemma bracket_𝔞 (x : D.𝔞) (a : PreNilStepAdoSpace D) : ⁅(x : 𝔫), a⁆ = equiv ⁅x, equiv.symm a⁆ := by
-  simp only [bracket_def, LinearMap.ofIsCompl_apply_left, LinearMap.coe_comp, coe_toLinearMap,
-    LinearEquiv.coe_coe, Function.comp_apply, LinearEquiv.conj_apply_apply, toEnd_apply_apply,
-    bracket_eq, ι_apply, EmbeddingLike.apply_eq_iff_eq]
+  simp only [bracket_def, LinearMap.ofIsCompl_apply_left, coe_toLinearMap,
+    LinearEquiv.conj_apply_apply, bracket_eq, ι_apply, EmbeddingLike.apply_eq_iff_eq]
   rfl
 
 -- encapsulate the type defeq hell in this lemma
 @[simp]
 lemma bracket_𝔥 (x : D.𝔥) (a : PreNilStepAdoSpace D) : ⁅(x : 𝔫), a⁆ = equiv ⁅x, equiv.symm a⁆ := by
-  simp only [bracket_def, LinearMap.ofIsCompl_apply_right, LinearMap.coe_comp, coe_toLinearMap,
-    LinearEquiv.coe_coe, Function.comp_apply, LinearEquiv.conj_apply_apply, toEnd_apply_apply,
-    EmbeddingLike.apply_eq_iff_eq]
+  simp only [bracket_def, LinearMap.ofIsCompl_apply_right, coe_toLinearMap,
+    LinearEquiv.conj_apply_apply, EmbeddingLike.apply_eq_iff_eq]
   rfl
 
 protected lemma add_lie (x y : 𝔫) (a : PreNilStepAdoSpace D) : ⁅x + y, a⁆ = ⁅x, a⁆ + ⁅y, a⁆ := by
