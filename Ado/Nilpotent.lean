@@ -364,8 +364,9 @@ noncomputable instance : LieRingModule 𝔫 (PreNilStepAdoSpace D) where
 lemma bracket_def (x : 𝔫) (a : PreNilStepAdoSpace D) :
     ⁅x, a⁆ = LinearEquiv.conj equiv
       (LinearMap.ofIsCompl D.isCompl_toSubmodule
-        (toEnd K D.𝔞 (UniversalEnvelopingAlgebra K D.𝔞))
-          (toEnd K D.𝔥 (UniversalEnvelopingAlgebra K D.𝔞)) x) a :=
+        (toEnd K D.𝔞 (UniversalEnvelopingAlgebra K D.𝔞) ∘ₗ D.𝔞.toSubmoduleEquiv.toLinearMap)
+          (toEnd K D.𝔥 (UniversalEnvelopingAlgebra K D.𝔞) ∘ₗ D.𝔥.toSubmoduleEquiv.toLinearMap) x)
+            a :=
   rfl
 
 instance : LieModule K 𝔫 (PreNilStepAdoSpace D) where
