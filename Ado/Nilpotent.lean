@@ -376,7 +376,8 @@ instance : LieModule K 𝔫 (PreNilStepAdoSpace D) where
 end PreNilStepAdoSpace
 
 set_option backward.privateInPublic true in
-axiom NilStepAdoData.isAdo (D : NilStepAdoData K 𝔫) : IsAdo K 𝔫
+set_option backward.privateInPublic.warn false in
+public axiom NilStepAdoData.isAdo (D : NilStepAdoData K 𝔫) : IsAdo K 𝔫
 
 public lemma LieAlgebra.IsAdo.of_isNilpotent : IsAdo K 𝔫 := by
   generalize hn : finrank K 𝔫 = n
