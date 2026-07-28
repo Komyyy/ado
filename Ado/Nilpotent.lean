@@ -439,7 +439,7 @@ set_option backward.privateInPublic true in
 set_option backward.privateInPublic.warn false in
 public axiom NilStepAdoData.isAdo (D : NilStepAdoData K 𝔫) : IsAdo K 𝔫
 
-public lemma LieAlgebra.IsAdo.of_isNilpotent : IsAdo K 𝔫 := by
+public instance LieAlgebra.IsAdo.of_isNilpotent : IsAdo K 𝔫 := by
   generalize hn : finrank K 𝔫 = n
   induction n generalizing 𝔫 with
   | zero => rw [finrank_zero_iff] at hn; exact .intro Unit
