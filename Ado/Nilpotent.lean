@@ -22,6 +22,10 @@ public import Ado.UniversalEnvelopingAlgebraTrick
 ## 冪零 Lie 代数に対する Ado の定理
 -/
 
+-- 公理を公開する為のみに使用
+set_option backward.privateInPublic true
+set_option backward.privateInPublic.warn false
+
 open Function Set Finset Module LieAlgebra LieModule LieSubmodule LieIdeal LieHom
 open TensorAlgebra hiding ringCon ι
 open UniversalEnvelopingAlgebra hiding ι
@@ -312,7 +316,7 @@ end NilStepAdoData
 
 def PreNilStepAdoSpace (D : NilStepAdoData K 𝔫) :=
   UniversalEnvelopingAlgebra K D.𝔞
-deriving AddCommGroup, Module K
+deriving Ring, Algebra K
 
 namespace PreNilStepAdoSpace
 
@@ -320,8 +324,8 @@ open UniversalEnvelopingAlgebra (ι)
 
 variable {D : NilStepAdoData K 𝔫}
 
-def equiv : UniversalEnvelopingAlgebra K D.𝔞 ≃ₗ[K] PreNilStepAdoSpace D :=
-  LinearEquiv.refl K (UniversalEnvelopingAlgebra K D.𝔞)
+def equiv : UniversalEnvelopingAlgebra K D.𝔞 ≃ₐ[K] PreNilStepAdoSpace D :=
+  AlgEquiv.refl (R := K) (A₁ := UniversalEnvelopingAlgebra K D.𝔞)
 
 @[ext]
 lemma ext {p q : PreNilStepAdoSpace D} (h : equiv.symm p = equiv.symm q) : p = q := by
@@ -333,13 +337,13 @@ protected def rec {motive : PreNilStepAdoSpace D → Sort*} :
   fun equiv' a ↦ equiv' (equiv.symm a)
 
 noncomputable instance : Bracket 𝔫 (PreNilStepAdoSpace D) where
-  bracket x := LinearEquiv.conj equiv
+  bracket x := LinearEquiv.conj equiv.toLinearEquiv
     (LinearMap.ofIsCompl D.isCompl_toSubmodule
       (toEnd K D.𝔞 (UniversalEnvelopingAlgebra K D.𝔞))
         (toEnd K D.𝔥 (UniversalEnvelopingAlgebra K D.𝔞)) x)
 
 lemma bracket_def (x : 𝔫) (a : PreNilStepAdoSpace D) :
-    ⁅x, a⁆ = LinearEquiv.conj equiv
+    ⁅x, a⁆ = LinearEquiv.conj equiv.toLinearEquiv
       (LinearMap.ofIsCompl D.isCompl_toSubmodule
         (toEnd K D.𝔞 (UniversalEnvelopingAlgebra K D.𝔞))
           (toEnd K D.𝔥 (UniversalEnvelopingAlgebra K D.𝔞)) x) a :=
@@ -349,14 +353,14 @@ lemma bracket_def (x : 𝔫) (a : PreNilStepAdoSpace D) :
 @[simp]
 lemma bracket_𝔞 (x : D.𝔞) (a : PreNilStepAdoSpace D) : ⁅(x : 𝔫), a⁆ = equiv ⁅x, equiv.symm a⁆ := by
   simp only [bracket_def, LinearMap.ofIsCompl_apply_left, coe_toLinearMap,
-    LinearEquiv.conj_apply_apply, bracket_eq, ι_apply, EmbeddingLike.apply_eq_iff_eq]
+    LinearEquiv.conj_apply_apply, bracket_eq, ι_apply]
   rfl
 
 -- encapsulate the type defeq hell in this lemma
 @[simp]
 lemma bracket_𝔥 (x : D.𝔥) (a : PreNilStepAdoSpace D) : ⁅(x : 𝔫), a⁆ = equiv ⁅x, equiv.symm a⁆ := by
   simp only [bracket_def, LinearMap.ofIsCompl_apply_right, coe_toLinearMap,
-    LinearEquiv.conj_apply_apply, EmbeddingLike.apply_eq_iff_eq]
+    LinearEquiv.conj_apply_apply]
   rfl
 
 protected lemma add_lie (x y : 𝔫) (a : PreNilStepAdoSpace D) : ⁅x + y, a⁆ = ⁅x, a⁆ + ⁅y, a⁆ := by
@@ -398,11 +402,11 @@ noncomputable instance : LieRingModule 𝔫 (PreNilStepAdoSpace D) where
     conv_lhs =>
       conv =>
         enter [1]
-        rw [← LieSubmodule.coe_bracket, bracket_𝔞, LinearEquiv.symm_apply_apply, bracket_eq]
+        rw [← LieSubmodule.coe_bracket, bracket_𝔞, AlgEquiv.symm_apply_apply, bracket_eq]
       conv =>
         enter [2]
         rw [← lie_skew, PreNilStepAdoSpace.neg_lie, ← LieSubmodule.coe_bracket, bracket_𝔞,
-          LinearEquiv.symm_apply_apply, bracket_eq]
+          AlgEquiv.symm_apply_apply, bracket_eq]
     conv_rhs =>
       simp only [bracket_eq]
       conv =>
@@ -419,8 +423,10 @@ instance : LieModule K 𝔫 (PreNilStepAdoSpace D) where
 
 end PreNilStepAdoSpace
 
-set_option backward.privateInPublic true in
-set_option backward.privateInPublic.warn false in
+protected def NilStepAdoData.I (D : NilStepAdoData K 𝔫) : TwoSidedIdeal (PreNilStepAdoSpace D) :=
+  .map PreNilStepAdoSpace.equiv.toAlgHom (.map (mkAlgHom K D.𝔞)
+    (.span (range (TensorPower.toTensorAlgebra (n := nilpotencyLength D.𝔞 (AdoSpace K D.𝔞))))))
+
 public axiom NilStepAdoData.isAdo (D : NilStepAdoData K 𝔫) : IsAdo K 𝔫
 
 public instance LieAlgebra.IsAdo.of_isNilpotent : IsAdo K 𝔫 := by
