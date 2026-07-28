@@ -282,7 +282,7 @@ lemma bracket_𝔥_ι (x : D.𝔥) (y : D.𝔞) :
     ⁅x, UniversalEnvelopingAlgebra.ι K y⁆ = UniversalEnvelopingAlgebra.ι K ⁅x, y⁆ := by
   simp [bracket_𝔥_mkAlgHom]
 
-/-!
+/-
 ## `reducible` レベル下での型の不一致への対応策
 
 ```lean4
