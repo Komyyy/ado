@@ -286,6 +286,65 @@ lemma bracket_𝔥_ι (x : D.𝔥) (y : D.𝔞) :
     ⁅x, UniversalEnvelopingAlgebra.ι K y⁆ = UniversalEnvelopingAlgebra.ι K ⁅x, y⁆ := by
   simp [bracket_𝔥_mkAlgHom]
 
+def nilSubmodule : Submodule K (UniversalEnvelopingAlgebra K D.𝔞) :=
+  Submodule.map (mkAlgHom K D.𝔞).toLinearMap
+    (⨆ k ≥ nilpotencyLength D.𝔞 (AdoSpace K D.𝔞),
+      LinearMap.range (TensorPower.toTensorAlgebra (n := k)))
+
+@[simp]
+lemma mkAlgHom_tprod_mem_nilSubmodule {n} (f : Fin n → D.𝔞)
+    (hn : nilpotencyLength D.𝔞 (AdoSpace K D.𝔞) ≤ n) :
+    mkAlgHom K D.𝔞 (TensorAlgebra.tprod K D.𝔞 n f) ∈ D.nilSubmodule := by
+  unfold nilSubmodule
+  apply Submodule.mem_map_of_mem
+  apply Submodule.mem_iSup_of_mem n
+  apply Submodule.mem_iSup_of_mem hn
+  convert LinearMap.mem_range_self _ (PiTensorProduct.tprod K f)
+  simp
+
+@[simp]
+lemma bracket_𝔥_mem_nilSubmodule_of_mem (x : D.𝔥) (a) (ha : a ∈ D.nilSubmodule) :
+    ⁅x, a⁆ ∈ D.nilSubmodule := by
+  revert a
+  suffices h :
+      Submodule.map (toEnd K D.𝔥 (UniversalEnvelopingAlgebra K D.𝔞) x) D.nilSubmodule
+        ≤ D.nilSubmodule by
+    rw [Submodule.map_le_iff_le_comap] at h
+    simpa [SetLike.le_def] using h
+  conv_lhs => rw [nilSubmodule, ← Submodule.map_comp]
+  simp_rw [Submodule.map_le_iff_le_comap, iSup₂_le_iff, LinearMap.range_le_iff_comap,
+    eq_top_iff, ← PiTensorProduct.span_tprod_eq_top, Submodule.span_le, range_subset_iff]
+  intro n hn f
+  conv => equals ∑ i : Fin n,
+      mkAlgHom K D.𝔞 (TensorAlgebra.tprod K D.𝔞 n (update f i ⁅x, f i⁆)) ∈ D.nilSubmodule =>
+    simp [bracket_𝔥_mkAlgHom, - TensorAlgebra.tprod_apply]
+  apply Submodule.sum_mem
+  rintro i -
+  exact D.mkAlgHom_tprod_mem_nilSubmodule _ hn
+
+@[simp]
+lemma ι_mul_mem_nilSubmodule_of_mem (x : D.𝔞) (a) (ha : a ∈ D.nilSubmodule) :
+    UniversalEnvelopingAlgebra.ι K x * a ∈ D.nilSubmodule := by
+  revert a
+  suffices h :
+      Submodule.map (LinearMap.mul K _ (UniversalEnvelopingAlgebra.ι K x)) D.nilSubmodule
+        ≤ D.nilSubmodule by
+    rw [Submodule.map_le_iff_le_comap] at h
+    simpa [SetLike.le_def] using h
+  conv_lhs => rw [nilSubmodule, ← Submodule.map_comp]
+  simp_rw [Submodule.map_le_iff_le_comap, iSup₂_le_iff, LinearMap.range_le_iff_comap,
+    eq_top_iff, ← PiTensorProduct.span_tprod_eq_top, Submodule.span_le, range_subset_iff]
+  intro n hn f
+  conv => equals
+      mkAlgHom K D.𝔞 (TensorAlgebra.tprod K D.𝔞 (n + 1) (Fin.cons x f)) ∈ D.nilSubmodule =>
+    simp
+  exact D.mkAlgHom_tprod_mem_nilSubmodule _ (by lia)
+
+lemma bracket_𝔞_mem_nilSubmodule_of_mem (x : D.𝔞) (a) (ha : a ∈ D.nilSubmodule) :
+    ⁅x, a⁆ ∈ D.nilSubmodule := by
+  rw [bracket_eq]
+  exact D.ι_mul_mem_nilSubmodule_of_mem x a ha
+
 /-
 ## `reducible` レベル下での型の不一致への対応策
 
@@ -318,9 +377,9 @@ def PreNilStepAdoSpace (D : NilStepAdoData K 𝔫) :=
   UniversalEnvelopingAlgebra K D.𝔞
 deriving Ring, Algebra K
 
-namespace PreNilStepAdoSpace
-
 open UniversalEnvelopingAlgebra (ι)
+
+namespace PreNilStepAdoSpace
 
 variable {D : NilStepAdoData K 𝔫}
 
@@ -423,11 +482,44 @@ instance : LieModule K 𝔫 (PreNilStepAdoSpace D) where
 
 end PreNilStepAdoSpace
 
-protected def NilStepAdoData.I (D : NilStepAdoData K 𝔫) : TwoSidedIdeal (PreNilStepAdoSpace D) :=
-  .map PreNilStepAdoSpace.equiv.toAlgHom (.map (mkAlgHom K D.𝔞)
-    (.span (range (TensorPower.toTensorAlgebra (n := nilpotencyLength D.𝔞 (AdoSpace K D.𝔞))))))
+open PreNilStepAdoSpace
 
-public axiom NilStepAdoData.isAdo (D : NilStepAdoData K 𝔫) : IsAdo K 𝔫
+namespace NilStepAdoData
+
+variable (D : NilStepAdoData K 𝔫)
+
+def nilLieSubmodule : LieSubmodule K 𝔫 (PreNilStepAdoSpace D) where
+  toSubmodule := Submodule.map equiv.toLinearMap D.nilSubmodule
+  lie_mem {x a} ha := by
+    obtain ⟨⟨x₁, x₂⟩, rfl⟩ := D.existsUnique_add_prod x |>.exists
+    cases a with | equiv a
+    conv at ha => equals a ∈ D.nilSubmodule => simp
+    conv => equals ι K x₁ * a + ⁅x₂, a⁆ ∈ D.nilSubmodule =>
+      rw [Submodule.mem_carrier, SetLike.mem_coe]; simp
+    simp [- ι_apply, add_mem, ha]
+
+end NilStepAdoData
+
+abbrev NilStepAdoSpace (D : NilStepAdoData K 𝔫) :=
+  PreNilStepAdoSpace D ⧸ D.nilLieSubmodule
+
+namespace NilStepAdoSpace
+
+variable (D : NilStepAdoData K 𝔫)
+
+@[instance]
+public axiom instFiniteDimensional : FiniteDimensional K (NilStepAdoSpace D)
+
+@[instance]
+public axiom instIsFaithful : IsFaithful K 𝔫 (NilStepAdoSpace D)
+
+@[instance]
+public axiom instIsNilpotent : IsNilpotent 𝔫 (NilStepAdoSpace D)
+
+end NilStepAdoSpace
+
+lemma NilStepAdoData.isAdo (D : NilStepAdoData K 𝔫) : IsAdo K 𝔫 :=
+  .intro (NilStepAdoSpace D)
 
 public instance LieAlgebra.IsAdo.of_isNilpotent : IsAdo K 𝔫 := by
   generalize hn : finrank K 𝔫 = n
