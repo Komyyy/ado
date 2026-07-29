@@ -345,6 +345,40 @@ lemma bracket_𝔞_mem_nilSubmodule_of_mem (x : D.𝔞) (a) (ha : a ∈ D.nilSub
   rw [bracket_eq]
   exact D.ι_mul_mem_nilSubmodule_of_mem x a ha
 
+instance : FiniteDimensional K (UniversalEnvelopingAlgebra K D.𝔞 ⧸ D.nilSubmodule) := by
+  -- `Submodule` を後で `open` した方がいいかな
+  suffices h : Submodule.map D.nilSubmodule.mkQ
+      (Submodule.map (mkAlgHom K D.𝔞).toLinearMap
+        (⨆ k < nilpotencyLength D.𝔞 (AdoSpace K D.𝔞),
+          LinearMap.range (TensorPower.toTensorAlgebra (n := k)))) = ⊤ by
+    simp_rw [Module.finite_def, ← h]
+    apply Submodule.FG.map
+    apply Submodule.FG.map
+    simp_rw [← Finset.mem_Iio]
+    apply Submodule.fg_biSup
+    rintro n -
+    apply Submodule.fg_range
+  suffices h : Submodule.map D.nilSubmodule.mkQ
+    (Submodule.map (mkAlgHom K D.𝔞).toLinearMap
+      (⨆ k ≥ nilpotencyLength D.𝔞 (AdoSpace K D.𝔞),
+        LinearMap.range (TensorPower.toTensorAlgebra (n := k)))) = ⊥ by
+    have hι := DirectSum.Decomposition.isInternal
+        (fun n : ℕ ↦ LinearMap.range (TensorAlgebra.ι K : D.𝔞 →ₗ[K] TensorAlgebra K D.𝔞) ^ n)
+    simp_rw [TensorAlgebra.ι_range_pow_eq] at hι
+    apply DirectSum.IsInternal.submodule_iSup_eq_top at hι
+    simp_rw +singlePass [iSup_split _ (· < nilpotencyLength D.𝔞 (AdoSpace K D.𝔞)), not_lt] at hι
+    apply_fun Submodule.map (mkAlgHom K D.𝔞).toLinearMap at hι
+    apply_fun Submodule.map D.nilSubmodule.mkQ at hι
+    simp_rw [Submodule.map_sup, h, sup_bot_eq, Submodule.map_top,
+      (mkAlgHom K D.𝔞).toLinearMap.range_eq_top_of_surjective (mkAlgHom_surjective _ _),
+      Submodule.map_top, Submodule.range_mkQ] at hι
+    exact hι
+  simp_rw +contextual [_root_.eq_bot_iff, Submodule.map_le_iff_le_comap, Submodule.comap_bot,
+    Submodule.ker_mkQ, iSup_le_iff, LinearMap.range_le_iff_comap, eq_top_iff,
+    ← PiTensorProduct.span_tprod_eq_top, Submodule.span_le, range_subset_iff, SetLike.mem_coe,
+    Submodule.mem_comap, AlgHom.toLinearMap_apply, TensorPower.toTensorAlgebra_tprod,
+    mkAlgHom_tprod_mem_nilSubmodule, forall_true_iff]
+
 /-
 ## `reducible` レベル下での型の不一致への対応策
 
