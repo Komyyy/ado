@@ -522,6 +522,7 @@ namespace NilStepAdoData
 
 variable (D : NilStepAdoData K 𝔫)
 
+@[simps toSubmodule]
 def nilLieSubmodule : LieSubmodule K 𝔫 (PreNilStepAdoSpace D) where
   toSubmodule := Submodule.map equiv.toLinearMap D.nilSubmodule
   lie_mem {x a} ha := by
@@ -541,8 +542,10 @@ namespace NilStepAdoSpace
 
 variable (D : NilStepAdoData K 𝔫)
 
-@[instance]
-public axiom instFiniteDimensional : FiniteDimensional K (NilStepAdoSpace D)
+instance instFiniteDimensional : FiniteDimensional K (NilStepAdoSpace D) :=
+  LinearEquiv.finiteDimensional <|
+    Submodule.Quotient.equiv D.nilSubmodule D.nilLieSubmodule.toSubmodule
+      PreNilStepAdoSpace.equiv.toLinearEquiv rfl
 
 @[instance]
 public axiom instIsFaithful : IsFaithful K 𝔫 (NilStepAdoSpace D)
