@@ -542,7 +542,7 @@ namespace NilStepAdoSpace
 
 variable (D : NilStepAdoData K 𝔫)
 
-instance instFiniteDimensional : FiniteDimensional K (NilStepAdoSpace D) :=
+instance : FiniteDimensional K (NilStepAdoSpace D) :=
   LinearEquiv.finiteDimensional <|
     Submodule.Quotient.equiv D.nilSubmodule D.nilLieSubmodule.toSubmodule
       PreNilStepAdoSpace.equiv.toLinearEquiv rfl
