@@ -548,7 +548,7 @@ instance instFiniteDimensional : FiniteDimensional K (NilStepAdoSpace D) :=
       PreNilStepAdoSpace.equiv.toLinearEquiv rfl
 
 @[instance]
-public axiom instIsFaithful : IsFaithful K 𝔫 (NilStepAdoSpace D)
+public axiom instIsFaithful : IsFaithful K (center K 𝔫) (NilStepAdoSpace D)
 
 @[instance]
 public axiom instIsNilpotent : IsNilpotent 𝔫 (NilStepAdoSpace D)
@@ -556,7 +556,7 @@ public axiom instIsNilpotent : IsNilpotent 𝔫 (NilStepAdoSpace D)
 end NilStepAdoSpace
 
 lemma NilStepAdoData.isAdo (D : NilStepAdoData K 𝔫) : IsAdo K 𝔫 :=
-  .intro (NilStepAdoSpace D)
+  .of_isNilpotent_of_isFaithful_center (NilStepAdoSpace D)
 
 public instance LieAlgebra.IsAdo.of_isNilpotent : IsAdo K 𝔫 := by
   generalize hn : finrank K 𝔫 = n
