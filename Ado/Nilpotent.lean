@@ -26,7 +26,8 @@ public import Ado.LieAbelian
 set_option backward.privateInPublic true
 set_option backward.privateInPublic.warn false
 
-open Function Set Finset Module LieAlgebra LieModule LieSubmodule LieIdeal LieHom
+open Function Set Finset LieAlgebra LieModule LieSubmodule LieIdeal LieHom
+open Module hiding Injective
 open TensorAlgebra hiding ringCon ι
 open UniversalEnvelopingAlgebra hiding ι
 
@@ -379,6 +380,17 @@ instance : FiniteDimensional K (UniversalEnvelopingAlgebra K D.𝔞 ⧸ D.nilSub
     Submodule.mem_comap, AlgHom.toLinearMap_apply, TensorPower.toTensorAlgebra_tprod,
     mkAlgHom_tprod_mem_nilSubmodule, forall_true_iff]
 
+public axiom nilSubmodule_le_ker_lift_toEnd_adoSpace :
+    D.nilSubmodule ≤ LinearMap.ker (lift K (toEnd K D.𝔞 (AdoSpace K D.𝔞))).toLinearMap
+
+lemma injective_quotient_mk_nilSubmodule :
+    Injective (fun x ↦
+      (Submodule.Quotient.mk (.ι K x) : UniversalEnvelopingAlgebra K D.𝔞 ⧸ D.nilSubmodule)) := by
+  apply Function.Injective.of_comp
+      (f := D.nilSubmodule.liftQ (lift K (toEnd K D.𝔞 (AdoSpace K D.𝔞))).toLinearMap
+        D.nilSubmodule_le_ker_lift_toEnd_adoSpace)
+  simpa [comp_def] using IsFaithful.injective_toEnd
+
 /-
 ## `reducible` レベル下での型の不一致への対応策
 
@@ -542,13 +554,40 @@ namespace NilStepAdoSpace
 
 variable (D : NilStepAdoData K 𝔫)
 
+@[simp]
+lemma quotient_equiv_mk (a : UniversalEnvelopingAlgebra K D.𝔞) :
+    Submodule.Quotient.equiv D.nilSubmodule D.nilLieSubmodule.toSubmodule
+      PreNilStepAdoSpace.equiv.toLinearEquiv rfl (Submodule.Quotient.mk a) =
+        (LieSubmodule.Quotient.mk (equiv a)) :=
+  rfl
+
 instance : FiniteDimensional K (NilStepAdoSpace D) :=
   LinearEquiv.finiteDimensional <|
     Submodule.Quotient.equiv D.nilSubmodule D.nilLieSubmodule.toSubmodule
       PreNilStepAdoSpace.equiv.toLinearEquiv rfl
 
-@[instance]
-public axiom instIsFaithful : IsFaithful K (center K 𝔫) (NilStepAdoSpace D)
+instance : IsFaithful K (center K 𝔫) (NilStepAdoSpace D) := by
+  suffices h : IsFaithful K D.𝔞 (NilStepAdoSpace D) by
+    rw [isFaithful_iff] at h ⊢
+    replace h := h.comp (LieSubmodule.inclusion_injective D.center_le_𝔞)
+    convert h using 1
+    ext x a
+    simp
+  suffices h :
+      Injective (fun x ↦ (LieSubmodule.Quotient.mk (equiv (ι K x)) : NilStepAdoSpace D)) by
+    rw [isFaithful_iff']
+    intro x hx
+    specialize hx (LieSubmodule.Quotient.mk 1)
+    simp_rw [coe_bracket_of_module, Quotient.lie_bracket_mk, bracket_𝔞, map_one, bracket_eq,
+      mul_one] at hx
+    conv_rhs at hx => equals LieSubmodule.Quotient.mk (equiv (ι K 0)) => simp
+    apply h at hx
+    exact hx
+  have h := D.injective_quotient_mk_nilSubmodule
+  apply (Submodule.Quotient.equiv D.nilSubmodule D.nilLieSubmodule.toSubmodule
+    PreNilStepAdoSpace.equiv.toLinearEquiv rfl).injective.comp at h
+  simp_rw [comp_def, quotient_equiv_mk] at h
+  exact h
 
 @[instance]
 public axiom instIsNilpotent : IsNilpotent 𝔫 (NilStepAdoSpace D)

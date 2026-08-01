@@ -41,6 +41,10 @@ variable {R L M M₂ : Type*} [CommRing R] [LieRing L] [AddCommGroup M] [AddComm
 variable [Module R M] [Module R M₂] [LieRingModule L M] [LieRingModule L M₂]
 variable [LieAlgebra R L] [LieModule R L M]
 
+@[simp]
+lemma lie_bracket_mk (N : LieSubmodule R L M) (x : L) (m : M) : ⁅x, (mk m : M ⧸ N)⁆ = mk ⁅x, m⁆ :=
+  rfl
+
 def lift (N : LieSubmodule R L M) (f : M →ₗ⁅R,L⁆ M₂) (h : N ≤ ker f) : M ⧸ N →ₗ⁅R,L⁆ M₂ where
   toLinearMap := N.toSubmodule.liftQ f.toLinearMap (by exact h)
   map_lie' {x m} := by
