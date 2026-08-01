@@ -15,8 +15,8 @@ public import Ado.ForMathlib.DirectSum
 public import Ado.ForMathlib.FinAdd
 public import Ado.ForMathlib.TensorAlgebra
 public import Ado.ForMathlib.LieIdealCoe
+public import Ado.ForMathlib.UniversalEnvelopingAlgebra
 public import Ado.LieAbelian
-public import Ado.UniversalEnvelopingAlgebraTrick
 
 /-!
 ## 冪零 Lie 代数に対する Ado の定理
