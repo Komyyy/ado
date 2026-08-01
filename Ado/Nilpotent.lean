@@ -303,6 +303,23 @@ lemma mkAlgHom_tprod_mem_nilSubmodule {n} (f : Fin n → D.𝔞)
   convert LinearMap.mem_range_self _ (PiTensorProduct.tprod K f)
   simp
 
+lemma nilSubmodule_eq_span_exists_eq_mkAlgHom_tprod :
+    D.nilSubmodule =
+      .span K {a | ∃ᵉ (n) (f : Fin n → D.𝔞), nilpotencyLength D.𝔞 (AdoSpace K D.𝔞) ≤ n ∧
+        a = mkAlgHom K D.𝔞 (TensorAlgebra.tprod K D.𝔞 n f)} := by
+  apply le_antisymm
+  · simp_rw [nilSubmodule, Submodule.map_le_iff_le_comap, iSup₂_le_iff,
+      LinearMap.range_le_iff_comap, eq_top_iff, ← PiTensorProduct.span_tprod_eq_top,
+      Submodule.span_le, range_subset_iff]
+    intro n hn f
+    apply Submodule.mem_span_of_mem
+    rw [mem_ofPred]
+    existsi n, f, hn
+    simp
+  · rw [Submodule.span_le, ofPred_subset]
+    rintro _ ⟨n, f, hn, rfl⟩
+    simp [hn, - TensorAlgebra.tprod_apply]
+
 @[simp]
 lemma bracket_𝔥_mem_nilSubmodule_of_mem (x : D.𝔥) (a) (ha : a ∈ D.nilSubmodule) :
     ⁅x, a⁆ ∈ D.nilSubmodule := by
@@ -312,10 +329,9 @@ lemma bracket_𝔥_mem_nilSubmodule_of_mem (x : D.𝔥) (a) (ha : a ∈ D.nilSub
         ≤ D.nilSubmodule by
     rw [Submodule.map_le_iff_le_comap] at h
     simpa [SetLike.le_def] using h
-  conv_lhs => rw [nilSubmodule, ← Submodule.map_comp]
-  simp_rw [Submodule.map_le_iff_le_comap, iSup₂_le_iff, LinearMap.range_le_iff_comap,
-    eq_top_iff, ← PiTensorProduct.span_tprod_eq_top, Submodule.span_le, range_subset_iff]
-  intro n hn f
+  conv_lhs => rw [nilSubmodule_eq_span_exists_eq_mkAlgHom_tprod, Submodule.map_span]
+  simp_rw [Submodule.span_le, image_subset_iff, ofPred_subset, Set.mem_preimage, toEnd_apply_apply]
+  rintro _ ⟨n, f, hn, rfl⟩
   conv => equals ∑ i : Fin n,
       mkAlgHom K D.𝔞 (TensorAlgebra.tprod K D.𝔞 n (update f i ⁅x, f i⁆)) ∈ D.nilSubmodule =>
     simp [bracket_𝔥_mkAlgHom, - TensorAlgebra.tprod_apply]
@@ -332,10 +348,10 @@ lemma ι_mul_mem_nilSubmodule_of_mem (x : D.𝔞) (a) (ha : a ∈ D.nilSubmodule
         ≤ D.nilSubmodule by
     rw [Submodule.map_le_iff_le_comap] at h
     simpa [SetLike.le_def] using h
-  conv_lhs => rw [nilSubmodule, ← Submodule.map_comp]
-  simp_rw [Submodule.map_le_iff_le_comap, iSup₂_le_iff, LinearMap.range_le_iff_comap,
-    eq_top_iff, ← PiTensorProduct.span_tprod_eq_top, Submodule.span_le, range_subset_iff]
-  intro n hn f
+  conv_lhs => rw [nilSubmodule_eq_span_exists_eq_mkAlgHom_tprod, Submodule.map_span]
+  simp_rw [Submodule.span_le, image_subset_iff, ofPred_subset, Set.mem_preimage,
+    LinearMap.mul_apply_apply]
+  rintro _ ⟨n, f, hn, rfl⟩
   conv => equals
       mkAlgHom K D.𝔞 (TensorAlgebra.tprod K D.𝔞 (n + 1) (Fin.cons x f)) ∈ D.nilSubmodule =>
     simp
@@ -360,9 +376,9 @@ instance : FiniteDimensional K (UniversalEnvelopingAlgebra K D.𝔞 ⧸ D.nilSub
     rintro n -
     apply Submodule.fg_range
   suffices h : Submodule.map D.nilSubmodule.mkQ
-    (Submodule.map (mkAlgHom K D.𝔞).toLinearMap
-      (⨆ k ≥ nilpotencyLength D.𝔞 (AdoSpace K D.𝔞),
-        LinearMap.range (TensorPower.toTensorAlgebra (n := k)))) = ⊥ by
+      (Submodule.map (mkAlgHom K D.𝔞).toLinearMap
+        (⨆ k ≥ nilpotencyLength D.𝔞 (AdoSpace K D.𝔞),
+          LinearMap.range (TensorPower.toTensorAlgebra (n := k)))) = ⊥ by
     have hι := DirectSum.Decomposition.isInternal
         (fun n : ℕ ↦ LinearMap.range (TensorAlgebra.ι K : D.𝔞 →ₗ[K] TensorAlgebra K D.𝔞) ^ n)
     simp_rw [TensorAlgebra.ι_range_pow_eq] at hι
@@ -374,11 +390,11 @@ instance : FiniteDimensional K (UniversalEnvelopingAlgebra K D.𝔞 ⧸ D.nilSub
       (mkAlgHom K D.𝔞).toLinearMap.range_eq_top_of_surjective (mkAlgHom_surjective _ _),
       Submodule.map_top, Submodule.range_mkQ] at hι
     exact hι
-  simp_rw +contextual [_root_.eq_bot_iff, Submodule.map_le_iff_le_comap, Submodule.comap_bot,
-    Submodule.ker_mkQ, iSup_le_iff, LinearMap.range_le_iff_comap, eq_top_iff,
-    ← PiTensorProduct.span_tprod_eq_top, Submodule.span_le, range_subset_iff, SetLike.mem_coe,
-    Submodule.mem_comap, AlgHom.toLinearMap_apply, TensorPower.toTensorAlgebra_tprod,
-    mkAlgHom_tprod_mem_nilSubmodule, forall_true_iff]
+  simp_rw [← nilSubmodule.eq_1, nilSubmodule_eq_span_exists_eq_mkAlgHom_tprod,
+    Submodule.map_span, Submodule.span_eq_bot, forall_mem_image, mem_ofPred]
+  rintro _ ⟨n, f, hn, rfl⟩
+  simp_rw [Submodule.mkQ_apply, Submodule.Quotient.mk_eq_zero,
+    D.mkAlgHom_tprod_mem_nilSubmodule f hn]
 
 public axiom nilSubmodule_le_ker_lift_toEnd_adoSpace :
     D.nilSubmodule ≤ LinearMap.ker (lift K (toEnd K D.𝔞 (AdoSpace K D.𝔞))).toLinearMap
