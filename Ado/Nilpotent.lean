@@ -396,8 +396,20 @@ instance : FiniteDimensional K (UniversalEnvelopingAlgebra K D.𝔞 ⧸ D.nilSub
   simp_rw [Submodule.mkQ_apply, Submodule.Quotient.mk_eq_zero,
     D.mkAlgHom_tprod_mem_nilSubmodule f hn]
 
-public axiom nilSubmodule_le_ker_lift_toEnd_adoSpace :
-    D.nilSubmodule ≤ LinearMap.ker (lift K (toEnd K D.𝔞 (AdoSpace K D.𝔞))).toLinearMap
+lemma nilSubmodule_le_ker_lift_toEnd_adoSpace :
+    D.nilSubmodule ≤ LinearMap.ker (lift K (toEnd K D.𝔞 (AdoSpace K D.𝔞))).toLinearMap := by
+  simp_rw [nilSubmodule_eq_span_exists_eq_mkAlgHom_tprod, Submodule.span_le, ofPred_subset,
+    SetLike.mem_coe, LinearMap.mem_ker, AlgHom.toLinearMap_apply]
+  rintro _ ⟨n, f, hn, rfl⟩
+  simp_rw [nilpotencyLength_le_iff K, SetLike.ext_iff, LieSubmodule.mem_bot] at hn
+  simp_rw [DFunLike.ext_iff, LinearMap.zero_apply, ← hn]
+  intro x
+  conv =>
+    enter [2, 1, 2, 2]
+    equals List.prod (List.map (ι K) (List.ofFn f)) => simp [comp_def]
+  simp_rw [map_list_prod, List.map_map, comp_def, lift_ι_apply']
+  convert list_prod_map_toEnd_apply_mem_lowerCentralSeries K (List.ofFn f) x
+  simp
 
 lemma injective_quotient_mk_nilSubmodule :
     Injective (fun x ↦

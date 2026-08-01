@@ -55,6 +55,38 @@ theorem isNilpotent_of_top_lieIdeal_iff :
     IsNilpotent (⊤ : LieIdeal R L) M ↔ IsNilpotent L M :=
   Equiv.lieModule_isNilpotent_iff LieIdeal.topEquiv (1 : M ≃ₗ[R] M) fun _ _ => rfl
 
+variable (R) in
+lemma nilpotencyLength_eq_iInf :
+    nilpotencyLength L M = sInf {k | LieModule.lowerCentralSeries R L M k = ⊥} := by
+  unfold nilpotencyLength
+  congr! with n
+  simp [SetLike.ext'_iff, coe_lowerCentralSeries_eq_int]
+
+variable (R) in
+lemma nilpotencyLength_le_iff [IsNilpotent L M] {n} :
+    nilpotencyLength L M ≤ n ↔ lowerCentralSeries R L M n = ⊥ := by
+  classical
+  simp_rw [nilpotencyLength_eq_iInf R,
+    -- intentional defeq abuce, because `Nat.sInf_def` have defeq issue.
+    Nat.sInf_def
+      (show ∃ k, k ∈ {k | lowerCentralSeries R L M k = ⊥} from IsNilpotent.nilpotent R L M),
+    Nat.find_le_iff, Set.mem_ofPred]
+  constructor
+  case mp =>
+    rintro ⟨m, hm₁, hm₂⟩
+    grw [eq_bot_iff, ← antitone_lowerCentralSeries R L M |>.imp hm₁, ← eq_bot_iff] at hm₂
+    exact hm₂
+  case mpr =>
+    intro h
+    exact ⟨n, le_rfl, h⟩
+
+variable (R) in
+lemma list_prod_map_toEnd_apply_mem_lowerCentralSeries (l : List L) (m : M) :
+    List.prod (List.map (toEnd R L M) l) m ∈ lowerCentralSeries R L M (List.length l) := by
+  induction l with
+  | nil => simp
+  | cons x l hl => simp [LieSubmodule.lie_mem_lie, hl]
+
 instance (I : LieIdeal R L) [IsNilpotent L M] : IsNilpotent I M :=
   Function.Injective.lieModuleIsNilpotent (f := LieIdeal.incl I) (g := LinearMap.id)
     (by simp) injective_id
