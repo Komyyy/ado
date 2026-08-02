@@ -9,7 +9,7 @@ public import Ado.ForMathlib.LieModuleHom
 
 @[expose] public section
 
-open Function LieModuleHom
+open Function LieModuleHom LieModule
 
 namespace LieIdeal.Quotient
 
@@ -103,5 +103,11 @@ lemma equiv_symm (N : LieSubmodule R L M) (N₂ : LieSubmodule R L M₂)
   ext x
   obtain ⟨x, rfl⟩ := LieSubmodule.Quotient.surjective_mk' N₂ x
   simp [equiv, LieModuleEquiv.symm, LieModuleHom.inverse, LinearMap.inverse]
+
+instance {R L M : Type*} [CommRing R] [LieRing L] [LieAlgebra R L] [AddCommGroup M] [Module R M]
+    [LieRingModule L M] [LieModule R L M]
+    [IsNilpotent L M] (s : LieSubmodule R L M) : IsNilpotent L (M ⧸ s) :=
+  Surjective.lieModuleIsNilpotent (f := LieHom.id) (g := LieSubmodule.Quotient.mk' s |>.toLinearMap)
+    (by simp) surjective_id (LieSubmodule.Quotient.surjective_mk' s)
 
 end LieSubmodule.Quotient

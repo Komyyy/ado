@@ -671,7 +671,97 @@ instance : IsFaithful K (center K 𝔫) (NilStepAdoSpace D) := by
   exact h
 
 @[instance]
-public axiom instIsNilpotent : IsNilpotent 𝔫 (NilStepAdoSpace D)
+public axiom instIsNilpotent𝔞 : IsNilpotent D.𝔞 (NilStepAdoSpace D)
+
+@[instance]
+public axiom instIsNilpotent𝔥 : IsNilpotent D.𝔥 (NilStepAdoSpace D)
+
+instance : IsNilpotent 𝔫 (NilStepAdoSpace D) := by
+  suffices h : ∀ n,
+      IsNilpotent 𝔫
+        (D.𝔞.lcs (NilStepAdoSpace D) n ⧸
+          comap (D.𝔞.lcs (NilStepAdoSpace D) n).incl (D.𝔞.lcs (NilStepAdoSpace D) (n + 1)))
+  · have h𝔞 : IsNilpotent D.𝔞 (NilStepAdoSpace D) := inferInstance
+    simp_rw [isNilpotent_quotient_iff, lowerCentralSeries_eq_lcs_comap,
+      ← LieSubmodule.map_le_iff_le_comap, LieSubmodule.map_comap_incl,
+      inf_of_le_right (lcs_le_self _ _), lcs_le_iff] at h
+    simp_rw [isNilpotent_iff K, ← toSubmodule_inj, ← LieIdeal.coe_lcs_eq,
+      LieSubmodule.bot_toSubmodule, toSubmodule_eq_bot] at h𝔞
+    obtain ⟨k, hk⟩ := h𝔞
+    replace h : ∀ n ≤ k, ∃ m,
+        D.𝔞.lcs (NilStepAdoSpace D) n ≤ ucs m (D.𝔞.lcs (NilStepAdoSpace D) k)
+    · intro n hn
+      induction hn using Nat.decreasingInduction with
+      | self => existsi 0; simp
+      | of_succ n hn hin =>
+        specialize h n
+        obtain ⟨m₁, hm₁⟩ := h
+        obtain ⟨m₂, hm₂⟩ := hin
+        existsi m₁ + m₂
+        grw [hm₁, hm₂, ucs_add]
+    specialize h 0 zero_le
+    simp_rw [LieIdeal.lcs_zero, hk, ← eq_top_iff, ← isNilpotent_iff_exists_ucs_eq_top] at h
+    exact h
+  intro n
+  have : IsNilpotent D.𝔥 (D.𝔞.lcs (NilStepAdoSpace D) n)
+  · change IsNilpotent D.𝔥 ((D.𝔞.lcs (NilStepAdoSpace D) n).restr D.𝔥)
+    have : IsNilpotent D.𝔥 (⊤ : LieSubmodule K D.𝔥 (NilStepAdoSpace D))
+    · rw [isNilpotent_of_top_iff']; infer_instance
+    refine isNilpotent_of_le _ _ _ _ ⊤ le_top
+  replace :
+      IsNilpotent D.𝔥
+        (D.𝔞.lcs (NilStepAdoSpace D) n ⧸
+          comap (D.𝔞.lcs (NilStepAdoSpace D) n).incl (D.𝔞.lcs (NilStepAdoSpace D) (n + 1)))
+  · change IsNilpotent D.𝔥
+        (D.𝔞.lcs (NilStepAdoSpace D) n ⧸
+          (comap (D.𝔞.lcs (NilStepAdoSpace D) n).incl
+            (D.𝔞.lcs (NilStepAdoSpace D) (n + 1))).restr D.𝔥)
+    infer_instance
+  have :
+      IsTrivial D.𝔞
+        (D.𝔞.lcs (NilStepAdoSpace D) n ⧸
+          comap (D.𝔞.lcs (NilStepAdoSpace D) n).incl (D.𝔞.lcs (NilStepAdoSpace D) (n + 1)))
+  · constructor
+    intro x a
+    obtain ⟨a, rfl⟩ := LieSubmodule.Quotient.surjective_mk' _ a
+    simp [lie_mem_lie]
+  apply Function.Injective.lieModuleIsNilpotent (R := K) (L₂ := D.𝔥)
+      (M₂ := D.𝔞.lcs (NilStepAdoSpace D) n ⧸
+          comap (D.𝔞.lcs (NilStepAdoSpace D) n).incl (D.𝔞.lcs (NilStepAdoSpace D) (n + 1)))
+      (f :=
+        { toLinearMap := Submodule.projectionOnto
+            D.𝔥.toSubmodule D.𝔞.toSubmodule D.isCompl_toSubmodule.symm
+          map_lie' {x y} := ?lie : 𝔫 →ₗ⁅K⁆ D.𝔥 })
+      (g := LinearMap.id) ?map injective_id
+  case lie =>
+    obtain ⟨⟨x₁, x₂⟩, rfl⟩ := D.existsUnique_add_prod x |>.exists
+    obtain ⟨⟨y₁, y₂⟩, rfl⟩ := D.existsUnique_add_prod y |>.exists
+    conv_lhs => tactic =>
+      simp_rw [_root_.add_lie, lie_add, ← LieIdeal.coe_bracket, ← lie_skew x₁.1 y₂.1,
+        ← LieSubmodule.coe_bracket, ← LieSubalgebra.coe_bracket, AddHom.toFun_eq_coe,
+        LinearMap.coe_toAddHom, map_add, map_neg,
+        Submodule.projectionOnto_apply_left D.isCompl_toSubmodule.symm,
+        Submodule.projectionOnto_apply_right D.isCompl_toSubmodule.symm,
+        neg_zero, zero_add]
+    conv_rhs => tactic =>
+      simp_rw [AddHom.toFun_eq_coe, LinearMap.coe_toAddHom, map_add,
+        Submodule.projectionOnto_apply_left D.isCompl_toSubmodule.symm,
+        Submodule.projectionOnto_apply_right D.isCompl_toSubmodule.symm, zero_add]
+  case map =>
+    intro x a
+    obtain ⟨⟨x₁, x₂⟩, rfl⟩ := D.existsUnique_add_prod x |>.exists
+    obtain ⟨a, rfl⟩ := LieSubmodule.Quotient.surjective_mk' _ a
+    conv_lhs =>
+      arg 1
+      change Submodule.projectionOnto
+          D.𝔥.toSubmodule D.𝔞.toSubmodule D.isCompl_toSubmodule.symm (x₁.1 + x₂.1)
+    conv_lhs => tactic =>
+      simp_rw [LinearMap.id_apply, map_add,
+        Submodule.projectionOnto_apply_left D.isCompl_toSubmodule.symm,
+        Submodule.projectionOnto_apply_right D.isCompl_toSubmodule.symm, zero_add]
+    conv_rhs => tactic =>
+      simp_rw [LinearMap.id_apply, _root_.add_lie, ← LieSubalgebra.coe_bracket_of_module,
+        ← LieIdeal.coe_bracket_of_module, trivial_lie_zero, zero_add]
 
 end NilStepAdoSpace
 
