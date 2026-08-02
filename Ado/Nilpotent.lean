@@ -670,8 +670,33 @@ instance : IsFaithful K (center K 𝔫) (NilStepAdoSpace D) := by
   simp_rw [comp_def, quotient_equiv_mk] at h
   exact h
 
-@[instance]
-public axiom instIsNilpotent𝔞 : IsNilpotent D.𝔞 (NilStepAdoSpace D)
+instance : IsNilpotent D.𝔞 (NilStepAdoSpace D) := by
+  suffices h : ∀ k,
+      (D.𝔞.lcs (PreNilStepAdoSpace D) k).toSubmodule ≤
+        Submodule.map equiv.toLinearMap (D.lengthSubmodule k) by
+    change IsNilpotent D.𝔞.toLieSubalgebra (PreNilStepAdoSpace D ⧸ D.nilLieSubmodule.restr D.𝔞)
+    simp_rw [isNilpotent_quotient_iff, ← toSubmodule_le_toSubmodule]
+    conv => enter [1, k, 1, 1]; change lowerCentralSeries K D.𝔞 (PreNilStepAdoSpace D) k
+    simp_rw [← coe_lcs_eq, restr_toSubmodule, toSubmodule_le_toSubmodule]
+    existsi nilpotencyLength D.𝔞 (AdoSpace K D.𝔞)
+    specialize h (nilpotencyLength D.𝔞 (AdoSpace K D.𝔞))
+    simp_rw [D.lengthSubmodule_nilpotenctLength, ← D.nilLieSubmodule_toSubmodule,
+      toSubmodule_le_toSubmodule] at h
+    exact h
+  intro k
+  induction k with
+  | zero => simp
+  | succ n hn =>
+    simp_rw [LieIdeal.lcs_succ, lieIdeal_oper_eq_linear_span', ← exists_prop (a := _ ∈ D.𝔞),
+      Subtype.exists', Submodule.span_le, ofPred_subset, SetLike.mem_coe, Submodule.mem_map_equiv]
+    rintro _ ⟨x, a, ha, rfl⟩
+    cases a with | equiv a
+    conv => equals ⁅x, a⁆ ∈ D.lengthSubmodule (n + 1) => simp
+    simp_rw [SetLike.le_def, mem_toSubmodule, Submodule.mem_map_equiv,
+      AlgEquiv.coe_symm_toLinearEquiv] at hn
+    specialize hn ha
+    rw [AlgEquiv.symm_apply_apply] at hn
+    exact D.bracket_𝔞_mem_lengthSubmodule_succ_of_mem n x a hn
 
 @[instance]
 public axiom instIsNilpotent𝔥 : IsNilpotent D.𝔥 (NilStepAdoSpace D)
