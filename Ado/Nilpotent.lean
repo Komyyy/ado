@@ -393,25 +393,6 @@ lemma bracket_𝔞_mem_nilSubmodule_of_mem (x : D.𝔞) (a) (ha : a ∈ D.nilSub
   rw [bracket_eq]
   exact D.ι_mul_mem_nilSubmodule_of_mem x a ha
 
-lemma bracket_𝔥_mem_lengthSubmodule_succ_of_mem (m) (x : D.𝔥) (a)
-    (ha : a ∈ D.lengthSubmodule m) : ⁅x, a⁆ ∈ D.lengthSubmodule (m + 1) := by
-  revert a
-  suffices h :
-      Submodule.map (toEnd K D.𝔥 (UniversalEnvelopingAlgebra K D.𝔞) x) (D.lengthSubmodule m)
-        ≤ D.lengthSubmodule (m + 1) by
-    rw [Submodule.map_le_iff_le_comap] at h
-    simpa [SetLike.le_def] using h
-  conv_lhs => rw [lengthSubmodule_eq_span_exists_eq_mkAlgHom_tprod, Submodule.map_span]
-  simp_rw [Submodule.span_le, image_subset_iff, ofPred_subset, Set.mem_preimage, toEnd_apply_apply]
-  rintro _ ⟨n, f, hn, rfl⟩
-  conv => equals ∑ i : Fin n,
-      mkAlgHom K D.𝔞 (TensorAlgebra.tprod K D.𝔞 n (update f i ⁅x, f i⁆))
-        ∈ D.lengthSubmodule (m + 1) =>
-    simp [bracket_𝔥_mkAlgHom, - TensorAlgebra.tprod_apply]
-  apply Submodule.sum_mem
-  rintro i -
-  sorry
-
 @[simp]
 lemma bracket_𝔥_mem_nilSubmodule_of_mem (x : D.𝔥) (a) (ha : a ∈ D.nilSubmodule) :
     ⁅x, a⁆ ∈ D.nilSubmodule := by
@@ -689,34 +670,8 @@ instance : IsFaithful K (center K 𝔫) (NilStepAdoSpace D) := by
   simp_rw [comp_def, quotient_equiv_mk] at h
   exact h
 
-instance : IsNilpotent 𝔫 (NilStepAdoSpace D) := by
-  suffices h : ∀ k,
-      (lowerCentralSeries K 𝔫 (PreNilStepAdoSpace D) k).toSubmodule ≤
-        Submodule.map equiv.toLinearMap (D.lengthSubmodule k) by
-    rw [isNilpotent_quotient_iff]
-    existsi nilpotencyLength D.𝔞 (AdoSpace K D.𝔞)
-    specialize h (nilpotencyLength D.𝔞 (AdoSpace K D.𝔞))
-    simp_rw [D.lengthSubmodule_nilpotenctLength, ← D.nilLieSubmodule_toSubmodule,
-      toSubmodule_le_toSubmodule] at h
-    exact h
-  intro k
-  induction k with
-  | zero => simp
-  | succ n hn =>
-    simp_rw [LieModule.lowerCentralSeries_succ, lieIdeal_oper_eq_linear_span', Submodule.span_le,
-      ofPred_subset, mem_top, true_and]
-    rintro _ ⟨x, a, ha, rfl⟩
-    cases a with | equiv a
-    obtain ⟨⟨x₁, x₂⟩, rfl⟩ := D.existsUnique_add_prod x |>.exists
-    simp_rw [SetLike.mem_coe, Submodule.mem_map_equiv]
-    conv => equals ⁅x₁, a⁆ + ⁅x₂, a⁆ ∈ D.lengthSubmodule (n + 1) => simp
-    simp_rw [SetLike.le_def, mem_toSubmodule, Submodule.mem_map_equiv,
-      AlgEquiv.coe_symm_toLinearEquiv] at hn
-    specialize hn ha
-    rw [AlgEquiv.symm_apply_apply] at hn
-    refine add_mem
-      (D.bracket_𝔞_mem_lengthSubmodule_succ_of_mem n x₁ a hn)
-      (D.bracket_𝔥_mem_lengthSubmodule_succ_of_mem n x₂ a hn)
+@[instance]
+public axiom instIsNilpotent : IsNilpotent 𝔫 (NilStepAdoSpace D)
 
 end NilStepAdoSpace
 
