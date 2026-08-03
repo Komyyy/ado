@@ -81,6 +81,12 @@ lemma nilpotencyLength_le_iff [IsNilpotent L M] {n} :
     exact ⟨n, le_rfl, h⟩
 
 variable (R) in
+@[simp]
+lemma lowerCentralSeries_nilpotencyLength [IsNilpotent L M] :
+    lowerCentralSeries R L M (nilpotencyLength L M) = ⊥ :=
+  nilpotencyLength_le_iff R |>.mp le_rfl
+
+variable (R) in
 lemma list_prod_map_toEnd_apply_mem_lowerCentralSeries (l : List L) (m : M) :
     List.prod (List.map (toEnd R L M) l) m ∈ lowerCentralSeries R L M (List.length l) := by
   induction l with
@@ -91,7 +97,12 @@ instance (I : LieIdeal R L) [IsNilpotent L M] : IsNilpotent I M :=
   Function.Injective.lieModuleIsNilpotent (f := LieIdeal.incl I) (g := LinearMap.id)
     (by simp) injective_id
 
-instance [LieRing.IsNilpotent L] (s : LieIdeal R L) : LieRing.IsNilpotent s :=
-  s.incl_injective.lieAlgebra_isNilpotent
+instance (L' : LieSubalgebra R L) [IsNilpotent L M] : IsNilpotent L' M :=
+  Function.Injective.lieModuleIsNilpotent (f := LieSubalgebra.incl L') (g := LinearMap.id)
+    (by simp) injective_id
+
+instance (N : LieSubmodule R L M) [IsNilpotent L M] : IsNilpotent L N :=
+  Function.Injective.lieModuleIsNilpotent (f := LieHom.id) (g := N.incl.toLinearMap)
+    (by simp [- LieSubmodule.incl_coe]) N.injective_incl
 
 end LieModule

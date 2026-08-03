@@ -294,6 +294,26 @@ def lengthSubmodule (m : ℕ) : Submodule K (UniversalEnvelopingAlgebra K D.𝔞
 noncomputable def nilSubmodule : Submodule K (UniversalEnvelopingAlgebra K D.𝔞) :=
   D.lengthSubmodule (nilpotencyLength D.𝔞 (AdoSpace K D.𝔞))
 
+def depthSubmodule (m : ℕ) : Submodule K (UniversalEnvelopingAlgebra K D.𝔞) :=
+  .span K {a | ∃ᵉ (n) (f : Fin n → D.𝔞) (x : Fin n → ℕ),
+      ∑ k, x k = m ∧ (∀ k, f k ∈ lowerCentralSeries K D.𝔥 D.𝔞 (x k)) ∧
+        a = mkAlgHom K D.𝔞 (TensorAlgebra.tprod K D.𝔞 n f)}
+
+noncomputable def depthLimit : ℕ :=
+  Nat.pred (nilpotencyLength D.𝔞 (AdoSpace K D.𝔞)) * Nat.pred (nilpotencyLength D.𝔥 D.𝔞) + 1
+
+lemma exists_nilpotencyLength_le_of_depthLimit_le_sum {n} [NeZero n] (x : Fin n → ℕ)
+    (hn : n < nilpotencyLength D.𝔞 (AdoSpace K D.𝔞)) (hx : D.depthLimit ≤ ∑ i, x i) :
+    ∃ i, nilpotencyLength D.𝔥 D.𝔞 ≤ x i := by
+  apply Nat.le_pred_of_lt at hn
+  grw [depthLimit, Nat.succ_le_iff, ← hn] at hx
+  conv_lhs at hx => equals ∑ _ : Fin n, Nat.pred (nilpotencyLength D.𝔥 D.𝔞) => simp
+  apply Finset.exists_lt_of_sum_lt at hx
+  simp_rw [Finset.mem_univ, true_and] at hx
+  obtain ⟨i, hi⟩ := hx
+  apply Nat.le_of_pred_lt at hi
+  exists i
+
 lemma lengthSubmodule_nilpotenctLength :
     D.lengthSubmodule (nilpotencyLength D.𝔞 (AdoSpace K D.𝔞)) = D.nilSubmodule :=
   rfl
@@ -347,6 +367,17 @@ lemma lengthSubmodule_zero : D.lengthSubmodule 0 = ⊤ := by
     LinearMap.range_eq_top_of_surjective (mkAlgHom K D.𝔞).toLinearMap (mkAlgHom_surjective K D.𝔞),
     - Submodule.map_iSup]
 
+@[simp]
+lemma depththSubmodule_zero : D.depthSubmodule 0 = ⊤ := by
+  simp_rw [eq_top_iff, ← lengthSubmodule_zero, lengthSubmodule_eq_span_exists_eq_mkAlgHom_tprod,
+    zero_le, true_and, Submodule.span_le, ofPred_subset, SetLike.mem_coe]
+  rintro _ ⟨n, f, rfl⟩
+  unfold depthSubmodule
+  apply Submodule.mem_span_of_mem
+  rw [mem_ofPred]
+  existsi n, f, 0
+  simp
+
 @[gcongr]
 lemma lengthSubmodule_mono ⦃m n⦄ (h : m ≤ n) : D.lengthSubmodule n ≤ D.lengthSubmodule m := by
   simp_rw [lengthSubmodule]
@@ -356,6 +387,36 @@ lemma lengthSubmodule_mono ⦃m n⦄ (h : m ≤ n) : D.lengthSubmodule n ≤ D.l
 
 lemma antitone_lengthSubmodule : Antitone D.lengthSubmodule :=
   D.lengthSubmodule_mono
+
+@[gcongr]
+lemma depthSubmodule_mono ⦃m n⦄ (h : m ≤ n) : D.depthSubmodule n ≤ D.depthSubmodule m := by
+  simp_rw [depthSubmodule]
+  gcongr 4 with _ n f
+  rintro ⟨x, rfl, hf, rfl⟩
+  rsuffices ⟨x', hx', rfl⟩ : ∃ x' : Fin n → ℕ, x' ≤ x ∧ ∑ k, x' k = m
+  · existsi x'
+    refine ⟨rfl, ?_, rfl⟩
+    intro k
+    grw [hx' k]
+    exact hf k
+  induction h using Nat.decreasingInduction with
+  | self => exists x
+  | of_succ k h hi =>
+    obtain ⟨x', hx', hi⟩ := hi
+    have hx'₂ : 0 < ∑ k, x' k := by lia
+    simp_rw [Finset.sum_pos_iff, Finset.mem_univ, true_and] at hx'₂
+    obtain ⟨j, hj⟩ := hx'₂
+    existsi x' - Pi.single j 1
+    constructor
+    · grw [tsub_le_self, hx']
+    · have hx'₂ : ∀ i ∈ (Finset.univ : Finset (Fin n)),
+          Pi.single (M := fun _ ↦ ℕ) j 1 i ≤ x' i
+      · rintro i -
+        obtain (rfl | hj) := eq_or_ne i j
+        · simp [hj, Nat.succ_le_iff]
+        · simp [hj]
+      simp_rw [Pi.sub_apply, Finset.sum_tsub_distrib _ hx'₂]
+      simp [hi]
 
 lemma ι_mul_mem_lengthSubmodule_succ_of_mem (m) (x : D.𝔞) (a) (ha : a ∈ D.lengthSubmodule m) :
     UniversalEnvelopingAlgebra.ι K x * a ∈ D.lengthSubmodule (m + 1) := by
@@ -411,6 +472,44 @@ lemma bracket_𝔥_mem_nilSubmodule_of_mem (x : D.𝔥) (a) (ha : a ∈ D.nilSub
   apply Submodule.sum_mem
   rintro i -
   exact D.mkAlgHom_tprod_mem_nilSubmodule _ hn
+
+lemma bracket_𝔥_mem_depthSubmodule_succ_of_mem (m) (x : D.𝔥) (a) (ha : a ∈ D.depthSubmodule m) :
+    ⁅x, a⁆ ∈ D.depthSubmodule (m + 1) := by
+  revert a
+  suffices h :
+      Submodule.map (toEnd K D.𝔥 (UniversalEnvelopingAlgebra K D.𝔞) x) (D.depthSubmodule m)
+        ≤ D.depthSubmodule (m + 1) by
+    rw [Submodule.map_le_iff_le_comap] at h
+    simpa [SetLike.le_def] using h
+  conv_lhs => rw [depthSubmodule, Submodule.map_span]
+  simp_rw [Submodule.span_le, image_subset_iff, ofPred_subset, Set.mem_preimage, toEnd_apply_apply]
+  rintro _ ⟨n, f, y, hy, hf, rfl⟩
+  simp_rw [bracket_𝔥_mkAlgHom, bracketAux_tprod, map_sum, SetLike.mem_coe]
+  apply sum_mem; rintro k -
+  simp_rw [depthSubmodule]; apply Submodule.mem_span_of_mem; simp_rw [mem_ofPred_eq]
+  existsi n, update f k ⁅x, f k⁆, y + Pi.single k 1
+  split_ands
+  on_goal 3 => rfl
+  · simp [Finset.sum_add_distrib, hy]
+  · intro j
+    obtain (rfl | hj) := eq_or_ne j k
+    · simp [lie_mem_lie, hf, - LieSubalgebra.coe_bracket_of_module]
+    · simp [hj, hf]
+
+lemma depthSubmodule_depthLimit_le_nilSubmodule :
+    D.depthSubmodule D.depthLimit ≤ D.nilSubmodule := by
+  simp_rw [depthSubmodule, Submodule.span_le, ofPred_subset, SetLike.mem_coe]
+  rintro _ ⟨n, f, x, hx, hf, rfl⟩
+  obtain (rfl | hn) := eq_or_ne n 0
+  case inl => simp [depthLimit] at hx
+  obtain (hn₂ | hn₂) := lt_or_ge n (nilpotencyLength D.𝔞 (AdoSpace K D.𝔞))
+  case inr => apply D.mkAlgHom_tprod_mem_nilSubmodule _ hn₂
+  apply NeZero.mk at hn
+  replace hx := D.exists_nilpotencyLength_le_of_depthLimit_le_sum x hn₂ hx.ge
+  obtain ⟨i, hi⟩ := hx
+  specialize hf i
+  grw [← hi, lowerCentralSeries_nilpotencyLength, mem_bot] at hf
+  simp [(TensorAlgebra.tprod K D.𝔞 n).map_coord_zero i hf, - TensorAlgebra.tprod_apply]
 
 instance : FiniteDimensional K (UniversalEnvelopingAlgebra K D.𝔞 ⧸ D.nilSubmodule) := by
   -- `Submodule` を後で `open` した方がいいかな
@@ -670,7 +769,7 @@ instance : IsFaithful K (center K 𝔫) (NilStepAdoSpace D) := by
   simp_rw [comp_def, quotient_equiv_mk] at h
   exact h
 
-instance : IsNilpotent D.𝔞 (NilStepAdoSpace D) := by
+lemma isNilpotent𝔞 : IsNilpotent D.𝔞 (NilStepAdoSpace D) := by
   suffices h : ∀ k,
       (D.𝔞.lcs (PreNilStepAdoSpace D) k).toSubmodule ≤
         Submodule.map equiv.toLinearMap (D.lengthSubmodule k) by
@@ -698,15 +797,37 @@ instance : IsNilpotent D.𝔞 (NilStepAdoSpace D) := by
     rw [AlgEquiv.symm_apply_apply] at hn
     exact D.bracket_𝔞_mem_lengthSubmodule_succ_of_mem n x a hn
 
-@[instance]
-public axiom instIsNilpotent𝔥 : IsNilpotent D.𝔥 (NilStepAdoSpace D)
+lemma isNilpotent𝔥 : IsNilpotent D.𝔥 (NilStepAdoSpace D) := by
+  suffices h : ∀ k,
+      (lowerCentralSeries K D.𝔥 (PreNilStepAdoSpace D) k).toSubmodule ≤
+        Submodule.map equiv.toLinearMap (D.depthSubmodule k) by
+    change IsNilpotent D.𝔥 (PreNilStepAdoSpace D ⧸ D.nilLieSubmodule.restr D.𝔥)
+    simp_rw [isNilpotent_quotient_iff, ← toSubmodule_le_toSubmodule, restr_toSubmodule]
+    existsi D.depthLimit
+    specialize h D.depthLimit
+    grw [D.depthSubmodule_depthLimit_le_nilSubmodule, ← D.nilLieSubmodule_toSubmodule] at h
+    exact h
+  intro k
+  induction k with
+  | zero => simp
+  | succ n hn =>
+    simp_rw [lowerCentralSeries_succ, lieIdeal_oper_eq_linear_span', ← exists_prop (a := _ ∈ ⊤),
+      Subtype.exists', Submodule.span_le, ofPred_subset, SetLike.mem_coe, Submodule.mem_map_equiv]
+    rintro _ ⟨x, a, ha, rfl⟩
+    cases a with | equiv a
+    conv => equals ⁅x, a⁆ ∈ D.depthSubmodule (n + 1) => simp
+    simp_rw [SetLike.le_def, mem_toSubmodule, Submodule.mem_map_equiv,
+      AlgEquiv.coe_symm_toLinearEquiv] at hn
+    specialize hn ha
+    rw [AlgEquiv.symm_apply_apply] at hn
+    exact D.bracket_𝔥_mem_depthSubmodule_succ_of_mem n x a hn
 
 instance : IsNilpotent 𝔫 (NilStepAdoSpace D) := by
   suffices h : ∀ n,
       IsNilpotent 𝔫
         (D.𝔞.lcs (NilStepAdoSpace D) n ⧸
           comap (D.𝔞.lcs (NilStepAdoSpace D) n).incl (D.𝔞.lcs (NilStepAdoSpace D) (n + 1)))
-  · have h𝔞 : IsNilpotent D.𝔞 (NilStepAdoSpace D) := inferInstance
+  · have h𝔞 := isNilpotent𝔞 D
     simp_rw [isNilpotent_quotient_iff, lowerCentralSeries_eq_lcs_comap,
       ← LieSubmodule.map_le_iff_le_comap, LieSubmodule.map_comap_incl,
       inf_of_le_right (lcs_le_self _ _), lcs_le_iff] at h
@@ -731,7 +852,7 @@ instance : IsNilpotent 𝔫 (NilStepAdoSpace D) := by
   have : IsNilpotent D.𝔥 (D.𝔞.lcs (NilStepAdoSpace D) n)
   · change IsNilpotent D.𝔥 ((D.𝔞.lcs (NilStepAdoSpace D) n).restr D.𝔥)
     have : IsNilpotent D.𝔥 (⊤ : LieSubmodule K D.𝔥 (NilStepAdoSpace D))
-    · rw [isNilpotent_of_top_iff']; infer_instance
+    · rw [isNilpotent_of_top_iff']; exact isNilpotent𝔥 D
     refine isNilpotent_of_le _ _ _ _ ⊤ le_top
   replace :
       IsNilpotent D.𝔥
