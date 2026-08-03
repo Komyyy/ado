@@ -4,27 +4,22 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Miyahara Kō
 -/
 module
-public import Mathlib
-public import Ado.ForMathlib.LieModulePUnit
-public import Ado.ForMathlib.LieModuleSubsingleton
-public import Ado.ForMathlib.LieModuleKer
-public import Ado.ForMathlib.LieFinrank
-public import Ado.ForMathlib.LieQuotient
-public import Ado.ForMathlib.LieHom
 public import Ado.ForMathlib.DirectSum
 public import Ado.ForMathlib.FinAdd
-public import Ado.ForMathlib.TensorAlgebra
+public import Ado.ForMathlib.LieFinrank
+public import Ado.ForMathlib.LieHom
 public import Ado.ForMathlib.LieIdealCoe
+public import Ado.ForMathlib.LieModuleKer
+public import Ado.ForMathlib.LieModulePUnit
+public import Ado.ForMathlib.LieModuleSubsingleton
+public import Ado.ForMathlib.LieQuotient
+public import Ado.ForMathlib.TensorAlgebra
 public import Ado.ForMathlib.UniversalEnvelopingAlgebra
 public import Ado.LieAbelian
 
 /-!
 ## 冪零 Lie 代数に対する Ado の定理
 -/
-
--- 公理を公開する為のみに使用
-set_option backward.privateInPublic true
-set_option backward.privateInPublic.warn false
 
 open Function Set Finset LieAlgebra LieModule LieSubmodule LieIdeal LieHom
 open Module hiding Injective
@@ -128,7 +123,6 @@ structure NilStepAdoData (K 𝔫 : Type*)
   protected 𝔞 : LieIdeal K 𝔫
   protected 𝔥 : LieSubalgebra K 𝔫
   center_le_𝔞 : center K 𝔫 ≤ 𝔞
-  finrank_𝔥 : finrank K 𝔥 = 1
   isCompl_toSubmodule : IsCompl 𝔞.toSubmodule 𝔥.toSubmodule
   [instIsAdo𝔞 : IsAdo K 𝔞]
 
@@ -925,11 +919,10 @@ public instance LieAlgebra.IsAdo.of_isNilpotent : IsAdo K 𝔫 := by
     · exact D.isAdo
     obtain ⟨𝔞, rfl, h𝔞⟩ := exists_for_nilStepAdoData_of_not_isLieAbelian K 𝔫 n hn h𝔫
     specialize hin rfl
-    obtain ⟨𝔥, h𝔥₁, h𝔥₂⟩ : ∃ 𝔥 : LieSubalgebra K 𝔫,
-        IsCompl 𝔞.toSubmodule 𝔥.toSubmodule ∧ finrank K 𝔥 = 1 := by
+    obtain ⟨𝔥, h𝔥₁⟩ : ∃ 𝔥 : LieSubalgebra K 𝔫, IsCompl 𝔞.toSubmodule 𝔥.toSubmodule := by
       obtain ⟨𝔥', h𝔥'⟩ := exists_isCompl 𝔞.toSubmodule
       rw [← Submodule.finrank_add_eq_of_isCompl h𝔥', finrank_toSubmodule,
         Nat.add_left_cancel_iff] at hn
       existsi 𝔥'.toLieSubalgebraOfDimOne hn
-      exact ⟨h𝔥', hn⟩
-    exact ⟨{ 𝔞, 𝔥, center_le_𝔞 := h𝔞, finrank_𝔥 := h𝔥₂, isCompl_toSubmodule := h𝔥₁ }⟩
+      exact h𝔥'
+    exact ⟨{ 𝔞, 𝔥, center_le_𝔞 := h𝔞, isCompl_toSubmodule := h𝔥₁ }⟩
