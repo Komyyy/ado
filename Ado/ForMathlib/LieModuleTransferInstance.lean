@@ -28,44 +28,28 @@ protected lemma Function.Injective.lieModule
   lie_smul t x m := hf <| by simp [*]
 
 @[instance_reducible]
-protected def Equiv.lieRingModule [LieRing L] [AddCommGroup M₂] [LieRingModule L M₂] (e : M₁ ≃ M₂) :
-    letI := e.addCommGroup
-    LieRingModule L M₁ :=
-  letI := e.addCommGroup
+protected def AddEquiv.lieRingModule [LieRing L] [AddCommGroup M₁] [AddCommGroup M₂]
+    [LieRingModule L M₂] (e : M₁ ≃+ M₂) : LieRingModule L M₁ :=
   letI := { bracket x m := e.symm ⁅x, e m⁆ : Bracket L M₁ }
-  e.injective.lieRingModule L e.addEquiv.toAddMonoidHom (by unfold_projs; simp)
+  e.injective.lieRingModule L e.toAddMonoidHom (by unfold_projs; simp)
 
-@[simp]
-lemma linearEquiv_coe {α β : Type*} [Semiring R] [AddCommMonoid β] [Module R β] (e : α ≃ β) :
-    ⇑(e.linearEquiv R) = e :=
-  rfl
-
-protected lemma Equiv.lieModule
-    [CommRing R] [LieRing L] [LieAlgebra R L] [AddCommGroup M₂] [Module R M₂] [LieRingModule L M₂]
-    [LieModule R L M₂] (e : M₁ ≃ M₂) :
-    letI := e.addCommGroup
-    letI := e.module R
+protected lemma LinearEquiv.lieModule
+    [CommRing R] [LieRing L] [LieAlgebra R L] [AddCommGroup M₁] [AddCommGroup M₂]
+    [Module R M₁] [Module R M₂] [LieRingModule L M₂] [LieModule R L M₂] (e : M₁ ≃ₗ[R] M₂) :
     letI := e.lieRingModule L
     LieModule R L M₁ :=
-  letI := e.addCommGroup
-  letI := e.module R
   letI := e.lieRingModule L
-  e.injective.lieModule R L (e.linearEquiv R).toLinearMap (by unfold_projs; simp)
+  e.injective.lieModule R L e.toLinearMap (by unfold_projs; simp)
 
-def Equiv.lieModuleEquiv
-    [CommRing R] [LieRing L] [LieAlgebra R L] [AddCommGroup M₂] [Module R M₂] [LieRingModule L M₂]
-    [LieModule R L M₂] (e : M₁ ≃ M₂) :
-    letI := e.addCommGroup
-    letI := e.module R
+def LinearEquiv.lieModuleEquiv
+    [CommRing R] [LieRing L] [LieAlgebra R L] [AddCommGroup M₁] [AddCommGroup M₂]
+    [Module R M₁] [Module R M₂] [LieRingModule L M₂] [LieModule R L M₂] (e : M₁ ≃ₗ[R] M₂) :
     letI := e.lieRingModule L
     letI := e.lieModule R L
     M₁ ≃ₗ⁅R,L⁆ M₂ :=
-  letI := e.addCommGroup
-  letI := e.module R
   letI := e.lieRingModule L
   letI := e.lieModule R L
-  { e.linearEquiv R with
-    map_lie' {x m} := by unfold_projs; simp }
+  { e with map_lie' {x m} := by unfold_projs; simp }
 
 open Function LieModule
 

@@ -17,17 +17,17 @@ variable (R L : Type*) {M : Type*} [Small.{u} M]
 namespace Shrink
 
 instance [LieRing L] [AddCommGroup M] [LieRingModule L M] : LieRingModule L (Shrink.{u} M) :=
-  (equivShrink M).symm.lieRingModule L
+  Shrink.addEquiv.lieRingModule L
 
 instance [CommRing R] [LieRing L] [LieAlgebra R L] [AddCommGroup M] [Module R M]
     [LieRingModule L M] [LieModule R L M] : LieModule R L (Shrink.{u} M) :=
-  (equivShrink M).symm.lieModule R L
+  (Shrink.linearEquiv R M).lieModule R L
 
 variable [CommRing R] [LieRing L] [LieAlgebra R L]
 variable [AddCommGroup M] [Module R M] [LieRingModule L M] [LieModule R L M]
 
 def lieModuleEquiv : Shrink.{u} M ≃ₗ⁅R,L⁆ M :=
-  (equivShrink M).symm.lieModuleEquiv R L
+  (Shrink.linearEquiv R M).lieModuleEquiv R L
 
 variable {R L}
 
