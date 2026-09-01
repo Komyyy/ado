@@ -33,6 +33,10 @@ instance {R L : Type*} [CommRing R] [LieRing L] [LieAlgebra R L]
     [LieRing.IsNilpotent L] (s : LieIdeal R L) : LieRing.IsNilpotent (L ⧸ s) :=
   (LieIdeal.Quotient.surjective_mk' s).lieAlgebra_isNilpotent
 
+instance {R L : Type*} [CommRing R] [LieRing L] [LieAlgebra R L]
+    [LieAlgebra.IsSolvable L] (s : LieIdeal R L) : LieAlgebra.IsSolvable (L ⧸ s) :=
+  (LieIdeal.Quotient.surjective_mk' s).lieAlgebra_isSolvable
+
 end LieIdeal.Quotient
 
 namespace LieSubmodule.Quotient
