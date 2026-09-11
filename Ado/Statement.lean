@@ -11,6 +11,36 @@ public import Ado.ForMathlib.LieModuleNilpotent
 ## Ado の定理の主張
 -/
 
+section ForMathlib
+
+public section Nilradical
+
+namespace LieAlgebra
+
+variable (R L : Type*) [CommRing R] [LieRing L] [LieAlgebra R L]
+
+/-- **注意:** これは `maxNilpotentIdeal` とは異なります。`maxNilpotentIdeal` は最大の `L`-冪零イデアル
+ですが、`nilradical R L = 𝔫` は最大の `𝔫`-冪零イデアルです。 -/
+def nilradical : LieIdeal R L :=
+  sSup {N | LieRing.IsNilpotent N}
+
+variable {R L}
+
+instance (L₁ L₂ : LieIdeal R L) [LieRing.IsNilpotent L₁] [LieRing.IsNilpotent L₂] :
+    LieRing.IsNilpotent ↥(L₁ ⊔ L₂) := by
+  sorry
+
+instance [IsNoetherian R L] : LieRing.IsNilpotent (nilradical R L) := by
+  have hwf := WellFoundedGT.isSupClosedCompact (α := LieIdeal R L) inferInstance
+  refine hwf {N | LieRing.IsNilpotent N} ⟨⊥, ?_⟩ fun N₁ h₁ N₂ h₂ => ?_ <;>
+  simp_all only [Set.mem_ofPred] <;> infer_instance
+
+end LieAlgebra
+
+end Nilradical
+
+end ForMathlib
+
 public section
 
 universe u
