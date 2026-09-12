@@ -10,33 +10,6 @@ public import Ado.Nilpotent
 ## 可解 Lie 代数に対する Ado の定理
 -/
 
-namespace CounterExample.LieMaxNilpotentIdeal
-
-open LieAlgebra LieModule LieIdeal
-
-attribute [local instance 100] LieRing.ofAssociativeRing LieRingModule.ofAssociativeModule
-
-variable (p : ℕ) [Fact p.Prime]
-
-def ψ : ZMod p × ZMod p →ₗ⁅ZMod p⁆ LieDerivation (ZMod p) (GaloisField p p) (GaloisField p p) :=
-  sorry
-
-variable {K L : Type*}
-variable [Field K] [LieRing L] [LieAlgebra K L]
-
-lemma LieIdeal.lieIdealOf_maxNilpotentIdeal_eq_of_le
-    (I : LieIdeal K L) (hN : maxNilpotentIdeal K L ≤ I) :
-    maxNilpotentIdeal K I = lieIdealOf (maxNilpotentIdeal K L) I := by
-  impossible +levels by
-    push Not
-    obtain ⟨p, hp⟩ : ∃ p : ℕ, Fact p.Prime := ⟨2, by decide⟩
-    existsi GaloisField p p
-    sorry
-
-end CounterExample.LieMaxNilpotentIdeal
-
-#exit
-
 open Module LieAlgebra LieModule
 
 variable {K 𝔰 : Type*}
