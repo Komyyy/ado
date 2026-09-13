@@ -29,8 +29,9 @@ variable {K 𝔫 : Type*}
 variable [Field K] [LieRing 𝔫] [LieAlgebra K 𝔫] [FiniteDimensional K 𝔫]
 variable [LieRing.IsNilpotent 𝔫]
 
-@[simps toSubmodule]
-def Submodule.toLieSubalgebraOfDimOne (𝔥 : Submodule K 𝔫) (h𝔥 : finrank K 𝔥 = 1) :
+-- `expose` しないと `simps` でエラーになる
+@[expose, simps toSubmodule]
+public def Submodule.toLieSubalgebraOfDimOne (𝔥 : Submodule K 𝔫) (h𝔥 : finrank K 𝔥 = 1) :
     LieSubalgebra K 𝔫 where
   toSubmodule := 𝔥
   lie_mem' {x y} hx hy := by

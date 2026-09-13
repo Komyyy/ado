@@ -14,6 +14,11 @@ open Module LieAlgebra LieModule
 
 variable {K 𝔰 : Type*}
 variable [Field K] [CharZero K] [LieRing 𝔰] [LieAlgebra K 𝔰] [FiniteDimensional K 𝔰]
+
+-- 注意: 正標数では成り立たない。別ファイルの反例を参照。
+public axiom LieIdeal.lieIdealOf_nilradical_eq_of_le (I : LieIdeal K 𝔰) (hN : nilradical K 𝔰 ≤ I) :
+    nilradical K I = lieIdealOf (nilradical K 𝔰) I
+
 variable [LieAlgebra.IsSolvable 𝔰]
 
 variable (K 𝔰) in
@@ -47,9 +52,10 @@ public local instance LieAlgebra.IsAdo.of_isSolvable : IsAdo K 𝔰 := by
     specialize hin hn𝔞
     obtain ⟨𝔥, h𝔥₁⟩ : ∃ 𝔥 : LieSubalgebra K 𝔰, IsCompl 𝔞.toSubmodule 𝔥.toSubmodule := by
       obtain ⟨𝔥', h𝔥'⟩ := exists_isCompl 𝔞.toSubmodule
-      stop
-      rw [← Submodule.finrank_add_eq_of_isCompl h𝔥', finrank_toSubmodule,
-        Nat.add_left_cancel_iff] at hn
+      simp_rw [← hn𝔞, LieIdeal.finrank_quotient, 𝔞.lieIdealOf_nilradical_eq_of_le h𝔞,
+        LieIdeal.finrank_lieIdealOf _ _ h𝔞, ← Submodule.finrank_add_eq_of_isCompl h𝔥',
+        LieIdeal.finrank_toSubmodule] at hn
+      conv at hn => equals finrank K 𝔥' = 1 => grind only [LieIdeal.finrank_mono h𝔞]
       existsi 𝔥'.toLieSubalgebraOfDimOne hn
       exact h𝔥'
     exact ⟨{ 𝔞, 𝔥, nilradical_le_𝔞 := h𝔞, isCompl_toSubmodule := h𝔥₁ }⟩

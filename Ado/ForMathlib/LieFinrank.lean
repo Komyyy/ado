@@ -65,9 +65,14 @@ lemma finrank_quotient {R : Type*} {L : Type u} [CommRing R] [LieRing L] [LieAlg
 
 @[simp]
 lemma finrank_le {R : Type*} {L : Type u} [CommRing R] [LieRing L] [LieAlgebra R L]
-    [Nontrivial R] [HasRankNullity.{u} R] [Module.Finite R L] (p : LieIdeal R L) :
+    [Nontrivial R] [Module.Finite R L] (p : LieIdeal R L) :
     finrank R p ≤ finrank R L :=
   p.toSubmodule.finrank_le
+
+lemma finrank_mono {R : Type*} {L : Type u} [CommRing R] [LieRing L] [LieAlgebra R L]
+    [Nontrivial R] {I J : LieIdeal R L} [Module.Finite R J] (hIJ : I ≤ J) :
+    finrank R I ≤ finrank R J :=
+  Submodule.finrank_mono (s := I.toSubmodule) (t := J.toSubmodule) (by simp [hIJ])
 
 end LieIdeal
 
