@@ -71,8 +71,8 @@ lemma LieIdeal.exists_for_nilStepAdoData_of_not_isLieAbelian (n : ℕ)
       idealRange_eq_top_of_surjective _
         (lieIdealComap_surjective_of_surjective _ _ (LieIdeal.Quotient.surjective_mk' _)),
       LieIdeal.finrank_top, lieIdealComap_ker, LieIdeal.Quotient.mk'_ker]
-    conv =>
-      enter [1, 2]
+    conv_lhs =>
+      enter [2]
       apply finrank_lieIdealOf
       tactic => grw [← ker_le_comap, LieIdeal.Quotient.mk'_ker]
     rw [finrank_quotient, eq_tsub_iff_add_eq_of_le (by simp)] at h𝔞'
