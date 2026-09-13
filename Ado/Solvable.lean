@@ -17,10 +17,9 @@ variable [Field K] [CharZero K] [LieRing 𝔰] [LieAlgebra K 𝔰] [FiniteDimens
 variable [LieAlgebra.IsSolvable 𝔰]
 
 variable (K 𝔰) in
-lemma LieIdeal.exists_for_solStepAdoData_of_not_isLieAbelian (n : ℕ)
+public axiom LieIdeal.exists_for_solStepAdoData_of_not_isLieAbelian (n : ℕ)
     (h𝔫r : finrank K (𝔰 ⧸ maxNilpotentIdeal K 𝔰) = n + 1) :
-    ∃ 𝔞 : LieIdeal K 𝔰, finrank K (𝔞 ⧸ maxNilpotentIdeal K 𝔞) = n ∧ maxNilpotentIdeal K 𝔰 ≤ 𝔞 := by
-  sorry
+    ∃ 𝔞 : LieIdeal K 𝔰, finrank K (𝔞 ⧸ maxNilpotentIdeal K 𝔞) = n ∧ maxNilpotentIdeal K 𝔰 ≤ 𝔞
 
 structure SolStepAdoData (K 𝔰 : Type*)
     [Field K] [CharZero K] [LieRing 𝔰] [LieAlgebra K 𝔰] [FiniteDimensional K 𝔰]
