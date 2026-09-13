@@ -4,13 +4,18 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Miyahara Kō
 -/
 module
-public import Mathlib.Algebra.Lie.Nilpotent
 public import Mathlib.Algebra.Order.Ring.Star
 public import Mathlib.Order.CompletePartialOrder
+public import Ado.ForMathlib.LieIdealLieSubalgebra
+public import Ado.ForMathlib.LieModuleRestr
+public import Ado.ForMathlib.LieQuotient
+
+public import Mathlib.Tactic.Replace
 
 public section
 
 open Filter Function
+open LieSubmodule hiding eq_bot_iff
 
 variable {R L M : Type*}
 variable [CommRing R] [LieRing L] [LieAlgebra R L] [AddCommGroup M] [Module R M]
@@ -93,6 +98,12 @@ lemma list_prod_map_toEnd_apply_mem_lowerCentralSeries (l : List L) (m : M) :
   | nil => simp
   | cons x l hl => simp [LieSubmodule.lie_mem_lie, hl]
 
+@[congr]
+lemma isNilpotent_congr_left (L' L'' : LieSubalgebra R L) (h : L' = L'') :
+    IsNilpotent L' M ↔ IsNilpotent L'' M :=
+  Equiv.lieModule_isNilpotent_iff (LieEquiv.ofEq L' L'' (by simp [h])) (LinearEquiv.refl R M)
+    (by simp)
+
 instance (I : LieIdeal R L) [IsNilpotent L M] : IsNilpotent I M :=
   Function.Injective.lieModuleIsNilpotent (f := LieIdeal.incl I) (g := LinearMap.id)
     (by simp) injective_id
@@ -104,5 +115,78 @@ instance (L' : LieSubalgebra R L) [IsNilpotent L M] : IsNilpotent L' M :=
 instance (N : LieSubmodule R L M) [IsNilpotent L M] : IsNilpotent L N :=
   Function.Injective.lieModuleIsNilpotent (f := LieHom.id) (g := N.incl.toLinearMap)
     (by simp [- LieSubmodule.incl_coe]) N.injective_incl
+
+instance (I : LieIdeal R L) [IsNilpotent I M] : IsNilpotent I.toLieSubalgebra M :=
+  inferInstanceAs (IsNilpotent I M)
+
+instance isNilpotent_sup_left (L' : LieSubalgebra R L) (I : LieIdeal R L)
+    [IsNilpotent L' M] [IsNilpotent I M] : IsNilpotent ↥(L' ⊔ I.toLieSubalgebra) M := by
+  suffices h : ∀ n,
+      IsNilpotent ↥(L' ⊔ I.toLieSubalgebra) (I.lcs M n ⧸ comap (I.lcs M n).incl (I.lcs M (n + 1)))
+  · rename IsNilpotent I M => hI
+    change ∀ n,
+      IsNilpotent ↥(L' ⊔ I.toLieSubalgebra)
+        ((I.lcs M n).restr (L' ⊔ I.toLieSubalgebra) ⧸
+          comap ((I.lcs M n).restr (L' ⊔ I.toLieSubalgebra)).incl
+            ((I.lcs M (n + 1)).restr (L' ⊔ I.toLieSubalgebra))) at h
+    simp_rw [isNilpotent_quotient_iff, lowerCentralSeries_eq_lcs_comap,
+      ← LieSubmodule.map_le_iff_le_comap, LieSubmodule.map_comap_incl,
+      inf_of_le_right (lcs_le_self _ _), lcs_le_iff] at h
+    simp_rw [isNilpotent_iff R, ← toSubmodule_inj, ← LieIdeal.coe_lcs_eq,
+      LieSubmodule.bot_toSubmodule, toSubmodule_eq_bot] at hI
+    obtain ⟨k, hk⟩ := hI
+    replace h : ∀ n ≤ k, ∃ m,
+        (I.lcs M n).restr (L' ⊔ LieIdeal.toLieSubalgebra R L I) ≤
+          ucs m ((I.lcs M k).restr (L' ⊔ LieIdeal.toLieSubalgebra R L I))
+    · intro n hn
+      induction hn using Nat.decreasingInduction with
+      | self => existsi 0; simp
+      | of_succ n hn hin =>
+        specialize h n
+        obtain ⟨m₁, hm₁⟩ := h
+        obtain ⟨m₂, hm₂⟩ := hin
+        existsi m₁ + m₂
+        grw [hm₁, hm₂, ucs_add]
+    specialize h 0 zero_le
+    simp_rw [LieIdeal.lcs_zero, hk, restr_top, restr_bot, ← eq_top_iff,
+      ← isNilpotent_iff_exists_ucs_eq_top] at h
+    exact h
+  intro n
+  have hL' : IsNilpotent L' (I.lcs M n)
+  · change IsNilpotent L' ((I.lcs M n).restr L')
+    have : IsNilpotent L' (⊤ : LieSubmodule R L' M)
+    · rw [isNilpotent_of_top_iff']; infer_instance
+    refine isNilpotent_of_le _ _ _ _ ⊤ le_top
+  replace hL' : IsNilpotent L' (I.lcs M n ⧸ comap (I.lcs M n).incl (I.lcs M (n + 1)))
+  · change IsNilpotent L' (I.lcs M n ⧸ (comap (I.lcs M n).incl (I.lcs M (n + 1))).restr L')
+    infer_instance
+  have : IsTrivial I (I.lcs M n ⧸ comap (I.lcs M n).incl (I.lcs M (n + 1)))
+  · constructor
+    intro x a
+    obtain ⟨a, rfl⟩ := LieSubmodule.Quotient.surjective_mk' _ a
+    simp [lie_mem_lie]
+  suffices h : ∀ k,
+      (lowerCentralSeries R ↥(L' ⊔ I.toLieSubalgebra)
+        (I.lcs M n ⧸ comap (I.lcs M n).incl (I.lcs M (n + 1))) k).toSubmodule =
+        (lowerCentralSeries R L'
+          (I.lcs M n ⧸ comap (I.lcs M n).incl (I.lcs M (n + 1))) k).toSubmodule
+  · simp_rw [isNilpotent_iff R, ← toSubmodule_eq_bot, h, toSubmodule_eq_bot, ← isNilpotent_iff, hL']
+  intro k
+  induction k with
+  | zero => simp
+  | succ k hk =>
+    simp_rw [lowerCentralSeries_succ, lieIdeal_oper_eq_linear_span', LieSubmodule.mem_top, true_and,
+      ← mem_toSubmodule, hk, mem_toSubmodule, SetLike.exists, LieSubalgebra.coe_bracket_of_module,
+      exists_prop, ← (L' ⊔ I.toLieSubalgebra).mem_toSubmodule,
+      LieSubalgebra.toSubmodule_sup_lieIdeal, Submodule.exists_mem_sup,
+      LieSubalgebra.mem_toSubmodule, mem_toSubmodule, add_lie, ← exists_prop (a := _ ∈ I),
+      Subtype.exists', ← LieIdeal.coe_bracket_of_module, trivial_lie_zero]
+    simp
+
+instance (I I' : LieIdeal R L) [IsNilpotent I M] [IsNilpotent I' M] : IsNilpotent ↥(I ⊔ I') M := by
+  change IsNilpotent ↥(I ⊔ I').toLieSubalgebra M
+  conv => equals IsNilpotent ↥(I.toLieSubalgebra ⊔ I'.toLieSubalgebra) M =>
+    simp
+  infer_instance
 
 end LieModule
