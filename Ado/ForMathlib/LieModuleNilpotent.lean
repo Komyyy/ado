@@ -49,6 +49,10 @@ lemma isNilpotent_of_lieIdeal_le_left (I₁ I₂ : LieIdeal R L) (h : I₁ ≤ I
   Function.Injective.lieModuleIsNilpotent (f := LieIdeal.inclusion h) (g := LinearMap.id)
     (by simp) injective_id
 
+lemma _root_.LieRing.isNilpotent_of_lieIdeal_le (I₁ I₂ : LieIdeal R L) (h : I₁ ≤ I₂)
+    [LieRing.IsNilpotent I₂] : LieRing.IsNilpotent I₁ :=
+  (LieIdeal.inclusion_injective h).lieAlgebra_isNilpotent
+
 @[congr]
 lemma isNilpotent_lieIdeal_congr_left (I₁ I₂ : LieIdeal R L) (h : I₁ = I₂) :
     IsNilpotent I₁ M ↔ IsNilpotent I₂ M where
@@ -59,6 +63,10 @@ lemma isNilpotent_lieIdeal_congr_left (I₁ I₂ : LieIdeal R L) (h : I₁ = I�
 theorem isNilpotent_of_top_lieIdeal_iff :
     IsNilpotent (⊤ : LieIdeal R L) M ↔ IsNilpotent L M :=
   Equiv.lieModule_isNilpotent_iff LieIdeal.topEquiv (1 : M ≃ₗ[R] M) fun _ _ => rfl
+
+lemma _root_.LieRing.isNilpotent_lieIdeal_top_iff :
+    LieRing.IsNilpotent (⊤ : LieIdeal R L) ↔ LieRing.IsNilpotent L := by
+  simp
 
 variable (R) in
 lemma nilpotencyLength_eq_iInf :

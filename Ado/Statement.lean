@@ -6,36 +6,11 @@ Authors: Miyahara Kō
 module
 public import Ado.ForMathlib.LieModuleShrink
 public import Ado.ForMathlib.LieModuleNilpotent
+public import Ado.ForMathlib.Nilradical
 
 /-!
 ## Ado の定理の主張
 -/
-
-section ForMathlib
-
-public section Nilradical
-
-namespace LieAlgebra
-
-variable (R L : Type*) [CommRing R] [LieRing L] [LieAlgebra R L]
-
-/-- **注意:** これは `maxNilpotentIdeal` とは異なります。`maxNilpotentIdeal` は最大の `L`-冪零イデアル
-ですが、`nilradical R L = 𝔫` は最大の `𝔫`-冪零イデアルです。 -/
-def nilradical : LieIdeal R L :=
-  sSup {N | LieRing.IsNilpotent N}
-
-variable {R L}
-
-instance [IsNoetherian R L] : LieRing.IsNilpotent (nilradical R L) := by
-  have hwf := WellFoundedGT.isSupClosedCompact (α := LieIdeal R L) inferInstance
-  refine hwf {N | LieRing.IsNilpotent N} ⟨⊥, ?_⟩ fun N₁ h₁ N₂ h₂ => ?_ <;>
-  simp_all only [Set.mem_ofPred] <;> infer_instance
-
-end LieAlgebra
-
-end Nilradical
-
-end ForMathlib
 
 public section
 
@@ -54,7 +29,7 @@ structure BundledAdoSpace (K : Type u) (𝔤 : Type*) [Field K] [LieRing 𝔤] [
   [instLieRingModule : LieRingModule 𝔤 V]
   [instLieModule : LieModule K 𝔤 V]
   [instIsFaithful : IsFaithful K 𝔤 V]
-  [instIsNilpotentMaxNilpotentIdeal : IsNilpotent (maxNilpotentIdeal K 𝔤) V]
+  [instIsNilpotentNilradical : IsNilpotent (nilradical K 𝔤) V]
 
 attribute [instance]
   BundledAdoSpace.instAddCommGroup
@@ -63,12 +38,12 @@ attribute [instance]
   BundledAdoSpace.instLieRingModule
   BundledAdoSpace.instLieModule
   BundledAdoSpace.instIsFaithful
-  BundledAdoSpace.instIsNilpotentMaxNilpotentIdeal
+  BundledAdoSpace.instIsNilpotentNilradical
 
 @[expose]
 noncomputable def BundledAdoSpace.mk {K : Type u} {𝔤 : Type*} [Field K] [LieRing 𝔤] [LieAlgebra K 𝔤]
     (V : Type*) [AddCommGroup V] [Module K V] [FiniteDimensional K V] [LieRingModule 𝔤 V]
-    [LieModule K 𝔤 V] [IsFaithful K 𝔤 V] [IsNilpotent (maxNilpotentIdeal K 𝔤) V] :
+    [LieModule K 𝔤 V] [IsFaithful K 𝔤 V] [IsNilpotent (nilradical K 𝔤) V] :
     BundledAdoSpace K 𝔤 :=
   haveI : Small.{u} V := Module.Finite.small K V
   { V := Shrink.{u} V }
@@ -79,7 +54,7 @@ class IsAdo (K : Type u) (𝔤 : Type*) [Field K] [LieRing 𝔤] [LieAlgebra K �
 
 lemma IsAdo.intro {K 𝔤 : Type*} [Field K] [LieRing 𝔤] [LieAlgebra K 𝔤]
     (V : Type*) [AddCommGroup V] [Module K V] [FiniteDimensional K V] [LieRingModule 𝔤 V]
-    [LieModule K 𝔤 V] [IsFaithful K 𝔤 V] [IsNilpotent (maxNilpotentIdeal K 𝔤) V] : IsAdo K 𝔤 :=
+    [LieModule K 𝔤 V] [IsFaithful K 𝔤 V] [IsNilpotent (nilradical K 𝔤) V] : IsAdo K 𝔤 :=
   ⟨⟨.mk V⟩⟩
 
 end LieAlgebra
@@ -112,8 +87,8 @@ instance : LieModule K 𝔤 (AdoSpace K 𝔤) :=
 instance : IsFaithful K 𝔤 (AdoSpace K 𝔤) :=
   inferInstanceAs (IsFaithful K 𝔤 ia.nonempty_bundledAdoSpace.some.V)
 
-instance : IsNilpotent (maxNilpotentIdeal K 𝔤) (AdoSpace K 𝔤) :=
-  inferInstanceAs (IsNilpotent (maxNilpotentIdeal K 𝔤) ia.nonempty_bundledAdoSpace.some.V)
+instance : IsNilpotent (nilradical K 𝔤) (AdoSpace K 𝔤) :=
+  inferInstanceAs (IsNilpotent (nilradical K 𝔤) ia.nonempty_bundledAdoSpace.some.V)
 
 instance [LieRing.IsNilpotent 𝔤] : IsNilpotent 𝔤 (AdoSpace K 𝔤) := by
-  simpa using (inferInstance : IsNilpotent (maxNilpotentIdeal K 𝔤) (AdoSpace K 𝔤))
+  simpa using (inferInstance : IsNilpotent (nilradical K 𝔤) (AdoSpace K 𝔤))

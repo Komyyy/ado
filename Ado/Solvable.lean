@@ -18,27 +18,27 @@ variable [LieAlgebra.IsSolvable 𝔰]
 
 variable (K 𝔰) in
 public axiom LieIdeal.exists_for_solStepAdoData_of_not_isLieAbelian (n : ℕ)
-    (h𝔫r : finrank K (𝔰 ⧸ maxNilpotentIdeal K 𝔰) = n + 1) :
-    ∃ 𝔞 : LieIdeal K 𝔰, finrank K (𝔞 ⧸ maxNilpotentIdeal K 𝔞) = n ∧ maxNilpotentIdeal K 𝔰 ≤ 𝔞
+    (h𝔫r : finrank K (𝔰 ⧸ nilradical K 𝔰) = n + 1) :
+    ∃ 𝔞 : LieIdeal K 𝔰, finrank K (𝔞 ⧸ nilradical K 𝔞) = n ∧ nilradical K 𝔰 ≤ 𝔞
 
 structure SolStepAdoData (K 𝔰 : Type*)
     [Field K] [CharZero K] [LieRing 𝔰] [LieAlgebra K 𝔰] [FiniteDimensional K 𝔰]
     [LieAlgebra.IsSolvable 𝔰] where
   protected 𝔞 : LieIdeal K 𝔰
   protected 𝔥 : LieSubalgebra K 𝔰
-  maxNilpotentIdeal_le_𝔞 : maxNilpotentIdeal K 𝔰 ≤ 𝔞
+  nilradical_le_𝔞 : nilradical K 𝔰 ≤ 𝔞
   isCompl_toSubmodule : IsCompl 𝔞.toSubmodule 𝔥.toSubmodule
   [instIsAdo𝔞 : IsAdo K 𝔞]
 
 axiom SolStepAdoData.isAdo (D : SolStepAdoData K 𝔰) : IsAdo K 𝔰
 
 public local instance LieAlgebra.IsAdo.of_isSolvable : IsAdo K 𝔰 := by
-  generalize hn : finrank K (𝔰 ⧸ maxNilpotentIdeal K 𝔰) = n
+  generalize hn : finrank K (𝔰 ⧸ nilradical K 𝔰) = n
   induction n generalizing 𝔰 with
   | zero =>
     rw [LieIdeal.finrank_quotient, Nat.sub_eq_zero_iff_le, ← not_lt, LieIdeal.finrank_lt_iff,
-      not_lt_top_iff, ← top_le_iff, ← LieIdeal.isNilpotent_iff_le_maxNilpotentIdeal,
-      isNilpotent_of_top_iff'] at hn
+      not_lt_top_iff, ← top_le_iff, ← LieIdeal.isNilpotent_iff_le_nilradical,
+      LieRing.isNilpotent_lieIdeal_top_iff] at hn
     exact IsAdo.of_isNilpotent
   | succ n hin =>
     rsuffices ⟨D⟩ : Nonempty (SolStepAdoData K 𝔰)
@@ -52,4 +52,4 @@ public local instance LieAlgebra.IsAdo.of_isSolvable : IsAdo K 𝔰 := by
         Nat.add_left_cancel_iff] at hn
       existsi 𝔥'.toLieSubalgebraOfDimOne hn
       exact h𝔥'
-    exact ⟨{ 𝔞, 𝔥, maxNilpotentIdeal_le_𝔞 := h𝔞, isCompl_toSubmodule := h𝔥₁ }⟩
+    exact ⟨{ 𝔞, 𝔥, nilradical_le_𝔞 := h𝔞, isCompl_toSubmodule := h𝔥₁ }⟩
