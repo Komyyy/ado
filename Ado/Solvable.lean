@@ -10,6 +10,10 @@ public import Ado.Nilpotent
 ## 可解 Lie 代数に対する Ado の定理
 -/
 
+-- 公理を公開するために使用
+set_option backward.privateInPublic true
+set_option backward.privateInPublic.warn false
+
 open Module LieAlgebra LieModule
 
 variable {K 𝔰 : Type*}
@@ -35,7 +39,7 @@ structure SolStepAdoData (K 𝔰 : Type*)
   isCompl_toSubmodule : IsCompl 𝔞.toSubmodule 𝔥.toSubmodule
   [instIsAdo𝔞 : IsAdo K 𝔞]
 
-axiom SolStepAdoData.isAdo (D : SolStepAdoData K 𝔰) : IsAdo K 𝔰
+public axiom SolStepAdoData.isAdo (D : SolStepAdoData K 𝔰) : IsAdo K 𝔰
 
 public local instance LieAlgebra.IsAdo.of_isSolvable : IsAdo K 𝔰 := by
   generalize hn : finrank K (𝔰 ⧸ nilradical K 𝔰) = n
