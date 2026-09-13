@@ -1,1 +1,2 @@
-import Ado.Nilpotent
+module
+public import Ado.Solvable
