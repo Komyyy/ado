@@ -119,6 +119,12 @@ instance (N : LieSubmodule R L M) [IsNilpotent L M] : IsNilpotent L N :=
 instance (I : LieIdeal R L) [IsNilpotent I M] : IsNilpotent I.toLieSubalgebra M :=
   inferInstanceAs (IsNilpotent I M)
 
+instance (L' : LieSubalgebra R L) (N : LieSubmodule R L M) [IsNilpotent L' M] : IsNilpotent L' N :=
+  inferInstanceAs (IsNilpotent L' (N.restr L'))
+
+instance (I : LieIdeal R L) (N : LieSubmodule R L M) [IsNilpotent I M] : IsNilpotent I N :=
+  inferInstanceAs (IsNilpotent I.toLieSubalgebra N)
+
 instance isNilpotent_sup_left (L' : LieSubalgebra R L) (I : LieIdeal R L)
     [IsNilpotent L' M] [IsNilpotent I M] : IsNilpotent ↥(L' ⊔ I.toLieSubalgebra) M := by
   suffices h : ∀ n,
@@ -188,5 +194,20 @@ instance (I I' : LieIdeal R L) [IsNilpotent I M] [IsNilpotent I' M] : IsNilpoten
   conv => equals IsNilpotent ↥(I.toLieSubalgebra ⊔ I'.toLieSubalgebra) M =>
     simp
   infer_instance
+
+instance (I : LieIdeal R L) [LieRing.IsNilpotent I] : IsNilpotent I L := by
+  suffices h : ∀ n, I.lcs L (n + 1) ≤ (I.lcs I n).map (LieSubmodule.incl I)
+  · rename LieRing.IsNilpotent I => hI
+    simp_rw [isNilpotent_iff R, ← LieSubmodule.toSubmodule_eq_bot, ← I.coe_lcs_eq,
+      LieSubmodule.toSubmodule_eq_bot] at hI ⊢
+    obtain ⟨k, hk⟩ := hI
+    specialize h k
+    grw [hk, LieSubmodule.map_bot, le_bot_iff] at h
+    exists k + 1
+  intro n
+  induction n with
+  | zero => simp [LieSubmodule.lie_le_left]
+  | succ n hn =>
+    grw [I.lcs_succ _ (n + 1), hn, I.lcs_succ, LieSubmodule.map_bracket_eq]
 
 end LieModule
