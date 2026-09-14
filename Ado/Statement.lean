@@ -16,7 +16,7 @@ public section
 
 universe u
 
-open LieAlgebra LieModule
+open Function LieAlgebra LieModule LieIdeal
 
 namespace LieAlgebra
 
@@ -63,8 +63,9 @@ def AdoSpace (K : Type u) (𝔤 : Type*)
     [Field K] [LieRing 𝔤] [LieAlgebra K 𝔤] [ia : IsAdo K 𝔤] : Type u :=
   ia.nonempty_bundledAdoSpace.some.V
 
-variable (K : Type u) (𝔤 : Type*)
+variable {K : Type u} {𝔤 𝔤₁ 𝔤₂ : Type*}
 variable [Field K] [LieRing 𝔤] [LieAlgebra K 𝔤] [ia : IsAdo K 𝔤]
+variable [LieRing 𝔤₁] [LieAlgebra K 𝔤₁] [LieRing 𝔤₂] [LieAlgebra K 𝔤₂]
 
 @[no_expose]
 noncomputable instance : AddCommGroup (AdoSpace K 𝔤) :=
@@ -92,3 +93,24 @@ instance : IsNilpotent (nilradical K 𝔤) (AdoSpace K 𝔤) :=
 
 instance [LieRing.IsNilpotent 𝔤] : IsNilpotent 𝔤 (AdoSpace K 𝔤) := by
   simpa using (inferInstance : IsNilpotent (nilradical K 𝔤) (AdoSpace K 𝔤))
+
+lemma LieEquiv.isAdo (e : 𝔤₁ ≃ₗ⁅K⁆ 𝔤₂) [IsAdo K 𝔤₁] : IsAdo K 𝔤₂ := by
+  let : LieRingModule 𝔤₂ (AdoSpace K 𝔤₁) :=
+    { bracket x m := ⁅e.symm x, m⁆
+      add_lie := by simp
+      lie_add := by simp
+      -- これ `simp` に出来ない?
+      leibniz_lie := by simp [LieEquiv.map_lie] }
+  have hlie (x : 𝔤₂) (m : AdoSpace K 𝔤₁) : ⁅x, m⁆ = ⁅e.symm x, m⁆ := rfl
+  have : LieModule K 𝔤₂ (AdoSpace K 𝔤₁) :=
+    { smul_lie := by simp [hlie]
+      lie_smul := by simp [hlie] }
+  have : IsFaithful K 𝔤₂ (AdoSpace K 𝔤₁) :=
+    { injective_toEnd := (IsFaithful.injective_toEnd (L := 𝔤₁)).comp e.symm.injective }
+  have : IsNilpotent (nilradical K 𝔤₂) (AdoSpace K 𝔤₁)
+  · suffices h : IsNilpotent (map e.toLieHom (nilradical K 𝔤₁)) (AdoSpace K 𝔤₁)
+    · simpa using h
+    rw [← Equiv.lieModule_isNilpotent_iff (lieIdealMap e (nilradical K 𝔤₁))
+      (LinearEquiv.refl K (AdoSpace K 𝔤₁)) (by simp [hlie])]
+    infer_instance
+  exact .intro (AdoSpace K 𝔤₁)

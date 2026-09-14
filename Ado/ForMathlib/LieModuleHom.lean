@@ -26,7 +26,7 @@ lemma _root_.LieModuleHom.ker_comp (f : M →ₗ⁅R,L⁆ M₂) (g : M₂ →ₗ
   ext x; simp
 
 @[simp high]
-lemma mem_map_equiv (e : M ≃ₗ⁅R,L⁆ M₂) (N : LieSubmodule R L M) (x) :
+lemma mem_map_equiv {e : M ≃ₗ⁅R,L⁆ M₂} {N : LieSubmodule R L M} {x} :
     x ∈ map e N ↔ e.symm x ∈ N := by
   simp [e.symm.surjective.exists]
 
