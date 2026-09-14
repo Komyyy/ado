@@ -114,3 +114,7 @@ lemma LieEquiv.isAdo (e : 𝔤₁ ≃ₗ⁅K⁆ 𝔤₂) [IsAdo K 𝔤₁] : IsA
       (LinearEquiv.refl K (AdoSpace K 𝔤₁)) (by simp [hlie])]
     infer_instance
   exact .intro (AdoSpace K 𝔤₁)
+
+lemma LieEquiv.isAdo_iff (e : 𝔤₁ ≃ₗ⁅K⁆ 𝔤₂) : IsAdo K 𝔤₁ ↔ IsAdo K 𝔤₂ where
+  mp _ := e.isAdo
+  mpr _ := e.symm.isAdo
