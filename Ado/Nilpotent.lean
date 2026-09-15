@@ -220,55 +220,48 @@ lemma LieIdeal.exists_for_nilStepAdoData_of_not_isLieAbelian (n : ℕ)
   simp_rw +singlePass [← finrank_lt_iff, ← Nat.sub_pos_iff_lt, ← finrank_quotient] at h𝔫'
   exact h𝔫'
 
-structure NilStepAdoData (K 𝔫 : Type*)
-    [Field K] [LieRing 𝔫] [LieAlgebra K 𝔫] [FiniteDimensional K 𝔫] [LieRing.IsNilpotent 𝔫] where
-  protected 𝔞 : LieIdeal K 𝔫
-  protected 𝔥 : LieSubalgebra K 𝔫
-  center_le_𝔞 : center K 𝔫 ≤ 𝔞
-  isCompl_toSubmodule : IsCompl 𝔞.toSubmodule 𝔥.toSubmodule
-  [instIsAdo𝔞 : IsAdo K 𝔞]
+variable {𝔞 𝔥 : Type*}
+variable [LieRing 𝔞] [LieAlgebra K 𝔞] [LieRing 𝔥] [LieAlgebra K 𝔥]
+variable (ψ : 𝔥 →ₗ⁅K⁆ LieDerivation K 𝔞 𝔞)
+variable (hc : center K (𝔞 ⋊⁅ψ⁆ 𝔥) ≤ (SemiDirectSum.inl ψ).idealRange)
 
-attribute [instance] NilStepAdoData.instIsAdo𝔞
-
-namespace NilStepAdoData
+namespace LieAlgebra.SemiDirectSum
 
 open TensorAlgebra (ι)
 
-variable (D : NilStepAdoData K 𝔫)
-
 attribute [local instance 100] LieRing.ofAssociativeRing
 
-def bracketAux (x : D.𝔥) : End K (TensorAlgebra K D.𝔞) :=
+def leftLieUEAux (x : 𝔥) : End K (TensorAlgebra K 𝔞) :=
   LinearEquiv.conj TensorAlgebra.equivDirectSum.toLinearEquiv.symm
     (DirectSum.lmap (fun n ↦
-      ∑ i : Fin n, PiTensorProduct.map (update (fun _ ↦ LinearMap.id) i (toEnd K D.𝔥 D.𝔞 x))))
+      ∑ i : Fin n, PiTensorProduct.map (update (fun _ ↦ LinearMap.id) i (ψ x))))
 
 @[simp]
-lemma bracketAux_ι (x : D.𝔥) (y : D.𝔞) : D.bracketAux x (ι K y) = ι K ⁅x, y⁆ := by
-  simp [bracketAux]
+lemma leftLieUEAux_ι (x : 𝔥) (y : 𝔞) : leftLieUEAux ψ x (ι K y) = ι K (ψ x y) := by
+  simp [leftLieUEAux]
 
 @[simp]
-lemma bracketAux_tprod (x : D.𝔥) {n} (f : Fin n → D.𝔞) :
-    D.bracketAux x (TensorAlgebra.tprod K D.𝔞 n f) =
-      ∑ i : Fin n, TensorAlgebra.tprod K D.𝔞 n (update f i ⁅x, f i⁆) := by
-  simp [bracketAux, - TensorAlgebra.tprod_apply, TensorAlgebra.toDirectSum_tensorPower_tprod,
-    apply_update (f := fun (i : Fin n) (F : D.𝔞 →ₗ[K] D.𝔞) ↦ F (f i))]
+lemma leftLieUEAux_tprod (x : 𝔥) {n} (f : Fin n → 𝔞) :
+    leftLieUEAux ψ x (TensorAlgebra.tprod K 𝔞 n f) =
+      ∑ i : Fin n, TensorAlgebra.tprod K 𝔞 n (update f i (ψ x (f i))) := by
+  simp [leftLieUEAux, - TensorAlgebra.tprod_apply, TensorAlgebra.toDirectSum_tensorPower_tprod,
+    apply_update (f := fun (i : Fin n) (F : 𝔞 →ₗ[K] 𝔞) ↦ F (f i))]
 
-lemma bracketAux_bracketAux_tprod (x y : D.𝔥) {n} (f : Fin n → D.𝔞) :
-    D.bracketAux x (D.bracketAux y (TensorAlgebra.tprod K D.𝔞 n f)) =
-      (∑ i : Fin n, TensorAlgebra.tprod K D.𝔞 n (update f i ⁅x, ⁅y, f i⁆⁆)) +
+lemma leftLieUEAux_leftLieUEAux_tprod (x y : 𝔥) {n} (f : Fin n → 𝔞) :
+    leftLieUEAux ψ x (leftLieUEAux ψ y (TensorAlgebra.tprod K 𝔞 n f)) =
+      (∑ i : Fin n, TensorAlgebra.tprod K 𝔞 n (update f i (ψ x (ψ y (f i))))) +
         (∑ p ∈ offDiag (univ : Finset (Fin n)),
-          TensorAlgebra.tprod K D.𝔞 n (update (update f p.1 ⁅y, f p.1⁆) p.2 ⁅x, f p.2⁆)) :=
+          TensorAlgebra.tprod K 𝔞 n (update (update f p.1 (ψ y (f p.1))) p.2 (ψ x (f p.2)))) :=
   calc _
-    _ = ∑ i : Fin n, D.bracketAux x (TensorAlgebra.tprod K D.𝔞 n (update f i ⁅y, f i⁆)) := by
-      conv_lhs => rw [bracketAux_tprod, map_sum]
+    _ = ∑ i : Fin n, leftLieUEAux ψ x (TensorAlgebra.tprod K 𝔞 n (update f i (ψ y (f i)))) := by
+      conv_lhs => rw [leftLieUEAux_tprod, map_sum]
     _ = ∑ i : Fin n, ∑ j : Fin n,
-        TensorAlgebra.tprod K D.𝔞 n
-          (update (update f i ⁅y, f i⁆) j (⁅x, update f i ⁅y, f i⁆ j⁆)) := by
-      simp only [bracketAux_tprod]
-    _ = (∑ i : Fin n, TensorAlgebra.tprod K D.𝔞 n (update f i ⁅x, ⁅y, f i⁆⁆)) +
+        TensorAlgebra.tprod K 𝔞 n
+          (update (update f i (ψ y (f i))) j (ψ x (update f i (ψ y (f i)) j))) := by
+      simp only [leftLieUEAux_tprod]
+    _ = (∑ i : Fin n, TensorAlgebra.tprod K 𝔞 n (update f i (ψ x (ψ y (f i))))) +
           (∑ i : Fin n, ∑ j ∈ ({i}ᶜ : Finset (Fin n)),
-            TensorAlgebra.tprod K D.𝔞 n (update (update f i ⁅y, f i⁆) j (⁅x, f j⁆))) := by
+            TensorAlgebra.tprod K 𝔞 n (update (update f i (ψ y (f i))) j (ψ x (f j)))) := by
       conv_lhs =>
         conv => enter [2, i]; rw [Fintype.sum_eq_add_sum_compl i]
         rw [sum_add_distrib]
@@ -279,17 +272,18 @@ lemma bracketAux_bracketAux_tprod (x y : D.𝔥) {n} (f : Fin n → D.𝔞) :
       apply sum_finset_product
       simp [not_iff_not, iff_true_intro eq_comm]
 
-lemma bracketAux_lie_left (x y : D.𝔥) (a) : D.bracketAux ⁅x, y⁆ a =
-    D.bracketAux x (D.bracketAux y a) - D.bracketAux y (D.bracketAux x a) := by
+lemma leftLieUEAux_lie_left (x y : 𝔥) (a) : leftLieUEAux ψ ⁅x, y⁆ a =
+    leftLieUEAux ψ x (leftLieUEAux ψ y a) - leftLieUEAux ψ y (leftLieUEAux ψ x a) := by
   revert a
-  suffices h : D.bracketAux ⁅x, y⁆ =
-      D.bracketAux x * D.bracketAux y - D.bracketAux y * D.bracketAux x by
+  suffices h : leftLieUEAux ψ ⁅x, y⁆ =
+      leftLieUEAux ψ x * leftLieUEAux ψ y - leftLieUEAux ψ y * leftLieUEAux ψ x by
     simpa [DFunLike.ext_iff] using h
   ext n f
   conv_lhs => tactic =>
-    simp_rw [bracketAux_tprod, lie_lie, MultilinearMap.map_update_sub, sum_sub_distrib]
+    simp_rw [leftLieUEAux_tprod, map_lie, LieDerivation.lie_apply, MultilinearMap.map_update_sub,
+      sum_sub_distrib]
   conv_rhs =>
-    simp only [LinearMap.sub_apply, End.mul_apply, bracketAux_bracketAux_tprod]
+    simp only [LinearMap.sub_apply, End.mul_apply, leftLieUEAux_leftLieUEAux_tprod]
     enter [2, 2]
     conv =>
       apply_congr
@@ -302,108 +296,113 @@ lemma bracketAux_lie_left (x y : D.𝔥) (a) : D.bracketAux ⁅x, y⁆ a =
       · intro i hi; simp only [Equiv.prodComm_apply, Prod.snd_swap, Prod.fst_swap]; rfl
   noncomm_ring
 
-lemma bracketAux_add_left (x y : D.𝔥) (a) :
-    D.bracketAux (x + y) a = D.bracketAux x a + D.bracketAux y a := by
-  simp [bracketAux, PiTensorProduct.map_update_add, Finset.sum_add_distrib]
+lemma leftLieUEAux_add_left (x y : 𝔥) (a) :
+    leftLieUEAux ψ (x + y) a = leftLieUEAux ψ x a + leftLieUEAux ψ y a := by
+  simp [leftLieUEAux, PiTensorProduct.map_update_add, Finset.sum_add_distrib]
 
-lemma bracketAux_smul_left (t : K) (x : D.𝔥) (a) :
-    D.bracketAux (t • x) a = t • D.bracketAux x a := by
-  simp [bracketAux, PiTensorProduct.map_update_smul, ← Finset.smul_sum]
+lemma leftLieUEAux_smul_left (t : K) (x : 𝔥) (a) :
+    leftLieUEAux ψ (t • x) a = t • leftLieUEAux ψ x a := by
+  simp [leftLieUEAux, PiTensorProduct.map_update_smul, ← Finset.smul_sum]
 
-lemma bracketAux_mul (x : D.𝔥) (a b) : D.bracketAux x (a * b) =
-    a * D.bracketAux x b + D.bracketAux x a * b := by
+lemma leftLieUEAux_mul (x : 𝔥) (a b) : leftLieUEAux ψ x (a * b) =
+    a * leftLieUEAux ψ x b + leftLieUEAux ψ x a * b := by
   revert a b
   suffices h :
-      (LinearMap.mul K (TensorAlgebra K D.𝔞)).compr₂ (D.bracketAux x) =
-        (LinearMap.mul K (TensorAlgebra K D.𝔞)).compl₁₂ LinearMap.id (D.bracketAux x) +
-          (LinearMap.mul K (TensorAlgebra K D.𝔞)).compl₁₂ (D.bracketAux x) LinearMap.id by
+      (LinearMap.mul K (TensorAlgebra K 𝔞)).compr₂ (leftLieUEAux ψ x) =
+        (LinearMap.mul K (TensorAlgebra K 𝔞)).compl₁₂ LinearMap.id (leftLieUEAux ψ x) +
+          (LinearMap.mul K (TensorAlgebra K 𝔞)).compl₁₂ (leftLieUEAux ψ x) LinearMap.id by
     simpa [DFunLike.ext_iff] using h
   conv_rhs => apply add_comm
   ext m y n z
   simp [Fin.sum_univ_add, - LieSubalgebra.coe_bracket_of_module, - TensorAlgebra.tprod_apply]
 
-lemma mkAlgHom_bracketAux_eq_of_ringCon (x : D.𝔥) (a b) (h : ringCon K D.𝔞 a b) :
-    mkAlgHom K D.𝔞 (D.bracketAux x a) = mkAlgHom K D.𝔞 (D.bracketAux x b) := by
+lemma mkAlgHom_leftLieUEAux_eq_of_ringCon (x : 𝔥) (a b) (h : ringCon K 𝔞 a b) :
+    mkAlgHom K 𝔞 (leftLieUEAux ψ x a) = mkAlgHom K 𝔞 (leftLieUEAux ψ x b) := by
   induction h using ringCon_induction with
   | refl | symm | trans | add => grind only [= map_add]
   | mul a b c d h₁ h₂ hi₁ hi₂ =>
-    rw [← mkAlgHom_eq_mkAlgHom] at h₁ h₂; simp [bracketAux_mul, *]
+    rw [← mkAlgHom_eq_mkAlgHom] at h₁ h₂; simp [leftLieUEAux_mul, *]
   | lie_compat a b =>
     simp_rw [map_add, ← eq_sub_iff_add_eq]
-    conv_rhs => simp only [bracketAux_mul, map_add, map_mul, bracketAux_ι, ← ι_apply]
+    conv_rhs => simp only [leftLieUEAux_mul, map_add, map_mul, leftLieUEAux_ι, ← ι_apply]
     conv_lhs =>
-      rw [bracketAux_ι, ← ι_apply, D.𝔥.coe_bracket_of_module, leibniz_lie,
-        ← D.𝔥.coe_bracket_of_module, ← D.𝔥.coe_bracket_of_module, map_add, map_lie, map_lie,
+      rw [leftLieUEAux_ι, ← ι_apply, LieDerivation.apply_lie_eq_add, map_add, map_lie, map_lie,
         LieRing.of_associative_ring_bracket, LieRing.of_associative_ring_bracket]
     noncomm_ring
 
-lemma ringCon_bracketAux_of_ringCon (x : D.𝔥) (a b) (h : ringCon K D.𝔞 a b) :
-    ringCon K D.𝔞 (D.bracketAux x a) (D.bracketAux x b) :=
-  mkAlgHom_eq_mkAlgHom.mp (D.mkAlgHom_bracketAux_eq_of_ringCon x a b h)
+lemma ringCon_leftLieUEAux_of_ringCon (x : 𝔥) (a b) (h : ringCon K 𝔞 a b) :
+    ringCon K 𝔞 (leftLieUEAux ψ x a) (leftLieUEAux ψ x b) :=
+  mkAlgHom_eq_mkAlgHom.mp (mkAlgHom_leftLieUEAux_eq_of_ringCon ψ x a b h)
 
-instance : Bracket D.𝔥 (UniversalEnvelopingAlgebra K D.𝔞) where
-  bracket x := tensorLift (mkAlgHom K D.𝔞 ∘ D.bracketAux x) (D.mkAlgHom_bracketAux_eq_of_ringCon x)
+def leftLieUE (x : 𝔥) : End K (UniversalEnvelopingAlgebra K 𝔞) :=
+  { toFun := tensorLift (mkAlgHom K 𝔞 ∘ leftLieUEAux ψ x) (mkAlgHom_leftLieUEAux_eq_of_ringCon ψ x)
+    map_add' a b := by
+      cases a with | mkAlgHom a
+      cases b with | mkAlgHom b
+      simp_rw [← map_add, tensorLift_mkAlgHom, comp_apply, map_add]
+    map_smul' t a := by
+      cases a with | mkAlgHom a
+      simp_rw [RingHom.id_apply, ← map_smul, tensorLift_mkAlgHom, comp_apply, map_smul] }
 
-lemma bracket_𝔥_def (x : D.𝔥) (a : UniversalEnvelopingAlgebra K D.𝔞) :
-    ⁅x, a⁆ =
-      tensorLift (mkAlgHom K D.𝔞 ∘ D.bracketAux x) (D.mkAlgHom_bracketAux_eq_of_ringCon x) a :=
+lemma leftLieUE_def (x : 𝔥) (a : UniversalEnvelopingAlgebra K 𝔞) :
+    leftLieUE ψ x a =
+      tensorLift (mkAlgHom K 𝔞 ∘ leftLieUEAux ψ x) (mkAlgHom_leftLieUEAux_eq_of_ringCon ψ x) a :=
   rfl
 
-lemma bracket_𝔥_mkAlgHom (x : D.𝔥) (a : TensorAlgebra K D.𝔞) :
-    ⁅x, mkAlgHom K D.𝔞 a⁆ = mkAlgHom K D.𝔞 (D.bracketAux x a) := by
-  simp [bracket_𝔥_def]
+lemma leftLieUE_mkAlgHom (x : 𝔥) (a : TensorAlgebra K 𝔞) :
+    leftLieUE ψ x (mkAlgHom K 𝔞 a) = mkAlgHom K 𝔞 (leftLieUEAux ψ x a) := by
+  simp [leftLieUE_def]
 
-instance : LieRingModule D.𝔥 (UniversalEnvelopingAlgebra K D.𝔞) where
-  add_lie x y a := by
-    cases a with | mkAlgHom a; simp [bracket_𝔥_mkAlgHom, bracketAux_add_left]
-  lie_add x a b := by
-    cases a with | mkAlgHom a
-    cases b with | mkAlgHom b
-    simp_rw [← map_add, bracket_𝔥_mkAlgHom, map_add]
-  leibniz_lie x y a := by
-    cases a with | mkAlgHom a; simp [bracket_𝔥_mkAlgHom, bracketAux_lie_left]
+lemma leftLieUE_add_left (x y : 𝔥) (a : UniversalEnvelopingAlgebra K 𝔞) :
+    leftLieUE ψ (x + y) a = leftLieUE ψ x a + leftLieUE ψ y a := by
+  cases a with | mkAlgHom a; simp [leftLieUE_mkAlgHom, leftLieUEAux_add_left]
 
-instance : LieModule K D.𝔥 (UniversalEnvelopingAlgebra K D.𝔞) where
-  smul_lie t x a := by
-    cases a with | mkAlgHom a; simp [bracket_𝔥_mkAlgHom, bracketAux_smul_left]
-  lie_smul t x a := by
-    cases a with | mkAlgHom a
-    simp_rw [← map_smul, bracket_𝔥_mkAlgHom, map_smul]
+lemma leftLieUE_lie_left (x y : 𝔥) (a : UniversalEnvelopingAlgebra K 𝔞) :
+    leftLieUE ψ ⁅x, y⁆ a = leftLieUE ψ x (leftLieUE ψ y a) - leftLieUE ψ y (leftLieUE ψ x a) := by
+  cases a with | mkAlgHom a; simp [leftLieUE_mkAlgHom, leftLieUEAux_lie_left]
+
+lemma leftLieUE_smul_left (t : K) (x : 𝔥) (a : UniversalEnvelopingAlgebra K 𝔞) :
+    leftLieUE ψ (t • x) a = t • leftLieUE ψ x a := by
+  cases a with | mkAlgHom a; simp [leftLieUE_mkAlgHom, leftLieUEAux_smul_left]
 
 @[simp]
-lemma bracket_𝔥_mul (x : D.𝔥) (a b : UniversalEnvelopingAlgebra K D.𝔞) :
-    ⁅x, a * b⁆ = a * ⁅x, b⁆ + ⁅x, a⁆ * b := by
+lemma leftLieUE_mul (x : 𝔥) (a b : UniversalEnvelopingAlgebra K 𝔞) :
+    leftLieUE ψ x (a * b) = a * leftLieUE ψ x b + leftLieUE ψ x a * b := by
   cases a with | mkAlgHom a
   cases b with | mkAlgHom b
-  simp_rw [← map_mul, bracket_𝔥_mkAlgHom, bracketAux_mul]
+  simp_rw [← map_mul, leftLieUE_mkAlgHom, leftLieUEAux_mul]
   simp
 
-@[simp]
-lemma bracket_𝔥_ι (x : D.𝔥) (y : D.𝔞) :
-    ⁅x, UniversalEnvelopingAlgebra.ι K y⁆ = UniversalEnvelopingAlgebra.ι K ⁅x, y⁆ := by
-  simp [bracket_𝔥_mkAlgHom]
+/-
 
-def lengthSubmodule (m : ℕ) : Submodule K (UniversalEnvelopingAlgebra K D.𝔞) :=
-  Submodule.map (mkAlgHom K D.𝔞).toLinearMap
+@[simp]
+lemma leftLieUE_ι (x : 𝔥) (y : 𝔞) :
+    leftLieUE ψ x (UniversalEnvelopingAlgebra.ι K y) = UniversalEnvelopingAlgebra.ι K (ψ x y) := by
+  simp [leftLieUE_mkAlgHom]
+
+def lengthSubmodule (m : ℕ) : Submodule K (UniversalEnvelopingAlgebra K 𝔞) :=
+  Submodule.map (mkAlgHom K 𝔞).toLinearMap
     (⨆ k ≥ m, LinearMap.range (TensorPower.toTensorAlgebra (n := k)))
 
-noncomputable def nilSubmodule : Submodule K (UniversalEnvelopingAlgebra K D.𝔞) :=
-  D.lengthSubmodule (nilpotencyLength D.𝔞 (AdoSpace K D.𝔞))
+variable [IsAdo K 𝔞]
 
-def depthSubmodule (m : ℕ) : Submodule K (UniversalEnvelopingAlgebra K D.𝔞) :=
-  .span K {a | ∃ᵉ (n) (f : Fin n → D.𝔞) (x : Fin n → ℕ),
-      ∑ k, x k = m ∧ (∀ k, f k ∈ lowerCentralSeries K D.𝔥 D.𝔞 (x k)) ∧
-        a = mkAlgHom K D.𝔞 (TensorAlgebra.tprod K D.𝔞 n f)}
+noncomputable def nilSubmodule : Submodule K (UniversalEnvelopingAlgebra K 𝔞) :=
+  lengthSubmodule (nilpotencyLength 𝔞 (AdoSpace K 𝔞))
+
+def depthSubmodule (m : ℕ) : Submodule K (UniversalEnvelopingAlgebra K 𝔞) :=
+  .span K {a | ∃ᵉ (n) (f : Fin n → 𝔞) (x : Fin n → ℕ),
+      ∑ k, x k = m ∧ (∀ k, f k ∈ lowerCentralSeries K 𝔥 𝔞 (x k)) ∧
+        a = mkAlgHom K 𝔞 (TensorAlgebra.tprod K 𝔞 n f)}
 
 noncomputable def depthLimit : ℕ :=
-  Nat.pred (nilpotencyLength D.𝔞 (AdoSpace K D.𝔞)) * Nat.pred (nilpotencyLength D.𝔥 D.𝔞) + 1
+  Nat.pred (nilpotencyLength 𝔞 (AdoSpace K 𝔞)) * Nat.pred (nilpotencyLength 𝔥 𝔞) + 1
 
 lemma exists_nilpotencyLength_le_of_depthLimit_le_sum {n} [NeZero n] (x : Fin n → ℕ)
-    (hn : n < nilpotencyLength D.𝔞 (AdoSpace K D.𝔞)) (hx : D.depthLimit ≤ ∑ i, x i) :
-    ∃ i, nilpotencyLength D.𝔥 D.𝔞 ≤ x i := by
+    (hn : n < nilpotencyLength 𝔞 (AdoSpace K 𝔞)) (hx : D.depthLimit ≤ ∑ i, x i) :
+    ∃ i, nilpotencyLength 𝔥 𝔞 ≤ x i := by
   apply Nat.le_pred_of_lt at hn
   grw [depthLimit, Nat.succ_le_iff, ← hn] at hx
-  conv_lhs at hx => equals ∑ _ : Fin n, Nat.pred (nilpotencyLength D.𝔥 D.𝔞) => simp
+  conv_lhs at hx => equals ∑ _ : Fin n, Nat.pred (nilpotencyLength 𝔥 𝔞) => simp
   apply Finset.exists_lt_of_sum_lt at hx
   simp_rw [Finset.mem_univ, true_and] at hx
   obtain ⟨i, hi⟩ := hx
@@ -411,12 +410,12 @@ lemma exists_nilpotencyLength_le_of_depthLimit_le_sum {n} [NeZero n] (x : Fin n 
   exists i
 
 lemma lengthSubmodule_nilpotenctLength :
-    D.lengthSubmodule (nilpotencyLength D.𝔞 (AdoSpace K D.𝔞)) = D.nilSubmodule :=
+    D.lengthSubmodule (nilpotencyLength 𝔞 (AdoSpace K 𝔞)) = D.nilSubmodule :=
   rfl
 
 @[simp]
-lemma mkAlgHom_tprod_mem_lengthSubmodule (m) {n} (f : Fin n → D.𝔞) (hn : m ≤ n) :
-    mkAlgHom K D.𝔞 (TensorAlgebra.tprod K D.𝔞 n f) ∈ D.lengthSubmodule m := by
+lemma mkAlgHom_tprod_mem_lengthSubmodule (m) {n} (f : Fin n → 𝔞) (hn : m ≤ n) :
+    mkAlgHom K 𝔞 (TensorAlgebra.tprod K 𝔞 n f) ∈ D.lengthSubmodule m := by
   unfold lengthSubmodule
   apply Submodule.mem_map_of_mem
   apply Submodule.mem_iSup_of_mem n
@@ -425,15 +424,15 @@ lemma mkAlgHom_tprod_mem_lengthSubmodule (m) {n} (f : Fin n → D.𝔞) (hn : m 
   simp
 
 @[simp]
-lemma mkAlgHom_tprod_mem_nilSubmodule {n} (f : Fin n → D.𝔞)
-    (hn : nilpotencyLength D.𝔞 (AdoSpace K D.𝔞) ≤ n) :
-    mkAlgHom K D.𝔞 (TensorAlgebra.tprod K D.𝔞 n f) ∈ D.nilSubmodule :=
-  D.mkAlgHom_tprod_mem_lengthSubmodule (nilpotencyLength D.𝔞 (AdoSpace K D.𝔞)) f hn
+lemma mkAlgHom_tprod_mem_nilSubmodule {n} (f : Fin n → 𝔞)
+    (hn : nilpotencyLength 𝔞 (AdoSpace K 𝔞) ≤ n) :
+    mkAlgHom K 𝔞 (TensorAlgebra.tprod K 𝔞 n f) ∈ D.nilSubmodule :=
+  D.mkAlgHom_tprod_mem_lengthSubmodule (nilpotencyLength 𝔞 (AdoSpace K 𝔞)) f hn
 
 lemma lengthSubmodule_eq_span_exists_eq_mkAlgHom_tprod (m) :
     D.lengthSubmodule m =
-      .span K {a | ∃ᵉ (n) (f : Fin n → D.𝔞), m ≤ n ∧
-        a = mkAlgHom K D.𝔞 (TensorAlgebra.tprod K D.𝔞 n f)} := by
+      .span K {a | ∃ᵉ (n) (f : Fin n → 𝔞), m ≤ n ∧
+        a = mkAlgHom K 𝔞 (TensorAlgebra.tprod K 𝔞 n f)} := by
   apply le_antisymm
   · simp_rw [lengthSubmodule, Submodule.map_le_iff_le_comap, iSup₂_le_iff,
       LinearMap.range_le_iff_comap, eq_top_iff, ← PiTensorProduct.span_tprod_eq_top,
@@ -449,18 +448,18 @@ lemma lengthSubmodule_eq_span_exists_eq_mkAlgHom_tprod (m) :
 
 lemma nilSubmodule_eq_span_exists_eq_mkAlgHom_tprod :
     D.nilSubmodule =
-      .span K {a | ∃ᵉ (n) (f : Fin n → D.𝔞), nilpotencyLength D.𝔞 (AdoSpace K D.𝔞) ≤ n ∧
-        a = mkAlgHom K D.𝔞 (TensorAlgebra.tprod K D.𝔞 n f)} :=
-  D.lengthSubmodule_eq_span_exists_eq_mkAlgHom_tprod (nilpotencyLength D.𝔞 (AdoSpace K D.𝔞))
+      .span K {a | ∃ᵉ (n) (f : Fin n → 𝔞), nilpotencyLength 𝔞 (AdoSpace K 𝔞) ≤ n ∧
+        a = mkAlgHom K 𝔞 (TensorAlgebra.tprod K 𝔞 n f)} :=
+  D.lengthSubmodule_eq_span_exists_eq_mkAlgHom_tprod (nilpotencyLength 𝔞 (AdoSpace K 𝔞))
 
 @[simp]
 lemma lengthSubmodule_zero : D.lengthSubmodule 0 = ⊤ := by
   have hι := DirectSum.Decomposition.isInternal
-      (fun n : ℕ ↦ LinearMap.range (TensorAlgebra.ι K : D.𝔞 →ₗ[K] TensorAlgebra K D.𝔞) ^ n)
+      (fun n : ℕ ↦ LinearMap.range (TensorAlgebra.ι K : 𝔞 →ₗ[K] TensorAlgebra K 𝔞) ^ n)
   simp_rw [TensorAlgebra.ι_range_pow_eq] at hι
   apply DirectSum.IsInternal.submodule_iSup_eq_top at hι
   simp [lengthSubmodule, hι,
-    LinearMap.range_eq_top_of_surjective (mkAlgHom K D.𝔞).toLinearMap (mkAlgHom_surjective K D.𝔞),
+    LinearMap.range_eq_top_of_surjective (mkAlgHom K 𝔞).toLinearMap (mkAlgHom_surjective K 𝔞),
     - Submodule.map_iSup]
 
 @[simp]
@@ -514,7 +513,7 @@ lemma depthSubmodule_mono ⦃m n⦄ (h : m ≤ n) : D.depthSubmodule n ≤ D.dep
       simp_rw [Pi.sub_apply, Finset.sum_tsub_distrib _ hx'₂]
       simp [hi]
 
-lemma ι_mul_mem_lengthSubmodule_succ_of_mem (m) (x : D.𝔞) (a) (ha : a ∈ D.lengthSubmodule m) :
+lemma ι_mul_mem_lengthSubmodule_succ_of_mem (m) (x : 𝔞) (a) (ha : a ∈ D.lengthSubmodule m) :
     UniversalEnvelopingAlgebra.ι K x * a ∈ D.lengthSubmodule (m + 1) := by
   revert a
   suffices h :
@@ -527,35 +526,35 @@ lemma ι_mul_mem_lengthSubmodule_succ_of_mem (m) (x : D.𝔞) (a) (ha : a ∈ D.
     LinearMap.mul_apply_apply]
   rintro _ ⟨n, f, hn, rfl⟩
   conv => equals
-      mkAlgHom K D.𝔞 (TensorAlgebra.tprod K D.𝔞 (n + 1) (Fin.cons x f))
+      mkAlgHom K 𝔞 (TensorAlgebra.tprod K 𝔞 (n + 1) (Fin.cons x f))
         ∈ D.lengthSubmodule (m + 1) =>
     simp
   exact D.mkAlgHom_tprod_mem_lengthSubmodule _ _ (by lia)
 
 @[simp]
-lemma ι_mul_mem_nilSubmodule_of_mem (x : D.𝔞) (a) (ha : a ∈ D.nilSubmodule) :
+lemma ι_mul_mem_nilSubmodule_of_mem (x : 𝔞) (a) (ha : a ∈ D.nilSubmodule) :
     UniversalEnvelopingAlgebra.ι K x * a ∈ D.nilSubmodule := by
   rw [← lengthSubmodule_nilpotenctLength] at ha ⊢
-  grw [(by lia : nilpotencyLength D.𝔞 (AdoSpace K D.𝔞) ≤ nilpotencyLength D.𝔞 (AdoSpace K D.𝔞) + 1)]
+  grw [(by lia : nilpotencyLength 𝔞 (AdoSpace K 𝔞) ≤ nilpotencyLength 𝔞 (AdoSpace K 𝔞) + 1)]
   apply ι_mul_mem_lengthSubmodule_succ_of_mem
   exact ha
 
-lemma bracket_𝔞_mem_lengthSubmodule_succ_of_mem (m) (x : D.𝔞) (a) (ha : a ∈ D.lengthSubmodule m) :
+lemma bracket_𝔞_mem_lengthSubmodule_succ_of_mem (m) (x : 𝔞) (a) (ha : a ∈ D.lengthSubmodule m) :
     ⁅x, a⁆ ∈ D.lengthSubmodule (m + 1) := by
   rw [bracket_eq]
   exact D.ι_mul_mem_lengthSubmodule_succ_of_mem m x a ha
 
-lemma bracket_𝔞_mem_nilSubmodule_of_mem (x : D.𝔞) (a) (ha : a ∈ D.nilSubmodule) :
+lemma bracket_𝔞_mem_nilSubmodule_of_mem (x : 𝔞) (a) (ha : a ∈ D.nilSubmodule) :
     ⁅x, a⁆ ∈ D.nilSubmodule := by
   rw [bracket_eq]
   exact D.ι_mul_mem_nilSubmodule_of_mem x a ha
 
 @[simp]
-lemma bracket_𝔥_mem_nilSubmodule_of_mem (x : D.𝔥) (a) (ha : a ∈ D.nilSubmodule) :
+lemma bracket_𝔥_mem_nilSubmodule_of_mem (x : 𝔥) (a) (ha : a ∈ D.nilSubmodule) :
     ⁅x, a⁆ ∈ D.nilSubmodule := by
   revert a
   suffices h :
-      Submodule.map (toEnd K D.𝔥 (UniversalEnvelopingAlgebra K D.𝔞) x) D.nilSubmodule
+      Submodule.map (toEnd K 𝔥 (UniversalEnvelopingAlgebra K 𝔞) x) D.nilSubmodule
         ≤ D.nilSubmodule by
     rw [Submodule.map_le_iff_le_comap] at h
     simpa [SetLike.le_def] using h
@@ -563,24 +562,24 @@ lemma bracket_𝔥_mem_nilSubmodule_of_mem (x : D.𝔥) (a) (ha : a ∈ D.nilSub
   simp_rw [Submodule.span_le, image_subset_iff, ofPred_subset, Set.mem_preimage, toEnd_apply_apply]
   rintro _ ⟨n, f, hn, rfl⟩
   conv => equals ∑ i : Fin n,
-      mkAlgHom K D.𝔞 (TensorAlgebra.tprod K D.𝔞 n (update f i ⁅x, f i⁆)) ∈ D.nilSubmodule =>
-    simp [bracket_𝔥_mkAlgHom, - TensorAlgebra.tprod_apply]
+      mkAlgHom K 𝔞 (TensorAlgebra.tprod K 𝔞 n (update f i ⁅x, f i⁆)) ∈ D.nilSubmodule =>
+    simp [leftLieUE_mkAlgHom, - TensorAlgebra.tprod_apply]
   apply Submodule.sum_mem
   rintro i -
   exact D.mkAlgHom_tprod_mem_nilSubmodule _ hn
 
-lemma bracket_𝔥_mem_depthSubmodule_succ_of_mem (m) (x : D.𝔥) (a) (ha : a ∈ D.depthSubmodule m) :
+lemma bracket_𝔥_mem_depthSubmodule_succ_of_mem (m) (x : 𝔥) (a) (ha : a ∈ D.depthSubmodule m) :
     ⁅x, a⁆ ∈ D.depthSubmodule (m + 1) := by
   revert a
   suffices h :
-      Submodule.map (toEnd K D.𝔥 (UniversalEnvelopingAlgebra K D.𝔞) x) (D.depthSubmodule m)
+      Submodule.map (toEnd K 𝔥 (UniversalEnvelopingAlgebra K 𝔞) x) (D.depthSubmodule m)
         ≤ D.depthSubmodule (m + 1) by
     rw [Submodule.map_le_iff_le_comap] at h
     simpa [SetLike.le_def] using h
   conv_lhs => rw [depthSubmodule, Submodule.map_span]
   simp_rw [Submodule.span_le, image_subset_iff, ofPred_subset, Set.mem_preimage, toEnd_apply_apply]
   rintro _ ⟨n, f, y, hy, hf, rfl⟩
-  simp_rw [bracket_𝔥_mkAlgHom, bracketAux_tprod, map_sum, SetLike.mem_coe]
+  simp_rw [leftLieUE_mkAlgHom, leftLieUEAux_tprod, map_sum, SetLike.mem_coe]
   apply sum_mem; rintro k -
   simp_rw [depthSubmodule]; apply Submodule.mem_span_of_mem; simp_rw [mem_ofPred_eq]
   existsi n, update f k ⁅x, f k⁆, y + Pi.single k 1
@@ -598,20 +597,20 @@ lemma depthSubmodule_depthLimit_le_nilSubmodule :
   rintro _ ⟨n, f, x, hx, hf, rfl⟩
   obtain (rfl | hn) := eq_or_ne n 0
   case inl => simp [depthLimit] at hx
-  obtain (hn₂ | hn₂) := lt_or_ge n (nilpotencyLength D.𝔞 (AdoSpace K D.𝔞))
+  obtain (hn₂ | hn₂) := lt_or_ge n (nilpotencyLength 𝔞 (AdoSpace K 𝔞))
   case inr => apply D.mkAlgHom_tprod_mem_nilSubmodule _ hn₂
   apply NeZero.mk at hn
   replace hx := D.exists_nilpotencyLength_le_of_depthLimit_le_sum x hn₂ hx.ge
   obtain ⟨i, hi⟩ := hx
   specialize hf i
   grw [← hi, lowerCentralSeries_nilpotencyLength, mem_bot] at hf
-  simp [(TensorAlgebra.tprod K D.𝔞 n).map_coord_zero i hf, - TensorAlgebra.tprod_apply]
+  simp [(TensorAlgebra.tprod K 𝔞 n).map_coord_zero i hf, - TensorAlgebra.tprod_apply]
 
-instance : FiniteDimensional K (UniversalEnvelopingAlgebra K D.𝔞 ⧸ D.nilSubmodule) := by
+instance : FiniteDimensional K (UniversalEnvelopingAlgebra K 𝔞 ⧸ D.nilSubmodule) := by
   -- `Submodule` を後で `open` した方がいいかな
   suffices h : Submodule.map D.nilSubmodule.mkQ
-      (Submodule.map (mkAlgHom K D.𝔞).toLinearMap
-        (⨆ k < nilpotencyLength D.𝔞 (AdoSpace K D.𝔞),
+      (Submodule.map (mkAlgHom K 𝔞).toLinearMap
+        (⨆ k < nilpotencyLength 𝔞 (AdoSpace K 𝔞),
           LinearMap.range (TensorPower.toTensorAlgebra (n := k)))) = ⊤ by
     simp_rw [Module.finite_def, ← h]
     apply Submodule.FG.map
@@ -621,18 +620,18 @@ instance : FiniteDimensional K (UniversalEnvelopingAlgebra K D.𝔞 ⧸ D.nilSub
     rintro n -
     apply Submodule.fg_range
   suffices h : Submodule.map D.nilSubmodule.mkQ
-      (Submodule.map (mkAlgHom K D.𝔞).toLinearMap
-        (⨆ k ≥ nilpotencyLength D.𝔞 (AdoSpace K D.𝔞),
+      (Submodule.map (mkAlgHom K 𝔞).toLinearMap
+        (⨆ k ≥ nilpotencyLength 𝔞 (AdoSpace K 𝔞),
           LinearMap.range (TensorPower.toTensorAlgebra (n := k)))) = ⊥ by
     have hι := DirectSum.Decomposition.isInternal
-        (fun n : ℕ ↦ LinearMap.range (TensorAlgebra.ι K : D.𝔞 →ₗ[K] TensorAlgebra K D.𝔞) ^ n)
+        (fun n : ℕ ↦ LinearMap.range (TensorAlgebra.ι K : 𝔞 →ₗ[K] TensorAlgebra K 𝔞) ^ n)
     simp_rw [TensorAlgebra.ι_range_pow_eq] at hι
     apply DirectSum.IsInternal.submodule_iSup_eq_top at hι
-    simp_rw +singlePass [iSup_split _ (· < nilpotencyLength D.𝔞 (AdoSpace K D.𝔞)), not_lt] at hι
-    apply_fun Submodule.map (mkAlgHom K D.𝔞).toLinearMap at hι
+    simp_rw +singlePass [iSup_split _ (· < nilpotencyLength 𝔞 (AdoSpace K 𝔞)), not_lt] at hι
+    apply_fun Submodule.map (mkAlgHom K 𝔞).toLinearMap at hι
     apply_fun Submodule.map D.nilSubmodule.mkQ at hι
     simp_rw [Submodule.map_sup, h, sup_bot_eq, Submodule.map_top,
-      (mkAlgHom K D.𝔞).toLinearMap.range_eq_top_of_surjective (mkAlgHom_surjective _ _),
+      (mkAlgHom K 𝔞).toLinearMap.range_eq_top_of_surjective (mkAlgHom_surjective _ _),
       Submodule.map_top, Submodule.range_mkQ] at hι
     exact hι
   simp_rw [← lengthSubmodule.eq_1, lengthSubmodule_nilpotenctLength,
@@ -643,7 +642,7 @@ instance : FiniteDimensional K (UniversalEnvelopingAlgebra K D.𝔞 ⧸ D.nilSub
     D.mkAlgHom_tprod_mem_nilSubmodule f hn]
 
 lemma nilSubmodule_le_ker_lift_toEnd_adoSpace :
-    D.nilSubmodule ≤ LinearMap.ker (lift K (toEnd K D.𝔞 (AdoSpace K D.𝔞))).toLinearMap := by
+    D.nilSubmodule ≤ LinearMap.ker (lift K (toEnd K 𝔞 (AdoSpace K 𝔞))).toLinearMap := by
   simp_rw [nilSubmodule_eq_span_exists_eq_mkAlgHom_tprod, Submodule.span_le, ofPred_subset,
     SetLike.mem_coe, LinearMap.mem_ker, AlgHom.toLinearMap_apply]
   rintro _ ⟨n, f, hn, rfl⟩
@@ -659,9 +658,9 @@ lemma nilSubmodule_le_ker_lift_toEnd_adoSpace :
 
 lemma injective_quotient_mk_nilSubmodule :
     Injective (fun x ↦
-      (Submodule.Quotient.mk (.ι K x) : UniversalEnvelopingAlgebra K D.𝔞 ⧸ D.nilSubmodule)) := by
+      (Submodule.Quotient.mk (.ι K x) : UniversalEnvelopingAlgebra K 𝔞 ⧸ D.nilSubmodule)) := by
   apply Function.Injective.of_comp
-      (f := D.nilSubmodule.liftQ (lift K (toEnd K D.𝔞 (AdoSpace K D.𝔞))).toLinearMap
+      (f := D.nilSubmodule.liftQ (lift K (toEnd K 𝔞 (AdoSpace K 𝔞))).toLinearMap
         D.nilSubmodule_le_ker_lift_toEnd_adoSpace)
   simpa [comp_def] using IsFaithful.injective_toEnd
 
@@ -688,13 +687,17 @@ example (s : LieIdeal R L) : ↥s = ↥s.toSubmodule := by
   with_reducible_and_instances rfl
 
 -- encapsulate the type defeq hell in this lemma
-lemma existsUnique_add_prod (x : 𝔫) : ∃! p : D.𝔞 × D.𝔥, (p.1 : 𝔫) + p.2 = x :=
+lemma existsUnique_add_prod (x : 𝔫) : ∃! p : 𝔞 × 𝔥, (p.1 : 𝔫) + p.2 = x :=
   Submodule.existsUnique_add_of_isCompl_prod D.isCompl_toSubmodule x
 
-end NilStepAdoData
+-/
+
+end LieAlgebra.SemiDirectSum
+
+/-
 
 def PreNilStepAdoSpace (D : NilStepAdoData K 𝔫) :=
-  UniversalEnvelopingAlgebra K D.𝔞
+  UniversalEnvelopingAlgebra K 𝔞
 deriving Ring, Algebra K
 
 open UniversalEnvelopingAlgebra (ι)
@@ -703,8 +706,8 @@ namespace PreNilStepAdoSpace
 
 variable {D : NilStepAdoData K 𝔫}
 
-def equiv : UniversalEnvelopingAlgebra K D.𝔞 ≃ₐ[K] PreNilStepAdoSpace D :=
-  AlgEquiv.refl (R := K) (A₁ := UniversalEnvelopingAlgebra K D.𝔞)
+def equiv : UniversalEnvelopingAlgebra K 𝔞 ≃ₐ[K] PreNilStepAdoSpace D :=
+  AlgEquiv.refl (R := K) (A₁ := UniversalEnvelopingAlgebra K 𝔞)
 
 @[ext]
 lemma ext {p q : PreNilStepAdoSpace D} (h : equiv.symm p = equiv.symm q) : p = q := by
@@ -718,26 +721,26 @@ protected def rec {motive : PreNilStepAdoSpace D → Sort*} :
 noncomputable instance : Bracket 𝔫 (PreNilStepAdoSpace D) where
   bracket x := LinearEquiv.conj equiv.toLinearEquiv
     (LinearMap.ofIsCompl D.isCompl_toSubmodule
-      (toEnd K D.𝔞 (UniversalEnvelopingAlgebra K D.𝔞))
-        (toEnd K D.𝔥 (UniversalEnvelopingAlgebra K D.𝔞)) x)
+      (toEnd K 𝔞 (UniversalEnvelopingAlgebra K 𝔞))
+        (toEnd K 𝔥 (UniversalEnvelopingAlgebra K 𝔞)) x)
 
 lemma bracket_def (x : 𝔫) (a : PreNilStepAdoSpace D) :
     ⁅x, a⁆ = LinearEquiv.conj equiv.toLinearEquiv
       (LinearMap.ofIsCompl D.isCompl_toSubmodule
-        (toEnd K D.𝔞 (UniversalEnvelopingAlgebra K D.𝔞))
-          (toEnd K D.𝔥 (UniversalEnvelopingAlgebra K D.𝔞)) x) a :=
+        (toEnd K 𝔞 (UniversalEnvelopingAlgebra K 𝔞))
+          (toEnd K 𝔥 (UniversalEnvelopingAlgebra K 𝔞)) x) a :=
   rfl
 
 -- encapsulate the type defeq hell in this lemma
 @[simp]
-lemma bracket_𝔞 (x : D.𝔞) (a : PreNilStepAdoSpace D) : ⁅(x : 𝔫), a⁆ = equiv ⁅x, equiv.symm a⁆ := by
+lemma bracket_𝔞 (x : 𝔞) (a : PreNilStepAdoSpace D) : ⁅(x : 𝔫), a⁆ = equiv ⁅x, equiv.symm a⁆ := by
   simp only [bracket_def, LinearMap.ofIsCompl_apply_left, coe_toLinearMap,
     LinearEquiv.conj_apply_apply, bracket_eq, ι_apply]
   rfl
 
 -- encapsulate the type defeq hell in this lemma
 @[simp]
-lemma bracket_𝔥 (x : D.𝔥) (a : PreNilStepAdoSpace D) : ⁅(x : 𝔫), a⁆ = equiv ⁅x, equiv.symm a⁆ := by
+lemma bracket_𝔥 (x : 𝔥) (a : PreNilStepAdoSpace D) : ⁅(x : 𝔫), a⁆ = equiv ⁅x, equiv.symm a⁆ := by
   simp only [bracket_def, LinearMap.ofIsCompl_apply_right, coe_toLinearMap,
     LinearEquiv.conj_apply_apply]
   rfl
@@ -831,7 +834,7 @@ attribute [local instance 100] LieRing.ofAssociativeRing
 variable (D : NilStepAdoData K 𝔫)
 
 @[simp]
-lemma quotient_equiv_mk (a : UniversalEnvelopingAlgebra K D.𝔞) :
+lemma quotient_equiv_mk (a : UniversalEnvelopingAlgebra K 𝔞) :
     Submodule.Quotient.equiv D.nilSubmodule D.nilLieSubmodule.toSubmodule
       PreNilStepAdoSpace.equiv.toLinearEquiv rfl (Submodule.Quotient.mk a) =
         (LieSubmodule.Quotient.mk (equiv a)) :=
@@ -843,7 +846,7 @@ instance : FiniteDimensional K (NilStepAdoSpace D) :=
       PreNilStepAdoSpace.equiv.toLinearEquiv rfl
 
 instance : IsFaithful K (center K 𝔫) (NilStepAdoSpace D) := by
-  suffices h : IsFaithful K D.𝔞 (NilStepAdoSpace D) by
+  suffices h : IsFaithful K 𝔞 (NilStepAdoSpace D) by
     rw [isFaithful_iff] at h ⊢
     replace h := h.comp (LieSubmodule.inclusion_injective D.center_le_𝔞)
     convert h using 1
@@ -865,16 +868,16 @@ instance : IsFaithful K (center K 𝔫) (NilStepAdoSpace D) := by
   simp_rw [comp_def, quotient_equiv_mk] at h
   exact h
 
-local instance : IsNilpotent D.𝔞 (NilStepAdoSpace D) := by
+local instance : IsNilpotent 𝔞 (NilStepAdoSpace D) := by
   suffices h : ∀ k,
-      (D.𝔞.lcs (PreNilStepAdoSpace D) k).toSubmodule ≤
+      (𝔞.lcs (PreNilStepAdoSpace D) k).toSubmodule ≤
         Submodule.map equiv.toLinearMap (D.lengthSubmodule k) by
-    change IsNilpotent D.𝔞.toLieSubalgebra (PreNilStepAdoSpace D ⧸ D.nilLieSubmodule.restr D.𝔞)
+    change IsNilpotent 𝔞.toLieSubalgebra (PreNilStepAdoSpace D ⧸ D.nilLieSubmodule.restr 𝔞)
     simp_rw [isNilpotent_quotient_iff, ← toSubmodule_le_toSubmodule]
-    conv => enter [1, k, 1, 1]; change lowerCentralSeries K D.𝔞 (PreNilStepAdoSpace D) k
+    conv => enter [1, k, 1, 1]; change lowerCentralSeries K 𝔞 (PreNilStepAdoSpace D) k
     simp_rw [← coe_lcs_eq, restr_toSubmodule, toSubmodule_le_toSubmodule]
-    existsi nilpotencyLength D.𝔞 (AdoSpace K D.𝔞)
-    specialize h (nilpotencyLength D.𝔞 (AdoSpace K D.𝔞))
+    existsi nilpotencyLength 𝔞 (AdoSpace K 𝔞)
+    specialize h (nilpotencyLength 𝔞 (AdoSpace K 𝔞))
     simp_rw [D.lengthSubmodule_nilpotenctLength, ← D.nilLieSubmodule_toSubmodule,
       toSubmodule_le_toSubmodule] at h
     exact h
@@ -882,7 +885,7 @@ local instance : IsNilpotent D.𝔞 (NilStepAdoSpace D) := by
   induction k with
   | zero => simp
   | succ n hn =>
-    simp_rw [LieIdeal.lcs_succ, lieIdeal_oper_eq_linear_span', ← exists_prop (a := _ ∈ D.𝔞),
+    simp_rw [LieIdeal.lcs_succ, lieIdeal_oper_eq_linear_span', ← exists_prop (a := _ ∈ 𝔞),
       Subtype.exists', Submodule.span_le, ofPred_subset, SetLike.mem_coe, Submodule.mem_map_equiv]
     rintro _ ⟨x, a, ha, rfl⟩
     cases a with | equiv a
@@ -893,11 +896,11 @@ local instance : IsNilpotent D.𝔞 (NilStepAdoSpace D) := by
     rw [AlgEquiv.symm_apply_apply] at hn
     exact D.bracket_𝔞_mem_lengthSubmodule_succ_of_mem n x a hn
 
-local instance isNilpotent𝔥 : IsNilpotent D.𝔥 (NilStepAdoSpace D) := by
+local instance isNilpotent𝔥 : IsNilpotent 𝔥 (NilStepAdoSpace D) := by
   suffices h : ∀ k,
-      (lowerCentralSeries K D.𝔥 (PreNilStepAdoSpace D) k).toSubmodule ≤
+      (lowerCentralSeries K 𝔥 (PreNilStepAdoSpace D) k).toSubmodule ≤
         Submodule.map equiv.toLinearMap (D.depthSubmodule k) by
-    change IsNilpotent D.𝔥 (PreNilStepAdoSpace D ⧸ D.nilLieSubmodule.restr D.𝔥)
+    change IsNilpotent 𝔥 (PreNilStepAdoSpace D ⧸ D.nilLieSubmodule.restr 𝔥)
     simp_rw [isNilpotent_quotient_iff, ← toSubmodule_le_toSubmodule, restr_toSubmodule]
     existsi D.depthLimit
     specialize h D.depthLimit
@@ -919,9 +922,9 @@ local instance isNilpotent𝔥 : IsNilpotent D.𝔥 (NilStepAdoSpace D) := by
     exact D.bracket_𝔥_mem_depthSubmodule_succ_of_mem n x a hn
 
 instance : IsNilpotent 𝔫 (NilStepAdoSpace D) := by
-  conv => equals IsNilpotent ↥(D.𝔥 ⊔ D.𝔞.toLieSubalgebra) (NilStepAdoSpace D) =>
-    have h : D.𝔥 ⊔ D.𝔞.toLieSubalgebra = ⊤
-    · simp [← LieSubalgebra.toSubmodule_inj, sup_comm D.𝔥.toSubmodule D.𝔞.toSubmodule,
+  conv => equals IsNilpotent ↥(𝔥 ⊔ 𝔞.toLieSubalgebra) (NilStepAdoSpace D) =>
+    have h : 𝔥 ⊔ 𝔞.toLieSubalgebra = ⊤
+    · simp [← LieSubalgebra.toSubmodule_inj, sup_comm 𝔥.toSubmodule 𝔞.toSubmodule,
         D.isCompl_toSubmodule.codisjoint.eq_top]
     simp [h]
   infer_instance
@@ -949,3 +952,8 @@ public instance LieAlgebra.IsAdo.of_isNilpotent : IsAdo K 𝔫 := by
       existsi 𝔥'.toLieSubalgebraOfDimOne hn
       exact h𝔥'
     exact ⟨{ 𝔞, 𝔥, center_le_𝔞 := h𝔞, isCompl_toSubmodule := h𝔥₁ }⟩
+
+-/
+
+@[instance]
+public axiom LieAlgebra.IsAdo.of_isNilpotent : IsAdo K 𝔫
