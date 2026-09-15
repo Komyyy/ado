@@ -16,6 +16,108 @@ public import Ado.ForMathlib.TensorAlgebra
 public import Ado.ForMathlib.UniversalEnvelopingAlgebra
 public import Ado.LieAbelian
 
+section ForMathlib
+
+@[expose] public section LieDerivation
+
+variable {R : Type*} [CommRing R]
+variable {L : Type*} [LieRing L] [LieAlgebra R L]
+
+namespace LieDerivation
+
+@[simps ! apply_apply]
+def adoIdeal (I : LieIdeal R L) : L →ₗ⁅R⁆ LieDerivation R I I where
+  toFun x :=
+    { toLinearMap := LieModule.toEnd R L I x
+      leibniz' y z := by
+        conv => equals ⁅x, ⁅y.1, z.1⁆⁆ = ⁅y.1, ⁅x, z.1⁆⁆ - ⁅z.1, ⁅x, y.1⁆⁆ =>
+          simp [Subtype.ext_iff]
+        grind only [= lie_lie, =_ lie_skew] }
+  map_add' x y := by ext; simp
+  map_smul' t x := by ext; simp
+  map_lie' {x y} := by ext; simp
+
+end LieDerivation
+
+end LieDerivation
+
+@[expose] public section LieSemiDirectSum
+
+-- TODO: `SemidirectProduct` と同様に、`SemidirectSum` に変名
+
+variable {R : Type*} [CommRing R]
+variable {K : Type*} [LieRing K] [LieAlgebra R K]
+variable {L : Type*} [LieRing L] [LieAlgebra R L]
+variable (ψ : L →ₗ⁅R⁆ LieDerivation R K K)
+
+open LieHom LieSubalgebra LieDerivation
+
+namespace LieAlgebra
+
+namespace SemiDirectSum
+
+@[simp]
+lemma isIdealMorphism_inl : IsIdealMorphism (inl ψ) := by
+  simp [isIdealMorphism_iff]
+
+instance [Module.Finite R K] [Module.Finite R L] : Module.Finite R (K ⋊⁅ψ⁆ L) :=
+  Module.Finite.equiv (toProdl ψ).symm
+
+end SemiDirectSum
+
+def IsInnerSemiDirectSum (I : LieIdeal R L) (L' : LieSubalgebra R L) : Prop :=
+  IsCompl I.toSubmodule L'.toSubmodule
+
+variable {I : LieIdeal R L} {L' : LieSubalgebra R L}
+
+lemma isInnerSemiDirectSum_iff :
+    IsInnerSemiDirectSum I L' ↔ IsCompl I.toSubmodule L'.toSubmodule :=
+  Iff.rfl
+
+alias ⟨IsInnerSemiDirectSum.isCompl, IsCompl.isInnerSemidirectSum⟩ :=
+  isInnerSemiDirectSum_iff
+
+namespace SemiDirectSum
+
+noncomputable def lieEquivLieSubalgebra (h : IsInnerSemiDirectSum I L') :
+    (I ⋊⁅comp (adoIdeal I) (incl L')⁆ L') ≃ₗ⁅R⁆ L where
+  __ := LinearEquiv.trans (toProdl _) (Submodule.prodEquivOfIsCompl _ _ h.isCompl)
+  map_lie' {x y} := by
+    -- `SetLike` の defeq に対処
+    have haux (x : I × L') :
+        Submodule.prodEquivOfIsCompl _ _ h.isCompl x = (x.1 : L) + (x.2 : L) :=
+      Submodule.coe_prodEquivOfIsCompl' ..
+    conv => equals
+        ⁅x.left.1, y.left.1⁆ + ⁅x.right.1, y.left.1⁆ -
+          ⁅y.right.1, x.left.1⁆ + ⁅x.right.1, y.right.1⁆ =
+            ⁅x.left.1, y.left.1⁆ + ⁅x.right.1, y.left.1⁆ +
+              (⁅x.left.1, y.right.1⁆ + ⁅x.right.1, y.right.1⁆) =>
+      -- `SetLike` の defeq に対処
+      have haux (x : I × L') :
+          Submodule.prodEquivOfIsCompl _ _ h.isCompl x = (x.1 : L) + (x.2 : L) :=
+        Submodule.coe_prodEquivOfIsCompl' ..
+      simp [haux]
+    grind only [=_ lie_skew]
+
+@[simp]
+lemma lieEquivLieSubalgebra_apply (h : IsInnerSemiDirectSum I L')
+    (x : I ⋊⁅comp (adoIdeal I) (incl L')⁆ L') : lieEquivLieSubalgebra h x = (x.1 : L) + (x.2 : L) :=
+  rfl
+
+lemma isInnerSemiDirectSum_self : IsInnerSemiDirectSum (idealRange (inl ψ)) (range (inr ψ)) := by
+  simp_rw [isInnerSemiDirectSum_iff, isCompl_iff]
+  constructor
+  · simp [Submodule.disjoint_def]
+  · rw [Submodule.codisjoint_iff_exists_add_eq]; simp
+
+end SemiDirectSum
+
+end LieAlgebra
+
+end LieSemiDirectSum
+
+end ForMathlib
+
 /-!
 ## 冪零 Lie 代数に対する Ado の定理
 -/
