@@ -373,8 +373,6 @@ lemma leftLieUE_mul (x : 𝔥) (a b : UniversalEnvelopingAlgebra K 𝔞) :
   simp_rw [← map_mul, leftLieUE_mkAlgHom, leftLieUEAux_mul]
   simp
 
-/-
-
 @[simp]
 lemma leftLieUE_ι (x : 𝔥) (y : 𝔞) :
     leftLieUE ψ x (UniversalEnvelopingAlgebra.ι K y) = UniversalEnvelopingAlgebra.ι K (ψ x y) := by
@@ -388,6 +386,8 @@ variable [IsAdo K 𝔞]
 
 noncomputable def nilSubmodule : Submodule K (UniversalEnvelopingAlgebra K 𝔞) :=
   lengthSubmodule (nilpotencyLength 𝔞 (AdoSpace K 𝔞))
+
+/-
 
 def depthSubmodule (m : ℕ) : Submodule K (UniversalEnvelopingAlgebra K 𝔞) :=
   .span K {a | ∃ᵉ (n) (f : Fin n → 𝔞) (x : Fin n → ℕ),
