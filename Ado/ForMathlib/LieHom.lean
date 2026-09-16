@@ -42,7 +42,7 @@ lemma map_equiv_eq_comap_symm (e : L ≃ₗ⁅R⁆ L₂) (I : LieIdeal R L) :
     map e.toLieHom I = comap e.symm.toLieHom I := by
   apply le_antisymm
   on_goal 2 =>
-    simp_rw [SetLike.le_def, mem_comap, coe_coe]
+    simp_rw [IsConcreteLE.le_iff, mem_comap, coe_coe]
     intro x hx
     simpa using mem_map (f := e.toLieHom) hx
   simp [map_le, Set.subset_def]

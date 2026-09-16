@@ -521,7 +521,7 @@ lemma ι_mul_mem_lengthSubmodule_succ_of_mem (m) (x : D.𝔞) (a) (ha : a ∈ D.
       Submodule.map (LinearMap.mul K _ (UniversalEnvelopingAlgebra.ι K x)) (D.lengthSubmodule m)
         ≤ D.lengthSubmodule (m + 1) by
     rw [Submodule.map_le_iff_le_comap] at h
-    simpa [SetLike.le_def] using h
+    simpa [IsConcreteLE.le_iff] using h
   conv_lhs => rw [lengthSubmodule_eq_span_exists_eq_mkAlgHom_tprod, Submodule.map_span]
   simp_rw [Submodule.span_le, image_subset_iff, ofPred_subset, Set.mem_preimage,
     LinearMap.mul_apply_apply]
@@ -558,7 +558,7 @@ lemma bracket_𝔥_mem_nilSubmodule_of_mem (x : D.𝔥) (a) (ha : a ∈ D.nilSub
       Submodule.map (toEnd K D.𝔥 (UniversalEnvelopingAlgebra K D.𝔞) x) D.nilSubmodule
         ≤ D.nilSubmodule by
     rw [Submodule.map_le_iff_le_comap] at h
-    simpa [SetLike.le_def] using h
+    simpa [IsConcreteLE.le_iff] using h
   conv_lhs => rw [nilSubmodule_eq_span_exists_eq_mkAlgHom_tprod, Submodule.map_span]
   simp_rw [Submodule.span_le, image_subset_iff, ofPred_subset, Set.mem_preimage, toEnd_apply_apply]
   rintro _ ⟨n, f, hn, rfl⟩
@@ -576,7 +576,7 @@ lemma bracket_𝔥_mem_depthSubmodule_succ_of_mem (m) (x : D.𝔥) (a) (ha : a �
       Submodule.map (toEnd K D.𝔥 (UniversalEnvelopingAlgebra K D.𝔞) x) (D.depthSubmodule m)
         ≤ D.depthSubmodule (m + 1) by
     rw [Submodule.map_le_iff_le_comap] at h
-    simpa [SetLike.le_def] using h
+    simpa [IsConcreteLE.le_iff] using h
   conv_lhs => rw [depthSubmodule, Submodule.map_span]
   simp_rw [Submodule.span_le, image_subset_iff, ofPred_subset, Set.mem_preimage, toEnd_apply_apply]
   rintro _ ⟨n, f, y, hy, hf, rfl⟩
