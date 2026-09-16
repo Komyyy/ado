@@ -887,7 +887,7 @@ local instance : IsNilpotent D.𝔞 (NilStepAdoSpace D) := by
     rintro _ ⟨x, a, ha, rfl⟩
     cases a with | equiv a
     conv => equals ⁅x, a⁆ ∈ D.lengthSubmodule (n + 1) => simp
-    simp_rw [SetLike.le_def, mem_toSubmodule, Submodule.mem_map_equiv,
+    simp_rw [IsConcreteLE.le_iff, mem_toSubmodule, Submodule.mem_map_equiv,
       AlgEquiv.coe_symm_toLinearEquiv] at hn
     specialize hn ha
     rw [AlgEquiv.symm_apply_apply] at hn
@@ -912,7 +912,7 @@ local instance isNilpotent𝔥 : IsNilpotent D.𝔥 (NilStepAdoSpace D) := by
     rintro _ ⟨x, a, ha, rfl⟩
     cases a with | equiv a
     conv => equals ⁅x, a⁆ ∈ D.depthSubmodule (n + 1) => simp
-    simp_rw [SetLike.le_def, mem_toSubmodule, Submodule.mem_map_equiv,
+    simp_rw [IsConcreteLE.le_iff, mem_toSubmodule, Submodule.mem_map_equiv,
       AlgEquiv.coe_symm_toLinearEquiv] at hn
     specialize hn ha
     rw [AlgEquiv.symm_apply_apply] at hn
