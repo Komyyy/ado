@@ -14,7 +14,7 @@ public import Ado.Nilpotent
 set_option backward.privateInPublic true
 set_option backward.privateInPublic.warn false
 
-open Set Module LieAlgebra LieModule LieHom LieSubmodule
+open Set Module LieAlgebra LieModule LieHom LieSubmodule SemiDirectSum
 
 variable {K 𝔯 : Type*}
 variable [Field K] [CharZero K] [LieRing 𝔯] [LieAlgebra K 𝔯] [FiniteDimensional K 𝔯]
@@ -88,18 +88,8 @@ lemma LieIdeal.exists_for_solStepAdoData_of_not_isLieAbelian (n : ℕ)
   simp_rw +singlePass [← finrank_lt_iff, ← Nat.sub_pos_iff_lt, ← finrank_quotient] at h𝔯'
   exact h𝔯'
 
-structure SolStepAdoData (K 𝔯 : Type*)
-    [Field K] [CharZero K] [LieRing 𝔯] [LieAlgebra K 𝔯] [FiniteDimensional K 𝔯]
-    [LieAlgebra.IsSolvable 𝔯] where
-  protected 𝔞 : LieIdeal K 𝔯
-  protected 𝔥 : LieSubalgebra K 𝔯
-  nilradical_le_𝔞 : nilradical K 𝔯 ≤ 𝔞
-  isCompl_toSubmodule : IsCompl 𝔞.toSubmodule 𝔥.toSubmodule
-  [instIsAdo𝔞 : IsAdo K 𝔞]
-
-attribute [instance] SolStepAdoData.instIsAdo𝔞
-
-public axiom SolStepAdoData.isAdo (D : SolStepAdoData K 𝔯) : IsAdo K 𝔯
+public axiom LieAlgebra.IsAdo.of_solStep (𝔞 : LieIdeal K 𝔯) (𝔥 : LieSubalgebra K 𝔯)
+    (hi : IsInnerSemiDirectSum 𝔞 𝔥) (hc : nilradical K 𝔯 ≤ 𝔞) [IsAdo K 𝔞] : IsAdo K 𝔯
 
 public local instance LieAlgebra.IsAdo.of_isSolvable : IsAdo K 𝔯 := by
   generalize hn : finrank K (𝔯 ⧸ nilradical K 𝔯) = n
@@ -110,8 +100,9 @@ public local instance LieAlgebra.IsAdo.of_isSolvable : IsAdo K 𝔯 := by
       LieRing.isNilpotent_lieIdeal_top_iff] at hn
     exact IsAdo.of_isNilpotent
   | succ n hin =>
-    rsuffices ⟨D⟩ : Nonempty (SolStepAdoData K 𝔯)
-    · exact D.isAdo
+    rsuffices ⟨𝔞, 𝔥, hi, hc, _⟩ : ∃ (𝔞 : LieIdeal K 𝔯) (𝔥 : LieSubalgebra K 𝔯),
+        IsInnerSemiDirectSum 𝔞 𝔥 ∧ nilradical K 𝔯 ≤ 𝔞 ∧ IsAdo K 𝔞
+    · exact .of_solStep 𝔞 𝔥 hi hc
     obtain ⟨𝔞, hn𝔞, h𝔞⟩ := LieIdeal.exists_for_solStepAdoData_of_not_isLieAbelian K 𝔯 n hn
     specialize hin hn𝔞
     obtain ⟨𝔥, h𝔥₁⟩ : ∃ 𝔥 : LieSubalgebra K 𝔯, IsCompl 𝔞.toSubmodule 𝔥.toSubmodule := by
@@ -122,4 +113,4 @@ public local instance LieAlgebra.IsAdo.of_isSolvable : IsAdo K 𝔯 := by
       conv at hn => equals finrank K 𝔥' = 1 => grind only [LieIdeal.finrank_mono h𝔞]
       existsi 𝔥'.toLieSubalgebraOfDimOne hn
       exact h𝔥'
-    exact ⟨{ 𝔞, 𝔥, nilradical_le_𝔞 := h𝔞, isCompl_toSubmodule := h𝔥₁ }⟩
+    exact ⟨𝔞, 𝔥, h𝔥₁.isInnerSemidirectSum, h𝔞, hin⟩
