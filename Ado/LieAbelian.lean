@@ -85,7 +85,7 @@ lemma bracket_top_top :
   next =>
     conv => equals ∀ x,
         equiv (x, 0) ∈ ⁅(⊤ : LieIdeal K 𝔤), (⊤ : LieSubmodule K 𝔤 (AbelianAdoSpace K 𝔤))⁆ =>
-      simp [SetLike.le_def, equiv.surjective.forall]
+      simp [IsConcreteLE.le_iff, equiv.surjective.forall]
     intro x
     convert lie_mem_lie (show x ∈ (⊤ : LieIdeal K 𝔤) by simp)
       (show equiv (0, 1) ∈ (⊤ : LieSubmodule K 𝔤 (AbelianAdoSpace K 𝔤)) by simp)
