@@ -93,22 +93,22 @@ public axiom LieAlgebra.IsAdo.semiDirectSum_of_isSolvable [CharZero K] {𝔞 �
     [LieRing 𝔞] [LieAlgebra K 𝔞] [LieRing 𝔥] [LieAlgebra K 𝔥]
     [FiniteDimensional K 𝔞] [FiniteDimensional K 𝔥] [IsAdo K 𝔞]
     (ψ : 𝔥 →ₗ⁅K⁆ LieDerivation K 𝔞 𝔞) [IsSolvable (𝔞 ⋊⁅ψ⁆ 𝔥)]
-    (hc : nilradical K (𝔞 ⋊⁅ψ⁆ 𝔥) ≤ (inl ψ).idealRange) :
+    (hn : nilradical K (𝔞 ⋊⁅ψ⁆ 𝔥) ≤ (inl ψ).idealRange) :
     IsAdo K (𝔞 ⋊⁅ψ⁆ 𝔥)
 
 lemma LieAlgebra.IsAdo.of_isInnerSemiDirectSum_of_isSolvable
     (𝔞 : LieIdeal K 𝔯) (𝔥 : LieSubalgebra K 𝔯)
-    (hi : IsInnerSemiDirectSum 𝔞 𝔥) (hc : nilradical K 𝔯 ≤ 𝔞) [IsAdo K 𝔞] : IsAdo K 𝔯 := by
+    (hi : IsInnerSemiDirectSum 𝔞 𝔥) (hn : nilradical K 𝔯 ≤ 𝔞) [IsAdo K 𝔞] : IsAdo K 𝔯 := by
   rw [(lieEquivLieSubalgebra hi).symm.isAdo_iff]
   have := (lieEquivLieSubalgebra hi).injective.lieAlgebra_isSolvable
-  apply (LieIdeal.map_mono (f := (lieEquivLieSubalgebra hi).symm.toLieHom)).imp at hc
-  rw [map_equiv_nilradical] at hc
-  conv_rhs at hc => equals idealRange (inl ((LieDerivation.adoIdeal 𝔞).comp 𝔥.incl)) =>
+  apply (LieIdeal.map_mono (f := (lieEquivLieSubalgebra hi).symm.toLieHom)).imp at hn
+  rw [map_equiv_nilradical] at hn
+  conv_rhs at hn => equals idealRange (inl ((LieDerivation.adoIdeal 𝔞).comp 𝔥.incl)) =>
     ext ⟨x, y⟩
     have h : y.1 ∈ 𝔞 ↔ y = 0 :=
       Submodule.mem_left_iff_eq_zero_of_disjoint hi.disjoint
     simp [add_mem_cancel_left, eq_comm (a := 0) (b := y), h]
-  exact .semiDirectSum_of_isSolvable _ hc
+  exact .semiDirectSum_of_isSolvable _ hn
 
 public local instance LieAlgebra.IsAdo.of_isSolvable : IsAdo K 𝔯 := by
   generalize hn : finrank K (𝔯 ⧸ nilradical K 𝔯) = n
