@@ -23,7 +23,7 @@ public import Ado.LieAbelian
 ## 冪零 Lie 代数に対する Ado の定理
 -/
 
-open Function Set Finset LieAlgebra LieModule LieSubmodule LieIdeal LieHom
+open Function Set Finset LieAlgebra LieModule LieSubmodule LieIdeal LieHom SemiDirectSum
 open Module hiding Injective
 open TensorAlgebra hiding ringCon ι
 open UniversalEnvelopingAlgebra hiding ι
@@ -120,6 +120,8 @@ lemma LieIdeal.exists_for_nilStepAdoData_of_not_isLieAbelian (n : ℕ)
   have h𝔫' := derivedSeries_lt_top_of_solvable K (𝔫 ⧸ center K 𝔫)
   simp_rw +singlePass [← finrank_lt_iff, ← Nat.sub_pos_iff_lt, ← finrank_quotient] at h𝔫'
   exact h𝔫'
+
+section Step
 
 variable {𝔞 𝔥 : Type*}
 variable [LieRing 𝔞] [LieAlgebra K 𝔞] [LieRing 𝔥] [LieAlgebra K 𝔥]
@@ -684,8 +686,6 @@ noncomputable def nilLieSubmodule [IsAdo K 𝔞] :
 
 end LieAlgebra.SemiDirectSum
 
-open LieAlgebra.SemiDirectSum
-
 variable [IsAdo K 𝔞]
 
 abbrev NilStepAdoSpace :=
@@ -783,7 +783,20 @@ instance [LieRing.IsNilpotent (𝔞 ⋊⁅ψ⁆ 𝔥)] : IsNilpotent (𝔞 ⋊�
 
 end NilStepAdoSpace
 
-lemma LieAlgebra.IsAdo.of_nilStep (𝔞 : LieIdeal K 𝔫) (𝔥 : LieSubalgebra K 𝔫)
+end Step
+
+lemma LieAlgebra.IsAdo.semiDirectSum_of_isNilpotent {𝔞 𝔥 : Type*}
+    [LieRing 𝔞] [LieAlgebra K 𝔞] [LieRing 𝔥] [LieAlgebra K 𝔥]
+    [FiniteDimensional K 𝔞] [FiniteDimensional K 𝔥] [IsAdo K 𝔞]
+    (ψ : 𝔥 →ₗ⁅K⁆ LieDerivation K 𝔞 𝔞) [LieRing.IsNilpotent (𝔞 ⋊⁅ψ⁆ 𝔥)]
+    (hc : center K (𝔞 ⋊⁅ψ⁆ 𝔥) ≤ (inl ψ).idealRange) :
+    IsAdo K (𝔞 ⋊⁅ψ⁆ 𝔥) := by
+  have := (inl_injective ψ).lieAlgebra_isNilpotent
+  have := NilStepAdoSpace.isFaithful_nilStepAdoSpace ψ hc
+  exact .of_isNilpotent_of_isFaithful_center (NilStepAdoSpace ψ)
+
+lemma LieAlgebra.IsAdo.of_isInnerSemiDirectSum_of_isNilpotent
+    (𝔞 : LieIdeal K 𝔫) (𝔥 : LieSubalgebra K 𝔫)
     (hi : IsInnerSemiDirectSum 𝔞 𝔥) (hc : center K 𝔫 ≤ 𝔞) [IsAdo K 𝔞] : IsAdo K 𝔫 := by
   rw [(lieEquivLieSubalgebra hi).symm.isAdo_iff]
   have := (lieEquivLieSubalgebra hi).injective.lieAlgebra_isNilpotent
@@ -794,9 +807,7 @@ lemma LieAlgebra.IsAdo.of_nilStep (𝔞 : LieIdeal K 𝔫) (𝔥 : LieSubalgebra
     have h : y.1 ∈ 𝔞 ↔ y = 0 :=
       Submodule.mem_left_iff_eq_zero_of_disjoint hi.disjoint
     simp [add_mem_cancel_left, eq_comm (a := 0) (b := y), h]
-  apply NilStepAdoSpace.isFaithful_nilStepAdoSpace at hc
-  exact .of_isNilpotent_of_isFaithful_center
-    (NilStepAdoSpace ((LieDerivation.adoIdeal 𝔞).comp 𝔥.incl))
+  exact .semiDirectSum_of_isNilpotent _ hc
 
 public instance LieAlgebra.IsAdo.of_isNilpotent : IsAdo K 𝔫 := by
   generalize hn : finrank K 𝔫 = n
@@ -807,7 +818,7 @@ public instance LieAlgebra.IsAdo.of_isNilpotent : IsAdo K 𝔫 := by
     case pos => exact .of_isLieAbelian
     rsuffices ⟨𝔞, 𝔥, hi, hc, _⟩ : ∃ (𝔞 : LieIdeal K 𝔫) (𝔥 : LieSubalgebra K 𝔫),
         IsInnerSemiDirectSum 𝔞 𝔥 ∧ center K 𝔫 ≤ 𝔞 ∧ IsAdo K 𝔞
-    · exact .of_nilStep 𝔞 𝔥 hi hc
+    · exact .of_isInnerSemiDirectSum_of_isNilpotent 𝔞 𝔥 hi hc
     obtain ⟨𝔞, rfl, h𝔞⟩ := exists_for_nilStepAdoData_of_not_isLieAbelian K 𝔫 n hn h𝔫
     specialize hin rfl
     obtain ⟨𝔥, h𝔥₁⟩ : ∃ 𝔥 : LieSubalgebra K 𝔫, IsCompl 𝔞.toSubmodule 𝔥.toSubmodule := by

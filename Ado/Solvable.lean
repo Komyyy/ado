@@ -88,8 +88,27 @@ lemma LieIdeal.exists_for_solStepAdoData_of_not_isLieAbelian (n : ℕ)
   simp_rw +singlePass [← finrank_lt_iff, ← Nat.sub_pos_iff_lt, ← finrank_quotient] at h𝔯'
   exact h𝔯'
 
-public axiom LieAlgebra.IsAdo.of_solStep (𝔞 : LieIdeal K 𝔯) (𝔥 : LieSubalgebra K 𝔯)
-    (hi : IsInnerSemiDirectSum 𝔞 𝔥) (hc : nilradical K 𝔯 ≤ 𝔞) [IsAdo K 𝔞] : IsAdo K 𝔯
+-- 一般の場合でも使うので公開
+public axiom LieAlgebra.IsAdo.semiDirectSum_of_isSolvable [CharZero K] {𝔞 𝔥 : Type*}
+    [LieRing 𝔞] [LieAlgebra K 𝔞] [LieRing 𝔥] [LieAlgebra K 𝔥]
+    [FiniteDimensional K 𝔞] [FiniteDimensional K 𝔥] [IsAdo K 𝔞]
+    (ψ : 𝔥 →ₗ⁅K⁆ LieDerivation K 𝔞 𝔞) [IsSolvable (𝔞 ⋊⁅ψ⁆ 𝔥)]
+    (hc : nilradical K (𝔞 ⋊⁅ψ⁆ 𝔥) ≤ (inl ψ).idealRange) :
+    IsAdo K (𝔞 ⋊⁅ψ⁆ 𝔥)
+
+lemma LieAlgebra.IsAdo.of_isInnerSemiDirectSum_of_isSolvable
+    (𝔞 : LieIdeal K 𝔯) (𝔥 : LieSubalgebra K 𝔯)
+    (hi : IsInnerSemiDirectSum 𝔞 𝔥) (hc : nilradical K 𝔯 ≤ 𝔞) [IsAdo K 𝔞] : IsAdo K 𝔯 := by
+  rw [(lieEquivLieSubalgebra hi).symm.isAdo_iff]
+  have := (lieEquivLieSubalgebra hi).injective.lieAlgebra_isSolvable
+  apply (LieIdeal.map_mono (f := (lieEquivLieSubalgebra hi).symm.toLieHom)).imp at hc
+  rw [map_equiv_nilradical] at hc
+  conv_rhs at hc => equals idealRange (inl ((LieDerivation.adoIdeal 𝔞).comp 𝔥.incl)) =>
+    ext ⟨x, y⟩
+    have h : y.1 ∈ 𝔞 ↔ y = 0 :=
+      Submodule.mem_left_iff_eq_zero_of_disjoint hi.disjoint
+    simp [add_mem_cancel_left, eq_comm (a := 0) (b := y), h]
+  exact .semiDirectSum_of_isSolvable _ hc
 
 public local instance LieAlgebra.IsAdo.of_isSolvable : IsAdo K 𝔯 := by
   generalize hn : finrank K (𝔯 ⧸ nilradical K 𝔯) = n
@@ -102,7 +121,7 @@ public local instance LieAlgebra.IsAdo.of_isSolvable : IsAdo K 𝔯 := by
   | succ n hin =>
     rsuffices ⟨𝔞, 𝔥, hi, hc, _⟩ : ∃ (𝔞 : LieIdeal K 𝔯) (𝔥 : LieSubalgebra K 𝔯),
         IsInnerSemiDirectSum 𝔞 𝔥 ∧ nilradical K 𝔯 ≤ 𝔞 ∧ IsAdo K 𝔞
-    · exact .of_solStep 𝔞 𝔥 hi hc
+    · exact .of_isInnerSemiDirectSum_of_isSolvable 𝔞 𝔥 hi hc
     obtain ⟨𝔞, hn𝔞, h𝔞⟩ := LieIdeal.exists_for_solStepAdoData_of_not_isLieAbelian K 𝔯 n hn
     specialize hin hn𝔞
     obtain ⟨𝔥, h𝔥₁⟩ : ∃ 𝔥 : LieSubalgebra K 𝔯, IsCompl 𝔞.toSubmodule 𝔥.toSubmodule := by
