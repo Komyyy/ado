@@ -119,7 +119,6 @@ section Step
 variable {𝔞 𝔥 : Type*}
 variable [LieRing 𝔞] [LieAlgebra K 𝔞] [LieRing 𝔥] [LieAlgebra K 𝔥]
 variable (ψ : 𝔥 →ₗ⁅K⁆ LieDerivation K 𝔞 𝔞)
-variable (hc : center K (𝔞 ⋊⁅ψ⁆ 𝔥) ≤ (SemiDirectSum.inl ψ).idealRange)
 
 namespace LieAlgebra.SemiDirectSum
 

@@ -14,7 +14,7 @@ public import Ado.Nilpotent
 set_option backward.privateInPublic true
 set_option backward.privateInPublic.warn false
 
-open Set Module LieAlgebra LieModule LieHom LieSubmodule SemiDirectSum
+open Set Module LieAlgebra LieModule LieHom LieSubmodule SemiDirectSum UniversalEnvelopingAlgebra
 
 variable {K 𝔯 : Type*}
 variable [Field K] [CharZero K] [LieRing 𝔯] [LieAlgebra K 𝔯] [FiniteDimensional K 𝔯]
@@ -87,6 +87,79 @@ lemma LieIdeal.exists_for_solStepAdoData_of_not_isLieAbelian (n : ℕ)
   have h𝔯' := derivedSeries_lt_top_of_solvable K (𝔯 ⧸ nilradical K 𝔯)
   simp_rw +singlePass [← finrank_lt_iff, ← Nat.sub_pos_iff_lt, ← finrank_quotient] at h𝔯'
   exact h𝔯'
+
+section Step
+
+variable {𝔞 𝔥 : Type*}
+variable [LieRing 𝔞] [LieAlgebra K 𝔞] [LieRing 𝔥] [LieAlgebra K 𝔥] [IsAdo K 𝔞]
+variable (ψ : 𝔥 →ₗ⁅K⁆ LieDerivation K 𝔞 𝔞)
+variable (hn : nilradical K (𝔞 ⋊⁅ψ⁆ 𝔥) ≤ (SemiDirectSum.inl ψ).idealRange)
+
+namespace UniversalEnvelopingAlgebra
+
+attribute [local instance 100] LieRing.ofAssociativeRing
+
+variable (K 𝔞) in
+noncomputable def annihilatingIdeal : Ideal (UniversalEnvelopingAlgebra K 𝔞) :=
+  RingHom.ker (UniversalEnvelopingAlgebra.lift K (toEnd K 𝔞 (AdoSpace K 𝔞)))
+deriving Ideal.IsTwoSided
+
+public axiom map_leftLieUE_annihilatingIdeal_le_annihilatingIdeal [CharZero K] (x : 𝔥) :
+    Submodule.map (leftLieUE ψ x) (Submodule.restrictScalars K (annihilatingIdeal K 𝔞)) ≤
+      Submodule.restrictScalars K (annihilatingIdeal K 𝔞)
+
+lemma leftLieUE_mem_annihilatingIdeal (x : 𝔥) {a : UniversalEnvelopingAlgebra K 𝔞}
+    (ha : a ∈ annihilatingIdeal K 𝔞) : leftLieUE ψ x a ∈ annihilatingIdeal K 𝔞 := by
+  have h := map_leftLieUE_annihilatingIdeal_le_annihilatingIdeal ψ x
+  rw [Submodule.map_le_iff_le_comap] at h
+  apply mem_of_le_of_mem at h
+  simp_all
+
+variable (K 𝔞) in
+noncomputable def nilIdeal : Ideal (UniversalEnvelopingAlgebra K 𝔞) :=
+  annihilatingIdeal K 𝔞 ^ nilpotencyLength (nilradical K 𝔞) (AdoSpace K 𝔞)
+deriving Ideal.IsTwoSided
+
+lemma map_leftLieUE_nilIdeal_le_nilIdeal (x : 𝔥) :
+    Submodule.map (leftLieUE ψ x) (Submodule.restrictScalars K (nilIdeal K 𝔞)) ≤
+      Submodule.restrictScalars K (nilIdeal K 𝔞) := by
+  unfold nilIdeal
+  generalize nilpotencyLength (nilradical K 𝔞) (AdoSpace K 𝔞) = n
+  induction n with
+  | zero => simp [Submodule.pow_zero]
+  | succ n hn =>
+    simp only [Submodule.map_le_iff_le_comap] at hn ⊢
+    -- `Submodule.restrictScalars_mem` という名前はよく無い
+    simp only [IsConcreteLE.le_iff, Submodule.mem_comap, Submodule.restrictScalars_mem] at hn
+    simp_rw [Submodule.pow_succ, Submodule.restrictScalars_mul, Submodule.mul_le,
+      Submodule.mem_comap, ← Submodule.restrictScalars_mul, Submodule.restrictScalars_mem]
+    intro a ha b hb
+    rw [leftLieUE_mul]
+    solve_by_elim (maxDepth := 10) (transparency := .instances)
+      [hn, add_mem, Submodule.mul_mem_mul, leftLieUE_mem_annihilatingIdeal]
+
+lemma leftLieUE_mem_nilIdeal (x : 𝔥) {a : UniversalEnvelopingAlgebra K 𝔞}
+    (ha : a ∈ nilIdeal K 𝔞) : leftLieUE ψ x a ∈ nilIdeal K 𝔞 := by
+  have h := map_leftLieUE_nilIdeal_le_nilIdeal ψ x
+  rw [Submodule.map_le_iff_le_comap] at h
+  apply mem_of_le_of_mem at h
+  simp_all
+
+noncomputable def nilLieSubmodule : LieSubmodule K (𝔞 ⋊⁅ψ⁆ 𝔥) (UniversalEnvelopingAlgebra K 𝔞) where
+  __ := Submodule.restrictScalars K (nilIdeal K 𝔞)
+  lie_mem {x a} ha := by
+    simp_all only [Submodule.toAddSubmonoid_restrictScalars, Submodule.carrier_eq_coe,
+      SetLike.mem_coe]
+    obtain ⟨x, y⟩ := x
+    simp only [lieUE_def, bracket_eq]
+    solve_by_elim (transparency := .reducible) [add_mem, Ideal.mul_mem_left, leftLieUE_mem_nilIdeal]
+
+end UniversalEnvelopingAlgebra
+
+abbrev SolStepAdoSpace :=
+  UniversalEnvelopingAlgebra K 𝔞 ⧸ nilLieSubmodule ψ
+
+end Step
 
 -- 一般の場合でも使うので公開
 public axiom LieAlgebra.IsAdo.semiDirectSum_of_isSolvable [CharZero K] {𝔞 𝔥 : Type*}
