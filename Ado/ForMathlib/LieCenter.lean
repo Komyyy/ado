@@ -4,19 +4,8 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Miyahara Kō
 -/
 module
-public import Ado.ForMathlib.DirectSum
-public import Ado.ForMathlib.FinAdd
-public import Ado.ForMathlib.LieFinrank
 public import Ado.ForMathlib.LieHom
-public import Ado.ForMathlib.LieIdealCoe
-public import Ado.ForMathlib.LieModuleKer
-public import Ado.ForMathlib.LieModulePUnit
-public import Ado.ForMathlib.LieModuleSubsingleton
-public import Ado.ForMathlib.TensorAlgebra
-public import Ado.ForMathlib.UniversalEnvelopingAlgebra
-public import Ado.ForMathlib.LieSemiDirectSum
-public import Ado.ForMathlib.LieMono
-public import Ado.LieAbelian
+public import Mathlib.Algebra.Lie.Abelian
 
 public section
 
