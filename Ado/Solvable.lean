@@ -101,7 +101,8 @@ attribute [local instance 100] LieRing.ofAssociativeRing
 
 variable (K 𝔞) in
 noncomputable def annihilatingIdeal : Ideal (UniversalEnvelopingAlgebra K 𝔞) :=
-  RingHom.ker (UniversalEnvelopingAlgebra.lift K (toEnd K 𝔞 (AdoSpace K 𝔞)))
+  TwoSidedIdeal.asIdeal (TwoSidedIdeal.span
+    (lift K (toEnd K 𝔞 (AdoSpace K 𝔞)) ⁻¹' {0} ∪ ι K '' nilradical K 𝔞))
 deriving Ideal.IsTwoSided
 
 public axiom map_leftLieUE_annihilatingIdeal_le_annihilatingIdeal [CharZero K] (x : 𝔥) :
