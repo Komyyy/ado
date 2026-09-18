@@ -425,8 +425,7 @@ lemma nilSubmodule_le_ker_lift_toEnd_adoSpace [IsAdo K 𝔞] [LieRing.IsNilpoten
     enter [2, 1, 2, 2]
     equals List.prod (List.map (TensorAlgebra.ι K) (List.ofFn f)) => simp [comp_def]
   simp_rw [map_list_prod, List.map_map, comp_def, lift_ι_apply']
-  convert list_prod_map_toEnd_apply_mem_lowerCentralSeries K (List.ofFn f) x
-  simp
+  exact list_prod_map_toEnd_apply_mem_lowerCentralSeries K (List.ofFn f) x n (by simp)
 
 variable (K 𝔞) in
 lemma injective_quotient_mk_nilSubmodule [IsAdo K 𝔞] [LieRing.IsNilpotent 𝔞] :

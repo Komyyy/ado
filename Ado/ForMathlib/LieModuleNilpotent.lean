@@ -100,11 +100,19 @@ lemma lowerCentralSeries_nilpotencyLength [IsNilpotent L M] :
   nilpotencyLength_le_iff R |>.mp le_rfl
 
 variable (R) in
-lemma list_prod_map_toEnd_apply_mem_lowerCentralSeries (l : List L) (m : M) :
-    List.prod (List.map (toEnd R L M) l) m ∈ lowerCentralSeries R L M (List.length l) := by
+lemma list_prod_map_toEnd_apply_mem_lowerCentralSeries
+    (l : List L) (m : M) (n : ℕ := List.length l) (hn : n = List.length l := by rfl) :
+    List.prod (List.map (toEnd R L M) l) m ∈ lowerCentralSeries R L M n := by
+  subst hn
   induction l with
   | nil => simp
   | cons x l hl => simp [LieSubmodule.lie_mem_lie, hl]
+
+attribute [local instance 100] LieRing.ofAssociativeRing in
+variable (R) in
+lemma fin_prod_map_toEnd_apply_mem_lowerCentralSeries {n} (f : Fin n → L) (m : M) :
+    Fin.prod ((toEnd R L M) ∘ f) m ∈ lowerCentralSeries R L M n := by
+  simpa using list_prod_map_toEnd_apply_mem_lowerCentralSeries R (List.map f (List.finRange n)) m
 
 @[congr]
 lemma isNilpotent_congr_left (L' L'' : LieSubalgebra R L) (h : L' = L'') :

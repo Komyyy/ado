@@ -93,7 +93,7 @@ section Step
 variable {𝔞 𝔥 : Type*}
 variable [LieRing 𝔞] [LieAlgebra K 𝔞] [LieRing 𝔥] [LieAlgebra K 𝔥] [IsAdo K 𝔞]
 variable (ψ : 𝔥 →ₗ⁅K⁆ LieDerivation K 𝔞 𝔞)
-variable (hn : nilradical K (𝔞 ⋊⁅ψ⁆ 𝔥) ≤ (SemiDirectSum.inl ψ).idealRange)
+variable (hn : nilradical K (𝔞 ⋊⁅ψ⁆ 𝔥) ≤ idealRange (SemiDirectSum.inl ψ))
 
 namespace UniversalEnvelopingAlgebra
 
