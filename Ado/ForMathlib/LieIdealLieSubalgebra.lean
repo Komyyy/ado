@@ -5,13 +5,15 @@ Authors: Miyahara Kō
 -/
 module
 public import Mathlib.Algebra.Lie.Ideal
+public import Mathlib.Algebra.Lie.OfAssociative
 
 public import Mathlib.Tactic.Have
 
 public section
 
-variable {R L : Type*}
+variable {R L M : Type*}
 variable [CommRing R] [LieRing L] [LieAlgebra R L]
+variable [AddCommGroup M] [Module R M] [LieRingModule L M] [LieModule R L M]
 
 open LieIdeal LieSubalgebra
 
@@ -53,5 +55,9 @@ lemma toLieSubalgebra_sup (I I' : LieIdeal R L) :
   suffices (I ⊔ I').toLieSubalgebra ≤ I.toLieSubalgebra ⊔ I'.toLieSubalgebra by
     simpa [le_antisymm_iff]
   simp [← toSubmodule_le_toSubmodule]
+
+theorem toEnd_eq (I : LieIdeal R L) {x : I} :
+    LieModule.toEnd R I M x = LieModule.toEnd R L M x :=
+  rfl
 
 end LieIdeal

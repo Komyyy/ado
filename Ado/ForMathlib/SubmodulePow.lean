@@ -5,6 +5,7 @@ Authors: Miyahara Kō
 -/
 module
 public import Mathlib.Algebra.Algebra.Operations
+public import Ado.ForMathlib.SetPow
 
 public section
 
@@ -16,35 +17,30 @@ variable {R : Type*} [Semiring R] {A : Type*} [Semiring A] [Module R A] [IsScala
 
 lemma list_prod_mem_pow (M : Submodule R A) (n) (l : List A)
     (hl : l.length = n) (hlM : ∀ x ∈ l, x ∈ M) : l.prod ∈ M ^ n := by
-  subst hl
-  induction l using List.reverseRec with
-  | nil => simp [Submodule.pow_zero, Submodule.one_eq_span_one_set, Submodule.mem_span]
-  | append_singleton l x hil =>
-    simp_rw [List.forall_mem_append, List.forall_mem_singleton] at hlM
-    specialize hil hlM.1
-    simp [Submodule.pow_succ, Submodule.mul_mem_mul, hil, hlM.2]
+  grw [← SetLike.mem_coe, ← pow_subset_pow, Set.mem_pow_iff_list_prod]
+  exists l
 
-lemma fin_prod_mem_pow (M : Submodule R A) {n} (f : Fin n → A) (hf : ∀ i, f i ∈ M) :
-    Fin.prod f ∈ M ^ n := by
-  simp [Fin.prod_eq_prod_map_finRange, list_prod_mem_pow, hf]
-
--- `mul_def` は非可換の場合でも拡張可能 (`pow` はできないかも)
-theorem mul_def_noncomm (M N : Submodule R A) : M * N = span R (M * N : Set A) := by
+-- `mul_def` は非可換の場合でも拡張可能
+lemma mul_def_noncomm (M N : Submodule R A) : M * N = span R (M * N : Set A) := by
   apply eq_of_forall_ge_iff
   simp [span_le, mul_le, Set.mul_subset_iff]
 
-section Algebra
+lemma span_mul (T : Set A) (M : Submodule R A) : span R T * M = span R (T * (M : Set A)) := by
+  apply le_antisymm
+  on_goal 2 => grw [span_le, ← mul_subset_mul, ← Set.mul_subset_mul_right subset_span]
+  rw [mul_le, forall₂_comm]
+  intro x hx
+  -- `LinearMap.mulRight` は積の可換性を要求しない！
+  conv => equals span R T ≤ comap (LinearMap.mulRight R x) (span R (T * (M : Set A))) =>
+    simp [IsConcreteLE.le_iff]
+  rw [span_le]
+  simp +contextual [Set.subset_def, Submodule.mem_span_of_mem, Set.mul_mem_mul, hx]
 
-variable {R : Type*} [CommSemiring R] {A : Type*} [Semiring A] [Algebra R A]
-
-lemma pow_le {M N : Submodule R A} {n : ℕ} :
-    M ^ n ≤ N ↔ (∀ f : Fin n → A, (∀ i, f i ∈ M) → Fin.prod f ∈ N) := by
-  simp_rw [pow_eq_span_pow_set, span_le, Set.subset_def, SetLike.mem_coe, Set.mem_pow,
-    forall_exists_index, forall_apply_eq_imp_iff, SetLike.coe_sort_coe,
-    Fin.prod_eq_prod_map_finRange, ← List.ofFn_eq_map, Equiv.subtypePiEquivPi.surjective.forall,
-    Subtype.forall]
-  simp [Equiv.subtypePiEquivPi]
-
-end Algebra
+-- `pow_eq_span_pow_set` は非可換の場合でも拡張可能
+lemma pow_eq_span_pow_set_noncomm (M : Submodule R A) (n : ℕ) : M ^ n = span R (M ^ n : Set A) := by
+  induction n with
+  | zero => simp [Submodule.pow_zero, one_eq_span_one_set]
+  | succ n hn =>
+    simp_rw [Submodule.pow_succ, hn, span_mul, pow_succ]
 
 end Submodule

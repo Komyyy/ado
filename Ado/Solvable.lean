@@ -14,18 +14,130 @@ public import Ado.Nilpotent
 set_option backward.privateInPublic true
 set_option backward.privateInPublic.warn false
 
+section ForMathlib
+
+public section IdealOperation
+
+variable {R : Type*} [Semiring R]
+
+open scoped Pointwise
+
+namespace Ideal
+
+instance (I J : Ideal R) [I.IsTwoSided] [J.IsTwoSided] : (I ⊔ J).IsTwoSided where
+  mul_mem_of_left {a} b ha := by
+    rw [Submodule.mem_sup] at ha
+    obtain ⟨a₁, ha₁, a₂, ha₂, rfl⟩ := ha
+    rw [add_mul]
+    solve_by_elim (transparency := .reducible) (maxDepth := 10)
+      [add_mem, Ideal.mul_mem_right, Ideal.mem_sup_left, Ideal.mem_sup_right]
+
+lemma mul_eq_span_mul (I J : Ideal R) : I * J = span (I * J : Set R) :=
+  Submodule.mul_def_noncomm I J
+
+lemma pow_eq_span_pow_set (I : Ideal R) (n : ℕ) : I ^ n = span (I ^ n : Set R) :=
+  Submodule.pow_eq_span_pow_set_noncomm I n
+
+lemma span_pow (S : Set R) (n : ℕ) [(span S).IsTwoSided] :
+    span S ^ n = span (S ^ n : Set R) := by
+  induction n with
+  | zero => simp
+  | succ n hn =>
+    have : (span (S ^ n : Set R)).IsTwoSided := by rw [← hn]; infer_instance
+    rw [Submodule.pow_succ, hn, span_mul_span, pow_succ]
+
+lemma mul_subset_mul (I J : Ideal R) : (I * J : Set R) ⊆ ↑(I * J) :=
+  Submodule.mul_subset_mul I J
+
+lemma pow_subset_pow (I : Ideal R) (n : ℕ) : (I : Set R) ^ n ⊆ ↑(I ^ n) :=
+  Submodule.pow_subset_pow I
+
+-- 後で `Submodule` に拡張
+lemma sup_eq_span (I J : Ideal R) : I ⊔ J = span (I ∪ J) := by
+  simp
+
+@[elab_as_elim]
+theorem span_induction {s : Set R} {p : (x : R) → x ∈ span s → Prop}
+    (mem : ∀ (x) (h : x ∈ s), p x (subset_span h))
+    (zero : p 0 (Ideal.zero_mem _))
+    (add : ∀ x y hx hy, p x hx → p y hy → p (x + y) (Ideal.add_mem _ ‹_› ‹_›))
+    (mul : ∀ (a : R) (x hx), p x hx → p (a * x) (Ideal.mul_mem_left _ _ ‹_›)) {x}
+    (hx : x ∈ span s) : p x hx :=
+  Submodule.span_induction mem zero add mul hx
+
+end Ideal
+
+namespace TwoSidedIdeal
+
+@[simp]
+lemma fromIdeal_span {R : Type*} [Ring R] (S : Set R) : fromIdeal (Ideal.span S) = span S := by
+  apply eq_of_forall_ge_iff
+  intro I
+  rw [TwoSidedIdeal.gc.le_iff_le, span_le, Ideal.span_le, coe_asIdeal]
+
+lemma _root_.Ideal.le_toTwoSidedIdeal {R : Type*} [Ring R] {I : TwoSidedIdeal R} {J : Ideal R}
+    [J.IsTwoSided] : I ≤ J.toTwoSided ↔ asIdeal I ≤ J := by
+  simp [IsConcreteLE.le_iff]
+
+lemma _root_.Ideal.toTwoSidedIdeal_le {R : Type*} [Ring R] {I : Ideal R} [I.IsTwoSided]
+    {J : TwoSidedIdeal R} : I.toTwoSided ≤ J ↔ I ≤ asIdeal J := by
+  simp [IsConcreteLE.le_iff]
+
+end TwoSidedIdeal
+
+end IdealOperation
+
+public section UniversalEnvelopingAlgebraIdeal
+
+variable {R L : Type*} [CommRing R] [LieRing L] [LieAlgebra R L]
+
+open Ideal
+
+namespace UniversalEnvelopingAlgebra
+
+attribute [local instance 100] LieRing.ofAssociativeRing
+
+@[instance]
+public axiom isTwoSided_span_ι_image_lieIdeal (I : LieIdeal R L) :
+    (span (ι R '' (I : Set L))).IsTwoSided -- where
+  -- mul_mem_of_left {a} b ha := by
+  --   induction ha using span_induction with
+  --   | mem a h =>
+  --     simp only [Set.mem_image, SetLike.mem_coe] at h
+  --     obtain ⟨x, hx, rfl⟩ := h
+  --     induction b with | mkAlgHom b
+  --     revert x hx b
+  --     conv =>
+  --       equals Submodule.map₂ (LinearMap.mul R (UniversalEnvelopingAlgebra R L))
+  --           (Submodule.map (ι R).toLinearMap I.toSubmodule)
+  --             (LinearMap.range (mkAlgHom R L).toLinearMap) ≤
+  --               Submodule.restrictScalars R (span (ι R '' (I : Set L))) =>
+  --       simp [Submodule.map₂_le]
+  --     simp_rw [← Submodule.map_top]
+  --     sorry
+  --   | zero => simp
+  --   | add a₁ a₂ ha₁ ha₂ hia₁ hia₂ => simp only [add_mul, add_mem, hia₁, hia₂]
+  --   | mul x a ha hia => simp only [mul_assoc, Ideal.mul_mem_left, hia]
+
+end UniversalEnvelopingAlgebra
+
+end UniversalEnvelopingAlgebraIdeal
+
+end ForMathlib
+
 open Set Module LieAlgebra LieModule LieHom LieSubmodule SemiDirectSum UniversalEnvelopingAlgebra
+open scoped Pointwise
 
 variable {K 𝔯 : Type*}
 variable [Field K] [CharZero K] [LieRing 𝔯] [LieAlgebra K 𝔯] [FiniteDimensional K 𝔯]
 
 -- 注意: 正標数では成り立たない。別ファイルの反例を参照。
-public axiom LieIdeal.lieIdealOf_nilradical_eq_of_le (I : LieIdeal K 𝔯) (hN : nilradical K 𝔯 ≤ I) :
+public axiom LieIdeal.lieIdealOf_nilradical_eq_of_le [CharZero K] [FiniteDimensional K 𝔯]
+    (I : LieIdeal K 𝔯) (hN : nilradical K 𝔯 ≤ I) :
     nilradical K I = lieIdealOf (nilradical K 𝔯) I
 
 variable [LieAlgebra.IsSolvable 𝔯]
 
-omit [CharZero K] in
 variable (K 𝔯) in
 lemma LieIdeal.exists_for_solStepAdoData_of_not_isLieAbelian (n : ℕ)
     (h𝔯r : finrank K (𝔯 ⧸ nilradical K 𝔯) = n + 1) :
@@ -101,25 +213,87 @@ attribute [local instance 100] LieRing.ofAssociativeRing
 
 variable (K 𝔞) in
 noncomputable def annihilatingIdeal : Ideal (UniversalEnvelopingAlgebra K 𝔞) :=
-  TwoSidedIdeal.asIdeal (TwoSidedIdeal.span
-    (lift K (toEnd K 𝔞 (AdoSpace K 𝔞)) ⁻¹' {0} ∪ ι K '' nilradical K 𝔞))
+  RingHom.ker (lift K (toEnd K 𝔞 (AdoSpace K 𝔞))) ⊔ Ideal.span (ι K '' nilradical K 𝔞)
 deriving Ideal.IsTwoSided
-
-public axiom map_leftLieUE_annihilatingIdeal_le_annihilatingIdeal [CharZero K] (x : 𝔥) :
-    Submodule.map (leftLieUE ψ x) (Submodule.restrictScalars K (annihilatingIdeal K 𝔞)) ≤
-      Submodule.restrictScalars K (annihilatingIdeal K 𝔞)
-
-lemma leftLieUE_mem_annihilatingIdeal (x : 𝔥) {a : UniversalEnvelopingAlgebra K 𝔞}
-    (ha : a ∈ annihilatingIdeal K 𝔞) : leftLieUE ψ x a ∈ annihilatingIdeal K 𝔞 := by
-  have h := map_leftLieUE_annihilatingIdeal_le_annihilatingIdeal ψ x
-  rw [Submodule.map_le_iff_le_comap] at h
-  apply mem_of_le_of_mem at h
-  simp_all
 
 variable (K 𝔞) in
 noncomputable def nilIdeal : Ideal (UniversalEnvelopingAlgebra K 𝔞) :=
   annihilatingIdeal K 𝔞 ^ nilpotencyLength (nilradical K 𝔞) (AdoSpace K 𝔞)
 deriving Ideal.IsTwoSided
+
+omit [CharZero K] in
+lemma nilIdeal_le {I} : nilIdeal K 𝔞 ≤ I ↔
+    ∀ l : List (UniversalEnvelopingAlgebra K 𝔞),
+      List.length l = nilpotencyLength (nilradical K 𝔞) (AdoSpace K 𝔞) →
+      (∀ x ∈ l, lift K (toEnd K 𝔞 (AdoSpace K 𝔞)) x = 0 ∨ x ∈ Ideal.span (ι K '' nilradical K 𝔞)) →
+          List.prod l ∈ I := by
+  have : (Ideal.span (RingHom.ker (lift K (toEnd K 𝔞 (AdoSpace K 𝔞))) ∪
+      Ideal.span (ι K '' (nilradical K 𝔞 : Set 𝔞)) :
+        Set (UniversalEnvelopingAlgebra K 𝔞))).IsTwoSided := by
+    rw [← Ideal.sup_eq_span]; infer_instance
+  simp_rw [nilIdeal, annihilatingIdeal, Ideal.sup_eq_span, Ideal.span_pow, Ideal.span_le,
+    Set.pow_subset]
+  simp
+
+omit [CharZero K] in
+variable (K 𝔞) in
+lemma nilIdeal_le_ker_lift_toEnd :
+    nilIdeal K 𝔞 ≤ RingHom.ker (lift K (toEnd K 𝔞 (AdoSpace K 𝔞))) := by
+  simp_rw [nilIdeal_le, RingHom.mem_ker]
+  intro l hll hl
+  by_cases! hf₂ : ∃ x ∈ l, lift K (toEnd K 𝔞 (AdoSpace K 𝔞)) x = 0
+  case pos =>
+    obtain ⟨x, hxl, hx⟩ := hf₂
+    rw [map_list_prod]
+    apply List.prod_eq_zero
+    rw [List.mem_map]
+    exists x
+  case neg =>
+    replace hl x hx := (hl x hx).resolve_left (hf₂ x hx)
+    clear hf₂
+    revert l hll hl
+    conv =>
+      equals (Ideal.span (ι K '' (nilradical K 𝔞 : Set 𝔞)) : Set (UniversalEnvelopingAlgebra K 𝔞)) ^
+          nilpotencyLength (nilradical K 𝔞) (AdoSpace K 𝔞) ⊆
+            lift K (toEnd K 𝔞 (AdoSpace K 𝔞)) ⁻¹' {0} =>
+        simp [Set.pow_subset]
+    have : (Ideal.span
+        (Ideal.span (ι K '' (nilradical K 𝔞 : Set 𝔞)) :
+          Set (UniversalEnvelopingAlgebra K 𝔞))).IsTwoSided := by
+      rw [Ideal.span_eq]; infer_instance
+    simp_rw [← RingHom.ker_eq, ← Ideal.span_le, ← Ideal.span_pow, Ideal.span_eq, Ideal.span_pow,
+      Ideal.span_le, RingHom.ker_eq, Set.pow_subset]
+    intro l hll hl
+    replace hl : l ∈ range (List.map (ι K ∘ ((↑) : nilradical K 𝔞 → 𝔞)))
+    · simp_rw [Set.range_list_map, Set.range_comp, Subtype.range_coe_subtype,
+        SetLike.setOfPred_mem_eq, Set.mem_ofPred]
+      exact hl
+    rw [Set.mem_range] at hl
+    obtain ⟨l, rfl⟩ := hl
+    rw [List.length_map] at hll
+    conv =>
+      equals ∀ x,
+         (List.map (toEnd K (nilradical K 𝔞) (AdoSpace K 𝔞)) l).prod x ∈
+            lowerCentralSeries K (nilradical K 𝔞) (AdoSpace K 𝔞)
+              (nilpotencyLength (nilradical K 𝔞) (AdoSpace K 𝔞)) =>
+        simp [← List.prod_hom, Function.comp_def, DFunLike.ext_iff,
+          - List.map_subtype, ← LieIdeal.toEnd_eq]
+    intro x
+    refine list_prod_map_toEnd_apply_mem_lowerCentralSeries K l x
+        (nilpotencyLength (nilradical K 𝔞) (AdoSpace K 𝔞)) ?_
+    simp [hll]
+
+public axiom range_leftLieUE_le_annihilatingIdeal
+    [CharZero K] [FiniteDimensional K 𝔞] [IsSolvable 𝔞] (x : 𝔥) :
+    LinearMap.range (leftLieUE ψ x) ≤ Submodule.restrictScalars K (annihilatingIdeal K 𝔞)
+
+variable [FiniteDimensional K 𝔞] [IsSolvable 𝔞]
+
+lemma leftLieUE_mem_annihilatingIdeal (x : 𝔥) {a : UniversalEnvelopingAlgebra K 𝔞} :
+    leftLieUE ψ x a ∈ annihilatingIdeal K 𝔞 := by
+  have h := range_leftLieUE_le_annihilatingIdeal ψ x
+  rw [LinearMap.range_le_iff_comap, Submodule.eq_top_iff'] at h
+  simp_all
 
 lemma map_leftLieUE_nilIdeal_le_nilIdeal (x : 𝔥) :
     Submodule.map (leftLieUE ψ x) (Submodule.restrictScalars K (nilIdeal K 𝔞)) ≤
@@ -157,6 +331,8 @@ noncomputable def nilLieSubmodule : LieSubmodule K (𝔞 ⋊⁅ψ⁆ 𝔥) (Univ
 
 end UniversalEnvelopingAlgebra
 
+variable [FiniteDimensional K 𝔞] [IsSolvable 𝔞]
+
 abbrev SolStepAdoSpace :=
   UniversalEnvelopingAlgebra K 𝔞 ⧸ nilLieSubmodule ψ
 
@@ -166,7 +342,7 @@ end Step
 public axiom LieAlgebra.IsAdo.semiDirectSum_of_isSolvable [CharZero K] {𝔞 𝔥 : Type*}
     [LieRing 𝔞] [LieAlgebra K 𝔞] [LieRing 𝔥] [LieAlgebra K 𝔥]
     [FiniteDimensional K 𝔞] [FiniteDimensional K 𝔥] [IsAdo K 𝔞]
-    (ψ : 𝔥 →ₗ⁅K⁆ LieDerivation K 𝔞 𝔞) [IsSolvable (𝔞 ⋊⁅ψ⁆ 𝔥)]
+    (ψ : 𝔥 →ₗ⁅K⁆ LieDerivation K 𝔞 𝔞) [IsSolvable 𝔞]
     (hn : nilradical K (𝔞 ⋊⁅ψ⁆ 𝔥) ≤ (inl ψ).idealRange) :
     IsAdo K (𝔞 ⋊⁅ψ⁆ 𝔥)
 
