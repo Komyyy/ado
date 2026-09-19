@@ -31,4 +31,11 @@ lemma update_append_natAdd {α m n} (x : Fin m → α) (y : Fin n → α) (i : F
     update (append x y) (natAdd m i) a = append x (update y i a) := by
   ext j; cases j using addCases <;> simp [update_apply]
 
+@[elab_as_elim]
+def appendCases {α m n} {motive : (Fin (m + n) → α) → Sort v}
+    (append : (f g : _) → motive (Fin.append f g))
+    (x : Fin (m + n) → α) : motive x :=
+  _root_.cast (by rw [append_castAdd_natAdd])
+    (append (fun i ↦ x (castAdd n i)) (fun i ↦ x (natAdd m i)))
+
 end Fin

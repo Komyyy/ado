@@ -46,6 +46,11 @@ lemma equivIdealRangeInl_apply_coe (x) : (equivIdealRangeInl ψ x).1 = inl ψ x 
   rfl
 
 @[simp]
+lemma incl_idealRange_inl_equivIdealRangeInl :
+    LieHom.comp (LieIdeal.incl (idealRange (inl ψ))) (equivIdealRangeInl ψ).toLieHom = inl ψ := by
+  ext : 1; simp
+
+@[simp]
 lemma equivIdealRangeInl_symm_apply (x) : (equivIdealRangeInl ψ).symm x = x.1.left :=
   rfl
 

@@ -10,8 +10,8 @@ public import Ado.ForMathlib.LieIdealOf
 
 open Function LieIdeal
 
-variable {R L L₂ : Type*} [CommRing R]
-variable [LieRing L] [LieAlgebra R L] [LieRing L₂] [LieAlgebra R L₂]
+variable {R L L₂ L₃ : Type*} [CommRing R]
+variable [LieRing L] [LieAlgebra R L] [LieRing L₂] [LieAlgebra R L₂] [LieRing L₃] [LieAlgebra R L₃]
 
 namespace LieHom
 
@@ -47,6 +47,10 @@ lemma map_equiv_eq_comap_symm (e : L ≃ₗ⁅R⁆ L₂) (I : LieIdeal R L) :
     simpa using mem_map (f := e.toLieHom) hx
   simp [map_le, Set.subset_def]
 
+lemma comap_equiv_eq_map_symm (e : L ≃ₗ⁅R⁆ L₂) (I : LieIdeal R L₂) :
+    comap e.toLieHom I = map e.symm.toLieHom I := by
+  simpa using map_equiv_eq_comap_symm e.symm I |>.symm
+
 @[simp high]
 lemma mem_map_equiv {e : L ≃ₗ⁅R⁆ L₂} {I : LieIdeal R L} {x} : x ∈ map e I ↔ e.symm x ∈ I := by
   simp [map_equiv_eq_comap_symm]
@@ -76,5 +80,9 @@ lemma surjective_map_of_surjective (f : L →ₗ⁅R⁆ L₂) (hf : Surjective f
   intro I
   existsi comap f I
   simp [f.isIdealMorphism_of_surjective, hf]
+
+lemma comap_comp (f : L →ₗ⁅R⁆ L₂) (g : L₂ →ₗ⁅R⁆ L₃) (I : LieIdeal R L₃) :
+    comap (g.comp f) I = comap f (comap g I) := by
+  ext; simp
 
 end LieIdeal

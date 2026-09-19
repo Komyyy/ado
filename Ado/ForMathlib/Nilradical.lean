@@ -48,6 +48,15 @@ lemma map_equiv_nilradical (e : L ≃ₗ⁅R⁆ L₂) :
     enter [J, 1]
     rw [← LieEquiv.lieIdealMap e J |>.nilpotent_iff_equiv_nilpotent]
 
+@[simp]
+lemma comap_equiv_nilradical (e : L ≃ₗ⁅R⁆ L₂) :
+    comap e (nilradical R L₂) = nilradical R L := by
+  rw [LieEquiv.comap_equiv_eq_map_symm, map_equiv_nilradical]
+
+lemma center_le_nilradical : center R L ≤ nilradical R L :=
+  have h : LieRing.IsNilpotent (center R L) := inferInstance
+  le_sSup h
+
 end LieAlgebra
 
 namespace LieIdeal

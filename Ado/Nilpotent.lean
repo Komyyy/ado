@@ -40,9 +40,10 @@ public def Submodule.toLieSubalgebraOfDimOne (𝔥 : Submodule K 𝔫) (h𝔥 : 
     obtain ⟨c₂, rfl⟩ := h𝔥 y'
     simp
 
-lemma LieAlgebra.IsAdo.of_isNilpotent_of_isFaithful_center
+omit [LieRing.IsNilpotent 𝔫] in
+public lemma LieAlgebra.IsAdo.of_isNilpotent_of_isFaithful_center
     (V : Type*) [AddCommGroup V] [Module K V] [FiniteDimensional K V] [LieRingModule 𝔫 V]
-    [LieModule K 𝔫 V] [IsFaithful K (center K 𝔫) V] [LieModule.IsNilpotent 𝔫 V] :
+    [LieModule K 𝔫 V] [IsFaithful K (center K 𝔫) V] [LieModule.IsNilpotent (nilradical K 𝔫) V] :
     IsAdo K 𝔫 := by
   suffices IsFaithful K 𝔫 (𝔫 × V) from .intro (𝔫 × V)
   rename IsFaithful K (center K 𝔫) V => h
@@ -462,7 +463,7 @@ attribute [local instance 100] LieRing.ofAssociativeRing
 instance [FiniteDimensional K 𝔞] : FiniteDimensional K (NilStepAdoSpace ψ) :=
   inferInstanceAs (FiniteDimensional K (UniversalEnvelopingAlgebra K 𝔞 ⧸ nilSubmodule K 𝔞))
 
-lemma isFaithful_nilStepAdoSpace [LieRing.IsNilpotent 𝔞]
+lemma isFaithful_center_nilStepAdoSpace [LieRing.IsNilpotent 𝔞]
     (hc : center K (𝔞 ⋊⁅ψ⁆ 𝔥) ≤ idealRange (inl ψ)) :
     IsFaithful K (center K (𝔞 ⋊⁅ψ⁆ 𝔥)) (NilStepAdoSpace ψ) := by
   suffices h : IsFaithful K (idealRange (inl ψ)) (NilStepAdoSpace ψ) by
@@ -556,7 +557,7 @@ lemma LieAlgebra.IsAdo.semiDirectSum_of_isNilpotent {𝔞 𝔥 : Type*}
     (hc : center K (𝔞 ⋊⁅ψ⁆ 𝔥) ≤ (inl ψ).idealRange) :
     IsAdo K (𝔞 ⋊⁅ψ⁆ 𝔥) := by
   have := (inl_injective ψ).lieAlgebra_isNilpotent
-  have := NilStepAdoSpace.isFaithful_nilStepAdoSpace ψ hc
+  have := NilStepAdoSpace.isFaithful_center_nilStepAdoSpace ψ hc
   exact .of_isNilpotent_of_isFaithful_center (NilStepAdoSpace ψ)
 
 lemma LieAlgebra.IsAdo.of_isInnerSemiDirectSum_of_isNilpotent

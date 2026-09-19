@@ -87,37 +87,107 @@ end TwoSidedIdeal
 
 end IdealOperation
 
+public section LieAssociative
+
+variable {A : Type*} [Ring A]
+
+open List Function
+
+attribute [local instance 100] LieRing.ofAssociativeRing
+
+namespace LieRing
+
+lemma mul_lie_of_associative (x y z : A) : ⁅x * y, z⁆ = ⁅x, z⁆ * y + x * ⁅y, z⁆ := by
+  simp_rw [of_associative_ring_bracket]; noncomm_ring
+
+lemma list_prod_ofFn_lie_of_associative {n} (f : Fin n → A) (x : A) :
+    ⁅prod (ofFn f), x⁆ = ∑ i : Fin n, prod (ofFn (update f i ⁅f i, x⁆)) := by
+  induction f using Fin.consInduction with
+  | elim0 => simp [of_associative_ring_bracket]
+  | cons y f hf =>
+    simp_rw [ofFn_cons, prod_cons, mul_lie_of_associative, hf, Fin.sum_univ_succ,
+      Fin.update_cons_zero, Fin.cons_zero, ← Fin.cons_update, ofFn_cons, prod_cons, Fin.cons_succ,
+      Finset.mul_sum]
+
+end LieRing
+
+end LieAssociative
+
+public section UniversalEnvelopingAlgebra
+
+variable {R L : Type*} [CommRing R] [LieRing L] [LieAlgebra R L]
+
+open Function TensorAlgebra
+
+namespace UniversalEnvelopingAlgebra
+
+lemma mkAlgHom_tprod_lie_of_associative {n} (f : Fin n → L) (x : L) :
+    ⁅mkAlgHom R L (tprod R L n f), ι R x⁆ =
+      ∑ i : Fin n, mkAlgHom R L (tprod R L n (update f i ⁅f i, x⁆)) := by
+  simp_rw [tprod_apply, ← List.prod_hom, List.map_ofFn, comp_def, ← ι_apply,
+    LieRing.list_prod_ofFn_lie_of_associative, ← LieHom.map_lie,
+    apply_update (f := fun _ ↦ ι R) (g := f)]
+
+end UniversalEnvelopingAlgebra
+
+end UniversalEnvelopingAlgebra
+
 public section UniversalEnvelopingAlgebraIdeal
 
 variable {R L : Type*} [CommRing R] [LieRing L] [LieAlgebra R L]
 
-open Ideal
+open Ideal TensorAlgebra
 
 namespace UniversalEnvelopingAlgebra
 
 attribute [local instance 100] LieRing.ofAssociativeRing
 
-@[instance]
-public axiom isTwoSided_span_ι_image_lieIdeal (I : LieIdeal R L) :
-    (span (ι R '' (I : Set L))).IsTwoSided -- where
-  -- mul_mem_of_left {a} b ha := by
-  --   induction ha using span_induction with
-  --   | mem a h =>
-  --     simp only [Set.mem_image, SetLike.mem_coe] at h
-  --     obtain ⟨x, hx, rfl⟩ := h
-  --     induction b with | mkAlgHom b
-  --     revert x hx b
-  --     conv =>
-  --       equals Submodule.map₂ (LinearMap.mul R (UniversalEnvelopingAlgebra R L))
-  --           (Submodule.map (ι R).toLinearMap I.toSubmodule)
-  --             (LinearMap.range (mkAlgHom R L).toLinearMap) ≤
-  --               Submodule.restrictScalars R (span (ι R '' (I : Set L))) =>
-  --       simp [Submodule.map₂_le]
-  --     simp_rw [← Submodule.map_top]
-  --     sorry
-  --   | zero => simp
-  --   | add a₁ a₂ ha₁ ha₂ hia₁ hia₂ => simp only [add_mul, add_mem, hia₁, hia₂]
-  --   | mul x a ha hia => simp only [mul_assoc, Ideal.mul_mem_left, hia]
+instance (I : LieIdeal R L) : (span (ι R '' (I : Set L))).IsTwoSided where
+  mul_mem_of_left {a} b ha := by
+    induction ha using span_induction with
+    | mem a h =>
+      simp only [Set.mem_image, SetLike.mem_coe] at h
+      obtain ⟨x, hx, rfl⟩ := h
+      induction b with | mkAlgHom b
+      revert x hx b
+      conv =>
+        equals Submodule.map₂ (LinearMap.mul R (UniversalEnvelopingAlgebra R L))
+            (Submodule.map (ι R).toLinearMap I.toSubmodule)
+              (LinearMap.range (mkAlgHom R L).toLinearMap) ≤
+                Submodule.restrictScalars R (span (ι R '' (I : Set L))) =>
+        simp [Submodule.map₂_le]
+      conv_lhs =>
+        enter [2]; rw [← Submodule.span_eq (Submodule.map (ι R).toLinearMap I.toSubmodule)]
+      simp_rw [← Submodule.map_top, ← span_tprod_eq_top, Submodule.map_span,
+        Submodule.map₂_span_span, Submodule.span_le, Set.image2_subset_iff]
+      conv =>
+        equals ∀ᵉ (x ∈ I) (n) (f : Fin n → L),
+            ι R x * mkAlgHom R L (tprod R L n f) ∈ span ((ι R) '' I) =>
+          simp [- TensorAlgebra.tprod_apply, - ι_apply]; grind only
+      intro x hx n f
+      induction n using Nat.strong_induction_on generalizing x with
+      | _ n hn =>
+        conv_rhs =>
+          equals mkAlgHom R L (tprod R L n f) * ι R x - ⁅mkAlgHom R L (tprod R L n f), ι R x⁆ =>
+            simp_rw [LieRing.of_associative_ring_bracket]; noncomm_ring
+        refine sub_mem (Ideal.mul_mem_left _ _ ?hx) ?_
+        case hx => grw [← SetLike.mem_coe, ← Ideal.subset_span]; exact Set.mem_image_of_mem (ι R) hx
+        simp_rw [mkAlgHom_tprod_lie_of_associative]
+        apply Ideal.sum_mem
+        rintro ⟨i, hi⟩ -
+        obtain ⟨m, rfl⟩ : ∃ m : ℕ, n = i + (m + 1) := by existsi n - (i + 1); lia
+        cases f using Fin.appendCases with | append f g
+        cases g using Fin.consCases with | cons y g
+        simp_rw [show Fin.mk i hi = Fin.natAdd i ⟨0, by lia⟩ by ext; simp, Fin.update_append_natAdd,
+          Fin.append_right, Fin.mk_zero, Fin.update_cons_zero, Fin.cons_zero,
+          ← TensorAlgebra.tprod_mul_tprod, ← TensorAlgebra.ι_mul_tprod, map_mul, ← ι_apply]
+        apply Ideal.mul_mem_left
+        apply hn
+        · lia
+        exact LieSubmodule.lie_mem _ hx
+    | zero => simp
+    | add a₁ a₂ ha₁ ha₂ hia₁ hia₂ => simp only [add_mul, add_mem, hia₁, hia₂]
+    | mul x a ha hia => simp only [mul_assoc, Ideal.mul_mem_left, hia]
 
 end UniversalEnvelopingAlgebra
 
@@ -336,15 +406,69 @@ variable [FiniteDimensional K 𝔞] [IsSolvable 𝔞]
 abbrev SolStepAdoSpace :=
   UniversalEnvelopingAlgebra K 𝔞 ⧸ nilLieSubmodule ψ
 
+namespace SolStepAdoSpace
+
+instance isFaithful_idealRange_solStepAdoSpace :
+    IsFaithful K (idealRange (inl ψ)) (SolStepAdoSpace ψ) := by
+  simp_rw [isFaithful_iff', (equivIdealRangeInl ψ).surjective.forall, LieEquiv.coe_coe,
+    LieIdeal.coe_bracket_of_module, equivIdealRangeInl_apply_coe,
+    (LieSubmodule.Quotient.surjective_mk' _).forall, ← LieModuleHom.map_lie, inl_lieUE,
+    LieSubmodule.Quotient.mk'_apply, LieSubmodule.Quotient.mk_eq_zero',
+    EmbeddingLike.map_eq_zero_iff]
+  intro x hx
+  suffices h : ∀ y : AdoSpace K 𝔞, ⁅x, y⁆ = 0
+  · apply LieModule.ext_of_isFaithful (R := K) (M := AdoSpace K 𝔞)
+    simpa using h
+  intro y
+  specialize hx 1
+  grw [bracket_eq, ι_apply, mul_one] at hx
+  apply mem_of_le_of_mem (nilIdeal_le_ker_lift_toEnd K 𝔞) at hx
+  simp_rw [RingHom.mem_ker, lift_ι_apply', toEnd_eq_zero_iff] at hx
+  subst hx
+  simp
+
+lemma isFaithful_center_solStepAdoSpace
+    (hn : nilradical K (𝔞 ⋊⁅ψ⁆ 𝔥) ≤ idealRange (inl ψ)) :
+    IsFaithful K (center K (𝔞 ⋊⁅ψ⁆ 𝔥)) (SolStepAdoSpace ψ) where
+  injective_toEnd := by
+    convert
+      (isFaithful_idealRange_solStepAdoSpace ψ).injective_toEnd.comp
+        (LieIdeal.inclusion_injective (center_le_nilradical.trans hn))
+    ext
+    simp
+
+public axiom isNilpotent_nilradical_solStepAdoSpace [FiniteDimensional K 𝔥]
+    (hn : nilradical K (𝔞 ⋊⁅ψ⁆ 𝔥) ≤ idealRange (inl ψ)) :
+    IsNilpotent (nilradical K (𝔞 ⋊⁅ψ⁆ 𝔥)) (SolStepAdoSpace ψ) -- := by
+  -- simp_rw +singlePass [LieModule.isNilpotent_iff_forall (R := K),
+  --   LieIdeal.lieIdealOfEquivOfLe hn |>.surjective.forall, LieEquiv.coe_coe, LieIdeal.toEnd_eq,
+  --   LieIdeal.lieIdealOfEquivOfLe_toFun_coe, Subtype.forall,
+  --   ← LieIdeal.lieIdealOf_nilradical_eq_of_le _ hn,
+  --   ← map_equiv_nilradical (equivIdealRangeInl ψ), (equivIdealRangeInl ψ).surjective.forall,
+  --   LieEquiv.coe_coe, LieEquiv.mem_map_equiv, LieEquiv.symm_apply_apply,
+  --   equivIdealRangeInl_apply_coe]
+  -- intro x hx
+  -- exists nilpotencyLength (nilradical K 𝔞) (AdoSpace K 𝔞)
+  -- sorry
+
+@[instance]
+public axiom finiteDimensional_solStepAdoSpace [FiniteDimensional K 𝔥] :
+    FiniteDimensional K (SolStepAdoSpace ψ)
+
+end SolStepAdoSpace
+
 end Step
 
 -- 一般の場合でも使うので公開
-public axiom LieAlgebra.IsAdo.semiDirectSum_of_isSolvable [CharZero K] {𝔞 𝔥 : Type*}
+public lemma LieAlgebra.IsAdo.semiDirectSum_of_isSolvable {𝔞 𝔥 : Type*}
     [LieRing 𝔞] [LieAlgebra K 𝔞] [LieRing 𝔥] [LieAlgebra K 𝔥]
     [FiniteDimensional K 𝔞] [FiniteDimensional K 𝔥] [IsAdo K 𝔞]
     (ψ : 𝔥 →ₗ⁅K⁆ LieDerivation K 𝔞 𝔞) [IsSolvable 𝔞]
     (hn : nilradical K (𝔞 ⋊⁅ψ⁆ 𝔥) ≤ (inl ψ).idealRange) :
-    IsAdo K (𝔞 ⋊⁅ψ⁆ 𝔥)
+    IsAdo K (𝔞 ⋊⁅ψ⁆ 𝔥) := by
+  have := SolStepAdoSpace.isFaithful_center_solStepAdoSpace ψ hn
+  have := SolStepAdoSpace.isNilpotent_nilradical_solStepAdoSpace ψ hn
+  exact .of_isNilpotent_of_isFaithful_center (SolStepAdoSpace ψ)
 
 lemma LieAlgebra.IsAdo.of_isInnerSemiDirectSum_of_isSolvable
     (𝔞 : LieIdeal K 𝔯) (𝔥 : LieSubalgebra K 𝔯)
