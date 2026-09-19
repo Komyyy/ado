@@ -261,6 +261,12 @@ instance : LieModule K (𝔞 ⋊⁅ψ⁆ 𝔥) (UniversalEnvelopingAlgebra K �
   smul_lie := smul_lieUE
   lie_smul t x a := by simp [lieUE_def]
 
+@[simp]
+lemma toEndUE_inl (x : 𝔞) :
+    toEnd K (𝔞 ⋊⁅ψ⁆ 𝔥) (UniversalEnvelopingAlgebra K 𝔞) (inl ψ x) =
+      toEnd K 𝔞 (UniversalEnvelopingAlgebra K 𝔞) x := by
+  ext; simp [- inl_eq_mk]
+
 end ActionOnUniversalEnvelopingAlgebra
 
 end LieAlgebra.SemiDirectSum

@@ -31,6 +31,11 @@ instance : LieModule R L (UniversalEnvelopingAlgebra R L) where
   smul_lie t x a := by simp
   lie_smul t x a := by simp
 
+@[simp]
+lemma toEnd_eq (x : L) :
+    toEnd R L (UniversalEnvelopingAlgebra R L) x = LinearMap.mulLeft R (ι R x) := by
+  ext; simp
+
 lemma ringCon_lie_compat (x y : L) :
     ringCon R L
       (TensorAlgebra.ι R ⁅x, y⁆ + TensorAlgebra.ι R y * TensorAlgebra.ι R x)

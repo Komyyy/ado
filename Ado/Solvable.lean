@@ -408,6 +408,9 @@ abbrev SolStepAdoSpace :=
 
 namespace SolStepAdoSpace
 
+attribute [local instance 100]
+  LieRing.ofAssociativeRing LieAlgebra.ofAssociativeAlgebra
+
 instance isFaithful_idealRange_solStepAdoSpace :
     IsFaithful K (idealRange (inl ψ)) (SolStepAdoSpace ψ) := by
   simp_rw [isFaithful_iff', (equivIdealRangeInl ψ).surjective.forall, LieEquiv.coe_coe,
@@ -437,19 +440,31 @@ lemma isFaithful_center_solStepAdoSpace
     ext
     simp
 
-public axiom isNilpotent_nilradical_solStepAdoSpace [FiniteDimensional K 𝔥]
+lemma isNilpotent_nilradical_solStepAdoSpace [FiniteDimensional K 𝔥]
     (hn : nilradical K (𝔞 ⋊⁅ψ⁆ 𝔥) ≤ idealRange (inl ψ)) :
-    IsNilpotent (nilradical K (𝔞 ⋊⁅ψ⁆ 𝔥)) (SolStepAdoSpace ψ) -- := by
-  -- simp_rw +singlePass [LieModule.isNilpotent_iff_forall (R := K),
-  --   LieIdeal.lieIdealOfEquivOfLe hn |>.surjective.forall, LieEquiv.coe_coe, LieIdeal.toEnd_eq,
-  --   LieIdeal.lieIdealOfEquivOfLe_toFun_coe, Subtype.forall,
-  --   ← LieIdeal.lieIdealOf_nilradical_eq_of_le _ hn,
-  --   ← map_equiv_nilradical (equivIdealRangeInl ψ), (equivIdealRangeInl ψ).surjective.forall,
-  --   LieEquiv.coe_coe, LieEquiv.mem_map_equiv, LieEquiv.symm_apply_apply,
-  --   equivIdealRangeInl_apply_coe]
-  -- intro x hx
-  -- exists nilpotencyLength (nilradical K 𝔞) (AdoSpace K 𝔞)
-  -- sorry
+    IsNilpotent (nilradical K (𝔞 ⋊⁅ψ⁆ 𝔥)) (SolStepAdoSpace ψ) := by
+  simp_rw +singlePass [LieModule.isNilpotent_iff_forall (R := K),
+    LieIdeal.lieIdealOfEquivOfLe hn |>.surjective.forall, LieEquiv.coe_coe, LieIdeal.toEnd_eq,
+    LieIdeal.lieIdealOfEquivOfLe_toFun_coe, Subtype.forall,
+    ← LieIdeal.lieIdealOf_nilradical_eq_of_le _ hn, ← map_equiv_nilradical (equivIdealRangeInl ψ),
+    (equivIdealRangeInl ψ).surjective.forall, LieEquiv.coe_coe, LieEquiv.mem_map_equiv,
+    LieEquiv.symm_apply_apply, equivIdealRangeInl_apply_coe]
+  intro x hx
+  exists nilpotencyLength (nilradical K 𝔞) (AdoSpace K 𝔞)
+  simp_rw [DFunLike.ext_iff, (LieSubmodule.Quotient.surjective_mk' _).forall, toEnd_pow_apply_map,
+    LinearMap.zero_apply, LieSubmodule.Quotient.mk_eq_zero, toEndUE_inl, toEnd_eq,
+    LinearMap.pow_mulLeft, LinearMap.mulLeft_apply]
+  intro a
+  apply Ideal.mul_mem_right
+  simp_rw [nilIdeal, annihilatingIdeal, Ideal.pow_eq_span_pow_set, ← SetLike.mem_coe,
+    Ideal.sup_eq_span]
+  apply mem_of_subset_of_mem Ideal.subset_span
+  apply Set.pow_mem_pow
+  apply mem_of_subset_of_mem Ideal.subset_span
+  apply Set.mem_union_right
+  apply mem_of_subset_of_mem Ideal.subset_span
+  apply Set.mem_image_of_mem
+  simp [hx]
 
 @[instance]
 public axiom finiteDimensional_solStepAdoSpace [FiniteDimensional K 𝔥] :
