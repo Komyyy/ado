@@ -115,3 +115,49 @@ instance {R L M : Type*} [CommRing R] [LieRing L] [LieAlgebra R L] [AddCommGroup
     (by simp) surjective_id (LieSubmodule.Quotient.surjective_mk' s)
 
 end LieSubmodule.Quotient
+
+namespace Module.Basis
+
+variable {R L V : Type*} [CommRing R] [LieRing L]
+    [AddCommGroup V] [Module R V] [LieRingModule L V]
+    {W : LieSubmodule R L V} {m n : Type*}
+    (bW : Basis m R W) (bQ : Basis n R (V ⧸ W))
+
+/-- defeq問題回避の為の`sumQuot`のコピー -/
+noncomputable def sumLieQuot : Basis (m ⊕ n) R V :=
+  sumQuot bW bQ
+
+@[simp]
+theorem sumLieQuot_inl (i : m) :
+    sumLieQuot bW bQ (Sum.inl i) = bW i :=
+  sumQuot_inl bW bQ i
+
+@[simp]
+theorem sumLieQuot_inr (j : n) :
+    LieSubmodule.Quotient.mk (sumLieQuot bW bQ (Sum.inr j)) = bQ j :=
+  sumQuot_inr bW bQ j
+
+@[simp]
+theorem sumLieQuot_repr_left (i : m) :
+    (sumLieQuot bW bQ).repr (bW i) = Finsupp.single (Sum.inl i) 1 :=
+  sumQuot_repr_left bW bQ i
+
+theorem sumLieQuot_repr_inl (w : W) (i : m) :
+    (sumLieQuot bW bQ).repr w (Sum.inl i) = bW.repr w i :=
+  sumQuot_repr_inl bW bQ w i
+
+@[simp]
+theorem sumLieQuot_repr_inl_of_mem (v : V) (hv : v ∈ W) (i : m) :
+    (sumLieQuot bW bQ).repr v (Sum.inl i) = bW.repr ⟨v, hv⟩ i :=
+  sumQuot_repr_inl_of_mem bW bQ v hv i
+
+@[simp]
+theorem sumLieQuot_repr_inr [LieAlgebra R L] [LieModule R L V] (v : V) (j : n) :
+    (sumLieQuot bW bQ).repr v (Sum.inr j) = bQ.repr (LieSubmodule.Quotient.mk' W v) j :=
+  sumQuot_repr_inr bW bQ v j
+
+theorem sumLieQuot_repr_inr_of_mem (v : V) (hv : v ∈ W) (j : n) :
+    (sumLieQuot bW bQ).repr v (Sum.inr j) = 0 :=
+  sumQuot_repr_inr_of_mem bW bQ v hv j
+
+end Module.Basis

@@ -19,37 +19,49 @@ section LieTheoremCorollary
 
 open Module LieAlgebra LieSubmodule LieModule LinearMap Matrix
 
--- example {K 𝔯 V} [Field K] [CharZero K] [IsAlgClosed K]
---     [LieRing 𝔯] [LieAlgebra K 𝔯] [IsSolvable 𝔯]
---     [AddCommGroup V] [Module K V] [LieRingModule 𝔯 V] [LieModule K 𝔯 V]
---     [FiniteDimensional K V] :
---     ∃ b : Basis (Fin (finrank K V)) K V,
---       ∀ x : 𝔯, IsUpperTriangular (toMatrix b b (toEnd K 𝔯 V x)) := by
---   generalize hn : finrank K V = n
---   induction n generalizing V with
---   | zero =>
---     rw [finrank_eq_zero_iff_of_free] at hn
---     simp [Subsingleton.eq_zero (α := Matrix (Fin 0) (Fin 0) K)]
---   | succ n hin =>
---     have hV : 0 < finrank K V := by lia
---     rw [finrank_pos_iff] at hV
---     obtain ⟨χ, hχ⟩ := exists_nontrivial_weightSpace_of_isSolvable K 𝔯 V
---     conv at hχ => equals ∃ v ∈ weightSpace V χ, v ≠ 0 =>
---       simp [nontrivial_iff_exists_ne (0 : weightSpace V χ)]
---     obtain ⟨v, hvw, hvz⟩ := hχ
---     rw [mem_weightSpace] at hvw
---     let V₀ : LieSubmodule K 𝔯 V :=
---       { toSubmodule := K ∙ v
---         lie_mem {x w} hw := by
---           conv at hw => equals ∃ k : K, k • v = w => simp [Submodule.mem_span_singleton]
---           obtain ⟨k, rfl⟩ := hw
---           simp [hvw, smul_smul, SMulMemClass.smul_mem] }
---     have hV₀ : finrank K V₀ = 1 := by
---       simp [← finrank_toSubmodule, V₀, finrank_span_singleton hvz]
---     replace hV₀ : finrank K (V ⧸ V₀) = n := by simp [hn, hV₀]
---     specialize hin hV₀
---     obtain ⟨b₀, hb₀⟩ := hin
---     sorry
+lemma LieModule.exists_basis_isUpperTriangular_of_isAlgClosed {K 𝔯 V}
+    [Field K] [CharZero K] [IsAlgClosed K] [LieRing 𝔯] [LieAlgebra K 𝔯] [IsSolvable 𝔯]
+    [AddCommGroup V] [Module K V] [LieRingModule 𝔯 V] [LieModule K 𝔯 V]
+    [FiniteDimensional K V] :
+    ∃ b : Basis (Fin (finrank K V)) K V,
+      ∀ x : 𝔯, IsUpperTriangular (toMatrix b b (toEnd K 𝔯 V x)) := by
+  generalize hn : finrank K V = n
+  induction n generalizing V with
+  | zero =>
+    rw [finrank_eq_zero_iff_of_free] at hn
+    simp [Subsingleton.eq_zero (α := Matrix (Fin 0) (Fin 0) K)]
+  | succ n hin =>
+    have hV : 0 < finrank K V := by lia
+    rw [finrank_pos_iff] at hV
+    obtain ⟨χ, hχ⟩ := exists_nontrivial_weightSpace_of_isSolvable K 𝔯 V
+    conv at hχ => equals ∃ v ∈ weightSpace V χ, v ≠ 0 =>
+      simp [nontrivial_iff_exists_ne (0 : weightSpace V χ)]
+    obtain ⟨v, hvw, hvz⟩ := hχ
+    rw [mem_weightSpace] at hvw
+    let V₀ : LieSubmodule K 𝔯 V :=
+      { toSubmodule := K ∙ v
+        lie_mem {x w} hw := by
+          conv at hw => equals ∃ k : K, k • v = w => simp [Submodule.mem_span_singleton]
+          obtain ⟨k, rfl⟩ := hw
+          simp [hvw, smul_smul, SMulMemClass.smul_mem] }
+    have hV₀ : finrank K V₀ = 1 := by
+      simp [← finrank_toSubmodule, V₀, finrank_span_singleton hvz]
+    replace hV₀ : finrank K (V ⧸ V₀) = n := by simp [hn, hV₀]
+    have hvq : (LieSubmodule.Quotient.mk v : V ⧸ V₀) = 0 := by simp [V₀]
+    specialize hin hV₀
+    obtain ⟨b₀, hb₀⟩ := hin
+    let bᵥ : Basis Unit K V₀ :=
+      Module.Basis.ofRepr
+        ((LinearEquiv.coord K V v hvz).trans (Finsupp.uniqueLinearEquiv K K ()).symm)
+    have hbv : (bᵥ () : V) = v := by simp [bᵥ, LinearEquiv.toSpanNonzeroSingleton]
+    let e : Unit ⊕ Fin n ≃ Fin (n + 1) :=
+      (Equiv.sumComm _ _).trans <| (Equiv.optionEquivSumPUnit _).symm.trans <| (finSuccEquiv _).symm
+    let b := Basis.reindex (Basis.sumLieQuot bᵥ b₀) e
+    existsi b
+    intro x
+    simp_rw [Matrix.IsUpperTriangular, Matrix.BlockTriangular, id_eq, e.surjective.forall]
+    simp only [IsUpperTriangular, BlockTriangular, id_eq, toMatrix_apply, toEnd_apply_apply] at hb₀
+    simp +contextual [e, b, toMatrix_apply, hbv, hvw, hvq, hb₀]
 
 @[instance]
 public axiom LieDerivation.isNilpotent_lieSpan_range {K 𝔯} [Field K] [CharZero K] [LieRing 𝔯]
@@ -64,6 +76,7 @@ open scoped Pointwise
 variable {K 𝔯 : Type*}
 variable [Field K] [CharZero K] [LieRing 𝔯] [LieAlgebra K 𝔯] [FiniteDimensional K 𝔯]
 
+-- 可解性の仮定は恐らく外せるが、根基が特性的である事を示すのに手こずったから後回し
 -- 注意: 正標数では成り立たない。別ファイルの反例を参照。
 lemma LieIdeal.lieIdealOf_nilradical_eq_of_le
     (I : LieIdeal K 𝔯) (hN : nilradical K 𝔯 ≤ I) [IsSolvable I] :
