@@ -7,7 +7,7 @@ module
 public import Ado.ForMathlib.LieHom
 public import Ado.ForMathlib.LieModuleNilpotent
 
-public section
+@[expose] public section
 
 open Function LieAlgebra LieIdeal
 
@@ -56,6 +56,13 @@ lemma comap_equiv_nilradical (e : L ≃ₗ⁅R⁆ L₂) :
 lemma center_le_nilradical : center R L ≤ nilradical R L :=
   have h : LieRing.IsNilpotent (center R L) := inferInstance
   le_sSup h
+
+lemma nilradical_le_radical : nilradical R L ≤ radical R L := by
+  unfold radical nilradical
+  apply sSup_le_sSup
+  simp_rw [Set.ofPred_subset_ofPred]
+  intro I hI
+  infer_instance
 
 end LieAlgebra
 

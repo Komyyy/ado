@@ -567,7 +567,7 @@ lemma LieAlgebra.IsAdo.of_isInnerSemiDirectSum_of_isNilpotent
   have := (lieEquivLieSubalgebra hi).injective.lieAlgebra_isNilpotent
   apply (LieIdeal.map_mono (f := (lieEquivLieSubalgebra hi).symm.toLieHom)).imp at hc
   rw [map_equiv_center] at hc
-  conv_rhs at hc => equals idealRange (inl ((LieDerivation.adoIdeal 𝔞).comp 𝔥.incl)) =>
+  conv_rhs at hc => equals idealRange (inl ((LieDerivation.adIdeal 𝔞).comp 𝔥.incl)) =>
     ext ⟨x, y⟩
     have h : y.1 ∈ 𝔞 ↔ y = 0 :=
       Submodule.mem_left_iff_eq_zero_of_disjoint hi.disjoint

@@ -53,11 +53,21 @@ lemma _root_.LieRing.isNilpotent_of_lieIdeal_le (I₁ I₂ : LieIdeal R L) (h : 
     [LieRing.IsNilpotent I₂] : LieRing.IsNilpotent I₁ :=
   (LieIdeal.inclusion_injective h).lieAlgebra_isNilpotent
 
+lemma _root_.LieRing.isNilpotent_of_lieSubalgebra_le (L' L'' : LieSubalgebra R L) (h : L' ≤ L'')
+    [LieRing.IsNilpotent L''] : LieRing.IsNilpotent L' :=
+  (LieSubalgebra.inclusion_injective h).lieAlgebra_isNilpotent
+
 @[congr]
 lemma isNilpotent_lieIdeal_congr_left (I₁ I₂ : LieIdeal R L) (h : I₁ = I₂) :
     IsNilpotent I₁ M ↔ IsNilpotent I₂ M where
   mp _ := isNilpotent_of_lieIdeal_le_left I₂ I₁ h.ge
   mpr _ := isNilpotent_of_lieIdeal_le_left I₁ I₂ h.le
+
+@[congr]
+lemma _root_.isNilpotent_lieSubalgebra_congr (L' L'' : LieSubalgebra R L) (h : L' = L'') :
+    LieRing.IsNilpotent L' ↔ LieRing.IsNilpotent L'' where
+  mp _ := LieRing.isNilpotent_of_lieSubalgebra_le L'' L' h.ge
+  mpr _ := LieRing.isNilpotent_of_lieSubalgebra_le L' L'' h.le
 
 @[simp]
 theorem isNilpotent_of_top_lieIdeal_iff :
@@ -134,6 +144,9 @@ instance (N : LieSubmodule R L M) [IsNilpotent L M] : IsNilpotent L N :=
 
 instance (I : LieIdeal R L) [IsNilpotent I M] : IsNilpotent I.toLieSubalgebra M :=
   inferInstanceAs (IsNilpotent I M)
+
+instance (I : LieIdeal R L) [LieRing.IsNilpotent I] : LieRing.IsNilpotent I.toLieSubalgebra :=
+  inferInstanceAs (LieRing.IsNilpotent I)
 
 instance (L' : LieSubalgebra R L) (N : LieSubmodule R L M) [IsNilpotent L' M] : IsNilpotent L' N :=
   inferInstanceAs (IsNilpotent L' (N.restr L'))

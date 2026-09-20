@@ -15,7 +15,7 @@ variable {L : Type*} [LieRing L] [LieAlgebra R L]
 namespace LieDerivation
 
 @[simps ! apply_apply]
-def adoIdeal (I : LieIdeal R L) : L →ₗ⁅R⁆ LieDerivation R I I where
+def adIdeal (I : LieIdeal R L) : L →ₗ⁅R⁆ LieDerivation R I I where
   toFun x :=
     { toLinearMap := LieModule.toEnd R L I x
       leibniz' y z := by

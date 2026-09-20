@@ -15,6 +15,21 @@ public import Ado.ForMathlib.UniversalEnvelopingAlgebraIdeal
 set_option backward.privateInPublic true
 set_option backward.privateInPublic.warn false
 
+section LieTheoremCorollary
+
+open LieAlgebra
+
+namespace LieDerivation
+
+@[instance]
+public axiom isNilpotent_lieSpan_range {K 𝔯} [Field K] [CharZero K] [LieRing 𝔯] [LieAlgebra K 𝔯]
+    [FiniteDimensional K 𝔯] [IsSolvable 𝔯] (D : LieDerivation K 𝔯 𝔯) :
+    LieRing.IsNilpotent (LieSubmodule.lieSpan K 𝔯 (Set.range D))
+
+end LieDerivation
+
+end LieTheoremCorollary
+
 open Set Module LieAlgebra LieModule LieHom LieSubmodule SemiDirectSum UniversalEnvelopingAlgebra
 open scoped Pointwise
 
@@ -22,11 +37,32 @@ variable {K 𝔯 : Type*}
 variable [Field K] [CharZero K] [LieRing 𝔯] [LieAlgebra K 𝔯] [FiniteDimensional K 𝔯]
 
 -- 注意: 正標数では成り立たない。別ファイルの反例を参照。
-public axiom LieIdeal.lieIdealOf_nilradical_eq_of_le [CharZero K] [FiniteDimensional K 𝔯]
-    (I : LieIdeal K 𝔯) (hN : nilradical K 𝔯 ≤ I) :
-    nilradical K I = lieIdealOf (nilradical K 𝔯) I
+lemma LieIdeal.lieIdealOf_nilradical_eq_of_le
+    (I : LieIdeal K 𝔯) (hN : nilradical K 𝔯 ≤ I) [IsSolvable I] :
+    nilradical K I = lieIdealOf (nilradical K 𝔯) I := by
+  apply le_antisymm
+  on_goal 2 =>
+    simp_rw [← LieIdeal.isNilpotent_iff_le_nilradical,
+      (LieIdeal.lieIdealOfEquivOfLe hN).injective.lieAlgebra_isNilpotent]
+  rsuffices ⟨J, hJ⟩ : ∃ J : LieIdeal K 𝔯,
+      J.toLieSubalgebra = LieSubalgebra.map I.incl (nilradical K I).toLieSubalgebra
+  · simp_rw [lieIdealOf, ← toLieSubalgebra_le_toLieSubalgebra, toLieSubalgebra_comap,
+      ← LieSubalgebra.map_le_iff_le_comap, ← hJ, toLieSubalgebra_le_toLieSubalgebra,
+      ← LieIdeal.isNilpotent_iff_le_nilradical]
+    change LieRing.IsNilpotent J.toLieSubalgebra
+    simp_rw [hJ]
+    apply (LieSubalgebra.equivMapOfInjective
+        _ (nilradical K I) I.incl_injective).surjective.lieAlgebra_isNilpotent
+  simp_rw [LieSubalgebra.exists_lieIdeal_coe_eq_iff, LieSubalgebra.mem_map, mem_toLieSubalgebra,
+    incl_apply]
+  rintro x _ ⟨y, hy, rfl⟩
+  have hy₂ := (LieDerivation.adIdeal I x).isNilpotent_lieSpan_range
+  simp_rw [LieIdeal.isNilpotent_iff_le_nilradical, lieSpan_le, range_subset_iff,
+    LieDerivation.adIdeal_apply_apply, SetLike.mem_coe] at hy₂
+  existsi ⁅x, y⁆, hy₂ y
+  simp
 
-variable [LieAlgebra.IsSolvable 𝔯]
+variable [IsSolvable 𝔯]
 
 variable (K 𝔯) in
 lemma LieIdeal.exists_for_solStepAdoData_of_not_isLieAbelian (n : ℕ)
@@ -84,7 +120,7 @@ lemma LieIdeal.exists_for_solStepAdoData_of_not_isLieAbelian (n : ℕ)
     existsi Submodule.span K (range f)
     simp [finrank_span_eq_card hf, hm]
   subst 𝔯'
-  have : Nontrivial (𝔯 ⧸ LieAlgebra.nilradical K 𝔯)
+  have : Nontrivial (𝔯 ⧸ nilradical K 𝔯)
   · simp [← finrank_pos_iff (R := K), h𝔯r]
   have h𝔯' := derivedSeries_lt_top_of_solvable K (𝔯 ⧸ nilradical K 𝔯)
   simp_rw +singlePass [← finrank_lt_iff, ← Nat.sub_pos_iff_lt, ← finrank_quotient] at h𝔯'
@@ -173,11 +209,45 @@ lemma nilIdeal_le_ker_lift_toEnd :
         (nilpotencyLength (nilradical K 𝔞) (AdoSpace K 𝔞)) ?_
     simp [hll]
 
-public axiom range_leftLieUE_le_annihilatingIdeal
-    [CharZero K] [FiniteDimensional K 𝔞] [IsSolvable 𝔞] (x : 𝔥) :
-    LinearMap.range (leftLieUE ψ x) ≤ Submodule.restrictScalars K (annihilatingIdeal K 𝔞)
+omit [IsAdo K 𝔞] in
+lemma range_ψ_le_nilradical
+    [FiniteDimensional K 𝔞] [IsSolvable 𝔞] (x : 𝔥) :
+    LinearMap.range (ψ x).toLinearMap ≤
+      Submodule.restrictScalars K (nilradical K 𝔞).toSubmodule := by
+  simp_rw [← SetLike.coe_subset_coe, Submodule.restrictScalars_self, coe_toSubmodule,
+    ← LieSubmodule.lieSpan_le, LinearMap.coe_range, LieDerivation.coeFn_coe,
+    ← LieIdeal.isNilpotent_iff_le_nilradical]
+  infer_instance
 
 variable [FiniteDimensional K 𝔞] [IsSolvable 𝔞]
+
+lemma range_leftLieUE_le_annihilatingIdeal (x : 𝔥) :
+    LinearMap.range (leftLieUE ψ x) ≤ Submodule.restrictScalars K (annihilatingIdeal K 𝔞) := by
+  simp_rw [← Submodule.map_top,
+    ← (mkAlgHom K 𝔞).toLinearMap.range_eq_top_of_surjective (mkAlgHom_surjective K 𝔞),
+    ← Submodule.map_top, ← TensorAlgebra.span_tprod_eq_top, Submodule.map_span, Submodule.span_le,
+    Set.subset_def, Set.forall_mem_image, Set.mem_ofPred, Submodule.coe_restrictScalars,
+    AlgHom.toLinearMap_apply, SetLike.mem_coe]
+  rintro _ ⟨n, f, rfl⟩
+  simp_rw [leftLieUE_mkAlgHom, leftLieUEAux_tprod, map_sum]
+  apply sum_mem
+  rintro ⟨i, hi⟩ -
+  obtain ⟨m, rfl⟩ : ∃ m : ℕ, n = i + (m + 1) := by existsi n - (i + 1); lia
+  cases f using Fin.appendCases with | append f g
+  cases g using Fin.consCases with | cons y g
+  simp_rw [show Fin.mk i hi = Fin.natAdd i ⟨0, by lia⟩ by ext; simp, Fin.update_append_natAdd,
+    Fin.append_right, Fin.mk_zero, Fin.update_cons_zero, Fin.cons_zero,
+    ← TensorAlgebra.tprod_mul_tprod, ← TensorAlgebra.ι_mul_tprod, map_mul, ← ι_apply]
+  apply Ideal.mul_mem_left
+  apply Ideal.mul_mem_right
+  simp_rw [annihilatingIdeal, Ideal.sup_eq_span, ← SetLike.mem_coe]
+  apply mem_of_subset_of_mem Ideal.subset_span
+  apply Set.mem_union_right
+  apply mem_of_subset_of_mem Ideal.subset_span
+  apply Set.mem_image_of_mem
+  simp_rw +singlePass [SetLike.mem_coe, ← mem_toSubmodule, ← Submodule.restrictScalars_mem K]
+  apply mem_of_le_of_mem (range_ψ_le_nilradical ψ x)
+  simp
 
 lemma leftLieUE_mem_annihilatingIdeal (x : 𝔥) {a : UniversalEnvelopingAlgebra K 𝔞} :
     leftLieUE ψ x a ∈ annihilatingIdeal K 𝔞 := by
@@ -263,9 +333,13 @@ lemma isFaithful_center_solStepAdoSpace
 lemma isNilpotent_nilradical_solStepAdoSpace [FiniteDimensional K 𝔥]
     (hn : nilradical K (𝔞 ⋊⁅ψ⁆ 𝔥) ≤ idealRange (inl ψ)) :
     IsNilpotent (nilradical K (𝔞 ⋊⁅ψ⁆ 𝔥)) (SolStepAdoSpace ψ) := by
-  simp_rw +singlePass [LieModule.isNilpotent_iff_forall (R := K),
+  have : IsSolvable (idealRange (SemiDirectSum.inl ψ)) :=
+    (equivIdealRangeInl ψ).surjective.lieAlgebra_isSolvable
+  simp_rw [LieModule.isNilpotent_iff_forall (R := K),
     LieIdeal.lieIdealOfEquivOfLe hn |>.surjective.forall, LieEquiv.coe_coe, LieIdeal.toEnd_eq,
-    LieIdeal.lieIdealOfEquivOfLe_toFun_coe, Subtype.forall,
+    LieIdeal.lieIdealOfEquivOfLe_toFun_coe,
+    SetLike.forall (p := LieIdeal.lieIdealOf (nilradical K (𝔞 ⋊⁅ψ⁆ 𝔥))
+      (idealRange (SemiDirectSum.inl ψ))),
     ← LieIdeal.lieIdealOf_nilradical_eq_of_le _ hn, ← map_equiv_nilradical (equivIdealRangeInl ψ),
     (equivIdealRangeInl ψ).surjective.forall, LieEquiv.coe_coe, LieEquiv.mem_map_equiv,
     LieEquiv.symm_apply_apply, equivIdealRangeInl_apply_coe]
@@ -312,7 +386,7 @@ lemma LieAlgebra.IsAdo.of_isInnerSemiDirectSum_of_isSolvable
   have := (lieEquivLieSubalgebra hi).injective.lieAlgebra_isSolvable
   apply (LieIdeal.map_mono (f := (lieEquivLieSubalgebra hi).symm.toLieHom)).imp at hn
   rw [map_equiv_nilradical] at hn
-  conv_rhs at hn => equals idealRange (inl ((LieDerivation.adoIdeal 𝔞).comp 𝔥.incl)) =>
+  conv_rhs at hn => equals idealRange (inl ((LieDerivation.adIdeal 𝔞).comp 𝔥.incl)) =>
     ext ⟨x, y⟩
     have h : y.1 ∈ 𝔞 ↔ y = 0 :=
       Submodule.mem_left_iff_eq_zero_of_disjoint hi.disjoint

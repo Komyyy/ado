@@ -94,7 +94,7 @@ alias ⟨IsInnerSemiDirectSum.isCompl, _root_.IsCompl.isInnerSemidirectSum⟩ :=
 namespace SemiDirectSum
 
 noncomputable def lieEquivLieSubalgebra (h : IsInnerSemiDirectSum I L') :
-    (I ⋊⁅comp (adoIdeal I) (incl L')⁆ L') ≃ₗ⁅R⁆ L where
+    (I ⋊⁅comp (adIdeal I) (incl L')⁆ L') ≃ₗ⁅R⁆ L where
   __ := LinearEquiv.trans (toProdl _) (Submodule.prodEquivOfIsCompl _ _ h.isCompl)
   map_lie' {x y} := by
     -- `SetLike` の defeq に対処
@@ -115,7 +115,7 @@ noncomputable def lieEquivLieSubalgebra (h : IsInnerSemiDirectSum I L') :
 
 @[simp]
 lemma lieEquivLieSubalgebra_apply (h : IsInnerSemiDirectSum I L')
-    (x : I ⋊⁅comp (adoIdeal I) (incl L')⁆ L') : lieEquivLieSubalgebra h x = (x.1 : L) + (x.2 : L) :=
+    (x : I ⋊⁅comp (adIdeal I) (incl L')⁆ L') : lieEquivLieSubalgebra h x = (x.1 : L) + (x.2 : L) :=
   rfl
 
 lemma isInnerSemiDirectSum_self : IsInnerSemiDirectSum (idealRange (inl ψ)) (range (inr ψ)) := by
