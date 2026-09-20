@@ -6,11 +6,12 @@ Authors: Miyahara Kō
 module
 public import Mathlib.Algebra.Lie.UniversalEnveloping
 import all Mathlib.Algebra.Lie.UniversalEnveloping
-public import Mathlib.Tactic.NoncommRing
+public import Ado.ForMathlib.LieAssociative
 
 public section
 
 open Function LieRing LieModule
+open TensorAlgebra hiding ι
 
 variable {R L : Type*} [CommRing R] [LieRing L] [LieAlgebra R L]
 
@@ -82,5 +83,12 @@ lemma mkAlgHom_surjective : Surjective (mkAlgHom R L) :=
 protected lemma ind {motive : UniversalEnvelopingAlgebra R L → Prop} :
     (mkAlgHom : ∀ a, motive (mkAlgHom R L a)) → ∀ a, motive a :=
   fun h ↦ (mkAlgHom_surjective R L).forall.mpr h
+
+lemma mkAlgHom_tprod_lie_of_associative {n} (f : Fin n → L) (x : L) :
+    ⁅mkAlgHom R L (tprod R L n f), ι R x⁆ =
+      ∑ i : Fin n, mkAlgHom R L (tprod R L n (update f i ⁅f i, x⁆)) := by
+  simp_rw [tprod_apply, ← List.prod_hom, List.map_ofFn, comp_def, ← ι_apply,
+    LieRing.list_prod_ofFn_lie_of_associative, ← LieHom.map_lie,
+    apply_update (f := fun _ ↦ ι R) (g := f)]
 
 end UniversalEnvelopingAlgebra
