@@ -17,16 +17,44 @@ set_option backward.privateInPublic.warn false
 
 section LieTheoremCorollary
 
-open LieAlgebra
+open Module LieAlgebra LieSubmodule LieModule LinearMap Matrix
 
-namespace LieDerivation
+-- example {K 𝔯 V} [Field K] [CharZero K] [IsAlgClosed K]
+--     [LieRing 𝔯] [LieAlgebra K 𝔯] [IsSolvable 𝔯]
+--     [AddCommGroup V] [Module K V] [LieRingModule 𝔯 V] [LieModule K 𝔯 V]
+--     [FiniteDimensional K V] :
+--     ∃ b : Basis (Fin (finrank K V)) K V,
+--       ∀ x : 𝔯, IsUpperTriangular (toMatrix b b (toEnd K 𝔯 V x)) := by
+--   generalize hn : finrank K V = n
+--   induction n generalizing V with
+--   | zero =>
+--     rw [finrank_eq_zero_iff_of_free] at hn
+--     simp [Subsingleton.eq_zero (α := Matrix (Fin 0) (Fin 0) K)]
+--   | succ n hin =>
+--     have hV : 0 < finrank K V := by lia
+--     rw [finrank_pos_iff] at hV
+--     obtain ⟨χ, hχ⟩ := exists_nontrivial_weightSpace_of_isSolvable K 𝔯 V
+--     conv at hχ => equals ∃ v ∈ weightSpace V χ, v ≠ 0 =>
+--       simp [nontrivial_iff_exists_ne (0 : weightSpace V χ)]
+--     obtain ⟨v, hvw, hvz⟩ := hχ
+--     rw [mem_weightSpace] at hvw
+--     let V₀ : LieSubmodule K 𝔯 V :=
+--       { toSubmodule := K ∙ v
+--         lie_mem {x w} hw := by
+--           conv at hw => equals ∃ k : K, k • v = w => simp [Submodule.mem_span_singleton]
+--           obtain ⟨k, rfl⟩ := hw
+--           simp [hvw, smul_smul, SMulMemClass.smul_mem] }
+--     have hV₀ : finrank K V₀ = 1 := by
+--       simp [← finrank_toSubmodule, V₀, finrank_span_singleton hvz]
+--     replace hV₀ : finrank K (V ⧸ V₀) = n := by simp [hn, hV₀]
+--     specialize hin hV₀
+--     obtain ⟨b₀, hb₀⟩ := hin
+--     sorry
 
 @[instance]
-public axiom isNilpotent_lieSpan_range {K 𝔯} [Field K] [CharZero K] [LieRing 𝔯] [LieAlgebra K 𝔯]
-    [FiniteDimensional K 𝔯] [IsSolvable 𝔯] (D : LieDerivation K 𝔯 𝔯) :
-    LieRing.IsNilpotent (LieSubmodule.lieSpan K 𝔯 (Set.range D))
-
-end LieDerivation
+public axiom LieDerivation.isNilpotent_lieSpan_range {K 𝔯} [Field K] [CharZero K] [LieRing 𝔯]
+    [LieAlgebra K 𝔯] [FiniteDimensional K 𝔯] [IsSolvable 𝔯] (D : LieDerivation K 𝔯 𝔯) :
+    LieRing.IsNilpotent (lieSpan K 𝔯 (Set.range D))
 
 end LieTheoremCorollary
 
@@ -397,7 +425,7 @@ public local instance LieAlgebra.IsAdo.of_isSolvable : IsAdo K 𝔯 := by
   generalize hn : finrank K (𝔯 ⧸ nilradical K 𝔯) = n
   induction n generalizing 𝔯 with
   | zero =>
-    rw [LieIdeal.finrank_quotient, Nat.sub_eq_zero_iff_le, ← not_lt, LieIdeal.finrank_lt_iff,
+    rw [finrank_quotient, Nat.sub_eq_zero_iff_le, ← not_lt, LieIdeal.finrank_lt_iff,
       not_lt_top_iff, ← top_le_iff, ← LieIdeal.isNilpotent_iff_le_nilradical,
       LieRing.isNilpotent_lieIdeal_top_iff] at hn
     exact IsAdo.of_isNilpotent
@@ -409,9 +437,9 @@ public local instance LieAlgebra.IsAdo.of_isSolvable : IsAdo K 𝔯 := by
     specialize hin hn𝔞
     obtain ⟨𝔥, h𝔥₁⟩ : ∃ 𝔥 : LieSubalgebra K 𝔯, IsCompl 𝔞.toSubmodule 𝔥.toSubmodule := by
       obtain ⟨𝔥', h𝔥'⟩ := exists_isCompl 𝔞.toSubmodule
-      simp_rw [← hn𝔞, LieIdeal.finrank_quotient, 𝔞.lieIdealOf_nilradical_eq_of_le h𝔞,
+      simp_rw [← hn𝔞, finrank_quotient, 𝔞.lieIdealOf_nilradical_eq_of_le h𝔞,
         LieIdeal.finrank_lieIdealOf _ _ h𝔞, ← Submodule.finrank_add_eq_of_isCompl h𝔥',
-        LieIdeal.finrank_toSubmodule] at hn
+        finrank_toSubmodule] at hn
       conv at hn => equals finrank K 𝔥' = 1 => grind only [LieIdeal.finrank_mono h𝔞]
       existsi 𝔥'.toLieSubalgebraOfDimOne hn
       exact h𝔥'
