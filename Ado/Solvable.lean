@@ -6,6 +6,7 @@ Authors: Miyahara Kō
 module
 public import Ado.Nilpotent
 public import Ado.ForMathlib.UniversalEnvelopingAlgebraIdeal
+public import Ado.ForMathlib.MatrixTriangular
 
 /-!
 ## 可解 Lie 代数に対する Ado の定理
@@ -19,7 +20,7 @@ section LieTheoremCorollary
 
 open Module LieAlgebra LieSubmodule LieModule LinearMap Matrix
 
-lemma LieModule.exists_basis_isUpperTriangular_of_isAlgClosed {K 𝔯 V}
+lemma LieModule.exists_basis_isUpperTriangular_of_isAlgClosed (K 𝔯 V)
     [Field K] [CharZero K] [IsAlgClosed K] [LieRing 𝔯] [LieAlgebra K 𝔯] [IsSolvable 𝔯]
     [AddCommGroup V] [Module K V] [LieRingModule 𝔯 V] [LieModule K 𝔯 V]
     [FiniteDimensional K V] :
@@ -48,7 +49,7 @@ lemma LieModule.exists_basis_isUpperTriangular_of_isAlgClosed {K 𝔯 V}
       simp [← finrank_toSubmodule, V₀, finrank_span_singleton hvz]
     replace hV₀ : finrank K (V ⧸ V₀) = n := by simp [hn, hV₀]
     have hvq : (LieSubmodule.Quotient.mk v : V ⧸ V₀) = 0 := by simp [V₀]
-    specialize hin hV₀
+    specialize hin (V ⧸ V₀) hV₀
     obtain ⟨b₀, hb₀⟩ := hin
     let bᵥ : Basis Unit K V₀ :=
       Module.Basis.ofRepr
@@ -62,6 +63,57 @@ lemma LieModule.exists_basis_isUpperTriangular_of_isAlgClosed {K 𝔯 V}
     simp_rw [Matrix.IsUpperTriangular, Matrix.BlockTriangular, id_eq, e.surjective.forall]
     simp only [IsUpperTriangular, BlockTriangular, id_eq, toMatrix_apply, toEnd_apply_apply] at hb₀
     simp +contextual [e, b, toMatrix_apply, hbv, hvw, hvq, hb₀]
+
+instance LieModule.isNilpotent_derivedSeries_one_of_isAlgClosed {K 𝔯}
+    [Field K] [CharZero K] [IsAlgClosed K] [LieRing 𝔯] [LieAlgebra K 𝔯] [IsSolvable 𝔯]
+    [FiniteDimensional K 𝔯] : IsNilpotent (derivedSeries K 𝔯 1) 𝔯 := by
+  obtain ⟨b, hb⟩ := exists_basis_isUpperTriangular_of_isAlgClosed K 𝔯 𝔯
+  simp_rw [LieModule.isNilpotent_iff_forall (R := K), SetLike.forall, LieIdeal.toEnd_mk,
+    ← LinearMap.isNilpotent_toMatrix_iff b]
+  intro x hx
+  replace hx : ∀ i j, j ≤ i → toMatrix b b (toEnd K 𝔯 𝔯 x) i j = 0
+  · conv at hx =>
+      conv => equals x ∈ (derivedSeries K 𝔯 1 : Submodule K 𝔯) => simp
+      equals x ∈ Submodule.span K {x : 𝔯 | ∃ (x₁ x₂ : 𝔯), ⁅x₁, x₂⁆ = x} =>
+        simp [LieSubmodule.lieIdeal_oper_eq_linear_span']
+    induction hx using Submodule.span_induction with
+    | mem x h =>
+      rw [Set.mem_ofPred_eq] at h
+      obtain ⟨x₁, x₂, rfl⟩ := h
+      intro i j hij
+      rw [le_iff_eq_or_lt] at hij
+      obtain (rfl | hij) := hij
+      case inr =>
+        replace hb x₁ x₂ := (hb x₁).mul (hb x₂)
+        simp_rw [Matrix.BlockTriangular, id_eq] at hb
+        simp [LieRing.of_associative_ring_bracket, LinearMap.toMatrix_mul, hb, hij]
+      replace hb x₁ x₂ i := mul_apply_diag_eq_mul_of_isUpperTriangular _ _ (hb x₁) (hb x₂) i
+      simp [LieRing.of_associative_ring_bracket, LinearMap.toMatrix_mul, hb, sub_eq_zero,
+        iff_true_intro (mul_comm _ _)]
+    | zero => simp
+    | add x y hx hy hix hiy => simp +contextual [*]
+    | smul a x hx hix => simp +contextual [*]
+  generalize toMatrix b b (toEnd K 𝔯 𝔯 x) = A at hx ⊢
+  clear * - x A hx
+  suffices h : ∀ (i j : Fin (finrank K 𝔯)) (n : ℕ), j < i + n → (A ^ n) i j = 0
+  · existsi finrank K 𝔯; ext i j; apply h; lia
+  intro i j n hij
+  induction n generalizing i j with
+  | zero => simp [show i ≠ j by lia]
+  | succ n hn =>
+    simp_rw +singlePass [pow_succ, Matrix.mul_apply,
+      ← Finset.sum_filter_add_sum_filter_not _ (fun k ↦ j ≤ k)]
+    conv_lhs =>
+      enter [1]
+      apply_congr
+      next => rfl
+      next k hk => rw [hx _ _ (by simpa using hk)]
+    conv_lhs => equals ∑ k with k < j, (A ^ n) i k * A k j => simp
+    conv_lhs =>
+      apply_congr
+      next => rfl
+      next k hk => rw [hn _ _ (by grind)]
+    simp
 
 @[instance]
 public axiom LieDerivation.isNilpotent_lieSpan_range {K 𝔯} [Field K] [CharZero K] [LieRing 𝔯]

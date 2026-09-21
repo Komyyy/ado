@@ -15,7 +15,7 @@ variable {R L L₂ M : Type*}
 variable [CommRing R] [LieRing L] [LieAlgebra R L] [LieRing L₂] [LieAlgebra R L₂]
 variable [AddCommGroup M] [Module R M] [LieRingModule L M] [LieModule R L M]
 
-open LieIdeal LieSubalgebra
+open LieIdeal LieSubalgebra LieModule LieAlgebra
 
 namespace LieSubalgebra
 
@@ -62,7 +62,12 @@ lemma toLieSubalgebra_comap (f : L →ₗ⁅R⁆ L₂) (I : LieIdeal R L₂) :
   ext; simp
 
 theorem toEnd_eq (I : LieIdeal R L) {x : I} :
-    LieModule.toEnd R I M x = LieModule.toEnd R L M x :=
+    toEnd R I M x = toEnd R L M x :=
+  rfl
+
+@[simp]
+theorem toEnd_mk (I : LieIdeal R L) {x : L} (hx : x ∈ I) :
+    toEnd R I M ⟨x, hx⟩ = toEnd R L M x :=
   rfl
 
 end LieIdeal

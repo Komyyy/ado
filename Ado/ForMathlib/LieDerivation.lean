@@ -10,7 +10,7 @@ public import Mathlib.Algebra.Lie.Ideal
 @[expose] public section
 
 variable {R : Type*} [CommRing R]
-variable {L : Type*} [LieRing L] [LieAlgebra R L]
+variable {K L : Type*} [LieRing L] [LieAlgebra R L]
 
 namespace LieDerivation
 
