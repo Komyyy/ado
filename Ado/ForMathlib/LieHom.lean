@@ -5,6 +5,7 @@ Authors: Miyahara Kō
 -/
 module
 public import Ado.ForMathlib.LieIdealOf
+public import Ado.ForMathlib.LieAssociative
 
 @[expose] public section
 
@@ -33,6 +34,30 @@ lemma lieIdealComap_surjective_of_surjective
 lemma lieIdealComap_ker (f : L →ₗ⁅R⁆ L₂) (q : LieIdeal R L₂) :
     ker (lieIdealComap f q) = lieIdealOf (ker f) (comap f q) := by
   ext; simp [Subtype.ext_iff]
+
+@[simps toLinearMap]
+def lieIdealMap (f : L →ₗ⁅R⁆ L₂) (I : LieIdeal R L) : I →ₗ⁅R⁆ map f I where
+  toLinearMap := Submodule.inclusion ?_ ∘ₗ (LinearMap.submoduleMap f.toLinearMap I)
+  map_lie' {_ _} := Subtype.ext f.map_lie'
+where finally
+  simp +contextual [IsConcreteLE.le_iff, LieIdeal.mem_map]
+
+@[simp]
+lemma lieIdealMap_apply_coe (f : L →ₗ⁅R⁆ L₂) (I : LieIdeal R L) (x : I) :
+    (lieIdealMap f I x : L₂) = f x :=
+  rfl
+
+@[simp]
+lemma lieIdealMap_injective_of_injective
+    (f : L →ₗ⁅R⁆ L₂) (I : LieIdeal R L) (hf : Injective f) : Injective (lieIdealMap f I) :=
+  fun _x₁ _x₂ hx ↦ Subtype.ext (hf congr(Subtype.val $hx))
+
+attribute [local instance 100] LieRing.ofAssociativeRing in
+variable (R L) in
+@[simps ! toLinearMap apply]
+def toSpanSingleton (x : L) : R →ₗ⁅R⁆ L where
+  toLinearMap := LinearMap.toSpanSingleton R L x
+  map_lie' {x y} := by simp [trivial_lie_zero]
 
 end LieHom
 

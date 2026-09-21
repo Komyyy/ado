@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Miyahara Kō
 -/
 module
-public import Mathlib.Algebra.Lie.OfAssociative
+public import Mathlib.Algebra.Lie.Abelian
 
 public import Mathlib.Tactic.NoncommRing
 
@@ -29,5 +29,8 @@ lemma list_prod_ofFn_lie_of_associative {n} (f : Fin n → A) (x : A) :
     simp_rw [ofFn_cons, prod_cons, mul_lie_of_associative, hf, Fin.sum_univ_succ,
       Fin.update_cons_zero, Fin.cons_zero, ← Fin.cons_update, ofFn_cons, prod_cons, Fin.cons_succ,
       Finset.mul_sum]
+
+instance {A : Type*} [CommRing A] : IsLieAbelian A := by
+  rw [← isMulCommutative_iff_isLieAbelian]; infer_instance
 
 end LieRing
