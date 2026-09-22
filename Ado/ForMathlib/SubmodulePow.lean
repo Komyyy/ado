@@ -15,6 +15,8 @@ namespace Submodule
 
 variable {R : Type*} [Semiring R] {A : Type*} [Semiring A] [Module R A] [IsScalarTower R A A]
 
+section ScalarTower
+
 lemma list_prod_mem_pow (M : Submodule R A) (n) (l : List A)
     (hl : l.length = n) (hlM : ∀ x ∈ l, x ∈ M) : l.prod ∈ M ^ n := by
   grw [← SetLike.mem_coe, ← pow_subset_pow, Set.mem_pow_iff_list_prod]
@@ -42,5 +44,16 @@ lemma pow_eq_span_pow_set_noncomm (M : Submodule R A) (n : ℕ) : M ^ n = span R
   | zero => simp [Submodule.pow_zero, one_eq_span_one_set]
   | succ n hn =>
     simp_rw [Submodule.pow_succ, hn, span_mul, pow_succ]
+
+end ScalarTower
+
+section Algebra
+
+variable {R : Type*} [CommSemiring R] {A : Type*} [Semiring A] [Algebra R A]
+
+lemma mul_span (M : Submodule R A) (S : Set A) : M * span R S = span R ((M : Set A) * S) := by
+  conv_lhs => rw [← M.span_eq, span_mul_span]
+
+end Algebra
 
 end Submodule

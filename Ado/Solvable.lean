@@ -10,14 +10,12 @@ public import Ado.PBWSpan
 public import Ado.ForMathlib.UniversalEnvelopingAlgebraIdeal
 public import Ado.ForMathlib.MatrixTriangular
 public import Ado.ForMathlib.LieBaseChange
+public import Ado.ForMathlib.MultisetReplicate
+public import Ado.ForMathlib.LinearMapCharpoly
 
 /-!
 ## 可解 Lie 代数に対する Ado の定理
 -/
-
--- 公理を公開するために使用
-set_option backward.privateInPublic true
-set_option backward.privateInPublic.warn false
 
 open Set Module LieAlgebra LieModule LieHom LieSubmodule SemiDirectSum UniversalEnvelopingAlgebra
 open scoped Pointwise
@@ -279,6 +277,10 @@ noncomputable def nilLieSubmodule : LieSubmodule K (𝔞 ⋊⁅ψ⁆ 𝔥) (Univ
     simp only [lieUE_def, bracket_eq]
     solve_by_elim (transparency := .reducible) [add_mem, Ideal.mul_mem_left, leftLieUE_mem_nilIdeal]
 
+@[simp]
+lemma mem_nilLieSubmodule {x} : x ∈ nilLieSubmodule ψ ↔ x ∈ nilIdeal K 𝔞 :=
+  Iff.rfl
+
 end UniversalEnvelopingAlgebra
 
 variable [FiniteDimensional K 𝔞] [IsSolvable 𝔞]
@@ -350,9 +352,207 @@ lemma isNilpotent_nilradical_solStepAdoSpace [FiniteDimensional K 𝔥]
   apply Set.mem_image_of_mem
   simp [hx]
 
-@[instance]
-public axiom finiteDimensional_solStepAdoSpace [FiniteDimensional K 𝔥] :
-    FiniteDimensional K (SolStepAdoSpace ψ)
+open scoped List in
+open Submodule renaming span → span, restrictScalars → restr in
+open Polynomial in
+/--
+```
+███████╗██╗   ██╗███████╗███████╗███████╗██████╗ ██╗███╗   ██╗ ██████╗ ██╗██╗██╗
+██╔════╝██║   ██║██╔════╝██╔════╝██╔════╝██╔══██╗██║████╗  ██║██╔════╝ ██║██║██║
+███████╗██║   ██║█████╗  █████╗  █████╗  ██████╔╝██║██╔██╗ ██║██║  ███╗██║██║██║
+╚════██║██║   ██║██╔══╝  ██╔══╝  ██╔══╝  ██╔══██╗██║██║╚██╗██║██║   ██║╚═╝╚═╝╚═╝
+███████║╚██████╔╝██║     ██║     ███████╗██║  ██║██║██║ ╚████║╚██████╔╝██╗██╗██╗
+╚══════╝ ╚═════╝ ╚═╝     ╚═╝     ╚══════╝╚═╝  ╚═╝╚═╝╚═╝  ╚═══╝ ╚═════╝ ╚═╝╚═╝╚═╝
+```
+証明に非常に苦労した。後でリファクタリングしたい
+-/
+instance finiteDimensional_solStepAdoSpace [FiniteDimensional K 𝔥] :
+    FiniteDimensional K (SolStepAdoSpace ψ) := by
+  have B' := finBasis K 𝔞
+  let N := finrank K (AdoSpace K 𝔞) * nilpotencyLength (nilradical K 𝔞) (AdoSpace K 𝔞)
+  let L := List.flatten (List.ofFn (List.replicate (Nat.pred N) : Fin (finrank K 𝔞) → _))
+  let S := List.toFinset (List.sublists L)
+  let B := List.prod ∘ List.map (ι K ∘ B')
+  suffices h : span K ((LieSubmodule.Quotient.mk ∘ B) '' S) = (⊤ : Submodule K (SolStepAdoSpace ψ))
+  · simp_rw [Module.finite_def, ← h]
+    apply Submodule.fg_span
+    apply Set.Finite.image
+    apply Finset.finite_toSet
+  suffices h : ∀ l, List.SortedLE l → B l ∈ restr K (nilIdeal K 𝔞) ⊔ span K (B '' S)
+  · rw [eq_top_iff]
+    conv_lhs =>
+      equals Submodule.map (LieSubmodule.Quotient.mk' _).toLinearMap ⊤ =>
+        simp [LinearMap.range_eq_top_of_surjective]
+    simp_rw [← pbw_span B', Submodule.map_span_le, forall_mem_image, mem_ofPred]
+    intro l hl
+    specialize h l hl
+    simp_rw [Submodule.mem_sup, Submodule.restrictScalars_mem, ← eq_sub_iff_add_eq] at h
+    obtain ⟨_, h, x, hx, rfl⟩ := h
+    conv at h => equals (LieSubmodule.Quotient.mk (B l - x) : SolStepAdoSpace ψ) = 0 =>
+      simp [- Submodule.Quotient.mk_sub]
+    conv_rhs => equals LieSubmodule.Quotient.mk (B l - x) + LieSubmodule.Quotient.mk x => simp [B]
+    apply add_mem
+    · simp [h, - Function.comp_apply]
+    · apply Submodule.mem_map_of_mem
+        (f := (LieSubmodule.Quotient.mk' (nilLieSubmodule ψ)).toLinearMap) at hx
+      simpa [Submodule.map_span, Set.image_image] using hx
+  subst S
+  conv => enter [l, _, 1, 2, 2, 2]; equals {l | l <+ L} => ext; simp
+  suffices h : ∀ l, List.SortedLE l → ¬l <+ L →
+      B l ∈ restr K (nilIdeal K 𝔞) ⊔
+        span K (B '' {l' | List.SortedLE l' ∧ Multiset.ofList l' < Multiset.ofList l})
+  · intro l hl
+    induction hs : Multiset.ofList l using WellFoundedLT.induction generalizing l with
+    | ind s hil =>
+      subst hs
+      replace hil l hllt hl := hil (Multiset.ofList l) hl l hllt rfl
+      by_cases hlL : l <+ L
+      case pos =>
+        grw [← le_sup_right, ← SetLike.mem_coe, ← Submodule.subset_span]
+        apply Set.mem_image_of_mem
+        simp [hlL]
+      case neg =>
+        specialize h l hl hlL
+        refine mem_of_le_of_mem ?_ h
+        simp_rw [sup_le_iff, le_sup_left, true_and, Submodule.span_le, Set.subset_def,
+          forall_mem_image, Set.mem_ofPred, and_imp]
+        exact hil
+  suffices h : ∀ (x : 𝔞) (n : ℕ), N ≤ n →
+      ι K x ^ n ∈ restr K (nilIdeal K 𝔞) ⊔ ⨆ i < n, K ∙ (ι K x ^ i)
+  · revert B' N L B h
+    generalize finrank K 𝔞 = n
+    intro B' N L B h l hls hlL
+    have hls₂ : ∃ f : Fin n → ℕ, l =
+        List.flatten (List.ofFn (fun i ↦ List.replicate (f i) i))
+    · existsi fun i ↦ List.count i l
+      refine List.Perm.eq_of_sortedLE hls ?hl's ?hl'p
+      case hl's =>
+        rw [List.sortedLE_iff_pairwise, List.pairwise_flatten]
+        constructor
+        next => simp
+        simp +contextual [le_of_lt]
+      case hl'p =>
+        simp [List.perm_iff_count, List.count_flatten, List.sum_ofFn,
+          List.count_replicate]
+    obtain ⟨f, rfl⟩ := hls₂
+    conv_rhs =>
+        equals List.prod (List.ofFn (fun x ↦ ι K (B' x) ^ f x)) =>
+      simp [B, Function.comp_def]
+    simp_rw [L, List.ofFn_eq_map, ← List.flatMap_def] at hlL
+    apply mt (List.Sublist.flatMap_right _) at hlL
+    conv at hlL => equals ∃ i, Nat.pred N < f i => simp
+    obtain ⟨⟨i, hif⟩, hi⟩ := hlL
+    apply Nat.le_of_pred_lt at hi
+    obtain ⟨m, rfl⟩ : ∃ m, n = i + (m + 1) := by existsi n - i - 1; lia
+    cases f using Fin.appendCases with | append f g
+    cases g using Fin.consCases with | cons n g
+    conv_rhs =>
+      enter [1, 1]
+      equals Fin.append (fun x ↦ ι K (B' (Fin.castAdd (m + 1) x)) ^ f x)
+          (Fin.cons (ι K (B' (Fin.natAdd i ⟨0, by lia⟩)) ^ n)
+            (fun x ↦ ι K (B' (Fin.natAdd i (Fin.succ x))) ^ g x)) =>
+        ext i
+        cases i using Fin.addCases with
+        | left i => simp
+        | right i => cases i using Fin.cases <;> simp
+    simp_rw [List.ofFn_fin_append, List.ofFn_cons, List.prod_append, List.prod_cons, Fin.natAdd_mk,
+      Nat.add_zero] at ⊢
+    conv_rhs at hi =>
+      conv => enter [3]; equals Fin.natAdd i ⟨0, by lia⟩ => simp_rw [Fin.natAdd_mk, Nat.add_zero]
+      equals n => simp
+    specialize h (B' ⟨i, hif⟩) n hi
+    replace h := Submodule.mul_mem_mul
+        (Submodule.mem_span_singleton_self
+          (List.prod (List.ofFn (fun x ↦ ι K (B' (Fin.castAdd (m + 1) x)) ^ f x)))) h
+    replace h := Submodule.mul_mem_mul h
+        (Submodule.mem_span_singleton_self
+          (List.prod (List.ofFn (fun x ↦ ι K (B' (Fin.natAdd i (Fin.succ x))) ^ g x))))
+    simp_rw [Submodule.mul_sup, Submodule.sup_mul, mul_assoc] at h
+    refine mem_of_le_of_mem ?_ h
+    apply sup_le_sup
+    · rw [Submodule.mul_span, Submodule.span_mul_span]
+      simp_rw [Submodule.span_le, Set.mul_subset_iff]
+      simp +contextual [Ideal.mul_mem_left, Ideal.mul_mem_right]
+    · simp_rw [Submodule.iSup_mul, Submodule.mul_iSup, iSup₂_le_iff, Submodule.span_mul_span,
+        Set.singleton_mul_singleton, Submodule.span_le, singleton_subset_iff, SetLike.mem_coe]
+      intro n' hn'
+      apply Submodule.mem_span_of_mem
+      simp_rw [Set.mem_image, Set.mem_ofPred]
+      have H : (fun x ↦ List.replicate (Fin.append f (Fin.cons n g) x) x) =
+          Fin.append (fun x ↦ List.replicate (f x) (Fin.castAdd (m + 1) x))
+            (Fin.cons (List.replicate n (Fin.natAdd i ⟨0, by lia⟩))
+              (fun x ↦ List.replicate (g x) (Fin.natAdd i (Fin.succ x))))
+      · ext i
+        cases i using Fin.addCases with
+        | left i => simp
+        | right i => cases i using Fin.cases <;> simp
+      simp_rw [H, List.ofFn_fin_append, List.ofFn_cons, List.flatten_append, List.flatten_cons,
+        Fin.natAdd_mk, Nat.add_zero] at hls ⊢
+      clear H
+      simp_rw [and_assoc]
+      existsi List.flatten (List.ofFn fun x ↦ List.replicate (f x) (Fin.castAdd (m + 1) x)) ++
+          (List.replicate n' ⟨i, by lia⟩ ++
+            List.flatten (List.ofFn fun x ↦ List.replicate (g x) (Fin.natAdd i x.succ)))
+      constructor
+      next => refine hls.pairwise.sublist ?_ |>.sortedLE; simp [hn'.le]
+      constructor
+      case right => simp [B, Function.comp_def, - ι_apply]
+      simp [← Multiset.coe_add, Multiset.coe_replicate, Multiset.replicate_lt_replicate, hn']
+  clear B' L B
+  suffices h : ∀ (x : 𝔞), ι K x ^ N ∈ restr K (nilIdeal K 𝔞) ⊔ ⨆ i < N, K ∙ (ι K x ^ i)
+  · intro x n hn
+    induction hn using Nat.leRec with
+    | refl => apply h
+    | @le_succ_of_le m hm hin =>
+      replace hin := Submodule.mul_mem_mul (Submodule.mem_span_singleton_self (ι K x)) hin
+      simp_rw [Submodule.mul_sup, Submodule.mul_iSup, Submodule.span_mul_span,
+        Set.singleton_mul_singleton, ← pow_succ', Submodule.span_mul, Submodule.coe_restrictScalars,
+        Set.singleton_mul] at hin
+      refine mem_of_le_of_mem ?_ hin
+      gcongr 1
+      · simp +contextual [Submodule.span_le, Set.subset_def, Ideal.mul_mem_left]
+      · simp_rw [iSup_subtype']
+        apply iSup_mono'
+        simp_rw [Subtype.forall, Subtype.exists, exists_prop]
+        intro n' hn'
+        exists n' + 1
+        simp [hn']
+  suffices h : ∀ (x : 𝔞), ∃ p : Polynomial K, degree p = N ∧ Monic p ∧
+      aeval (ι K x) p ∈ nilIdeal K 𝔞
+  · intro x
+    specialize h x
+    obtain ⟨p, hpd, hpm, hp⟩ := h
+    rw [← eraseLead_add_C_mul_X_pow p, add_comm, hpm.leadingCoeff,
+      natDegree_eq_of_degree_eq_some hpd] at hp
+    conv_rhs at hp =>
+        equals ι K x ^ N + aeval (ι K x) (eraseLead p) =>
+      simp [- ι_apply, - eraseLead_add_C_mul_X_pow]
+    simp_rw [Submodule.mem_sup, Submodule.restrictScalars_mem]
+    refine ⟨_, hp, -aeval (ι K x) (eraseLead p), neg_mem ?_, by module⟩
+    replace hpd : degree (eraseLead p) < N := by
+      rw [← hpd]; apply degree_eraseLead_lt; rw [← degree_ne_bot, hpd]; apply WithBot.natCast_ne_bot
+    rw [← mem_degreeLT] at hpd
+    apply Submodule.mem_map_of_mem (f := (aeval (ι K x)).toLinearMap) at hpd
+    rw [AlgHom.toLinearMap_apply] at hpd
+    gconvert hpd
+    conv => equals ∀ a < N, ι K x ^ a ∈ ⨆ i < N, K ∙ ι K x ^ i =>
+      classical simp [degreeLT_eq_span_X_pow, Submodule.map_span_le]
+    exact fun n' hn' ↦ Submodule.mem_iSup_of_mem n' (Submodule.mem_iSup_of_mem hn'
+      (Submodule.mem_span_singleton_self _))
+  subst N
+  suffices h : ∀ (x : 𝔞), ∃ p : Polynomial K, degree p = finrank K (AdoSpace K 𝔞) ∧ Monic p ∧
+      aeval (ι K x) p ∈ annihilatingIdeal K 𝔞
+  · gconvert h using 1 with a ⟨p, hpd, hpm, hpn⟩
+    existsi p ^ nilpotencyLength (nilradical K 𝔞) (AdoSpace K 𝔞)
+    simp [hpd, hpm.pow, Submodule.pow_mem_pow _ hpn, iff_true_intro (mul_comm _ _), nilIdeal,
+      - ι_apply]
+  intro x
+  exists LinearMap.charpoly (toEnd K 𝔞 (AdoSpace K 𝔞) x)
+  split_ands
+  · rw [LinearMap.charpoly_degree]
+  · apply LinearMap.charpoly_monic
+  · grw [annihilatingIdeal, ← le_sup_left]
+    simp [← aeval_algHom_apply, LinearMap.aeval_self_charpoly]
 
 end SolStepAdoSpace
 

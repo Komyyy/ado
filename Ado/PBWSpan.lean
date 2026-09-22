@@ -120,6 +120,7 @@ public lemma pbw_span : span R ((prod ∘ map (ι R ∘ B)) '' {l : List m | Sor
           conv_rhs => arg 1; apply apply_linearCombination _ (ι R).toLinearMap
           simp_rw [LieHom.coe_toLinearMap, mem_span_image_iff_linearCombination]
           conv_rhs =>
+            -- 後で `linearCombination_mul` という補題に分けたい
             tactic => simp_rw [linearCombination_apply, sum_mul, ← linearCombination_apply]
           have hli : Injective ((· :: l) : m → List m) := fun _ _ _ ↦ by simp_all
           exists embDomain ⟨(· :: l), hli⟩ (B.repr ⁅B b, B a⁆)
