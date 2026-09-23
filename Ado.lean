@@ -1,2 +1,2 @@
 module
-public import Ado.Solvable
+public import Ado.General

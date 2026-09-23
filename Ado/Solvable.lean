@@ -584,7 +584,7 @@ lemma LieAlgebra.IsAdo.of_isInnerSemiDirectSum_of_isSolvable
   exact .semiDirectSum_of_isSolvable _ hn
 
 -- 後で一般の場合を示すため局所インスタンスに
-public local instance LieAlgebra.IsAdo.of_isSolvable : IsAdo K 𝔯 := by
+public local instance LieAlgebra.IsAdo.of_isSolvable_of_charZero : IsAdo K 𝔯 := by
   generalize hn : finrank K (𝔯 ⧸ nilradical K 𝔯) = n
   induction n generalizing 𝔯 with
   | zero =>

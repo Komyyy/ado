@@ -15,6 +15,7 @@ public import Mathlib.RingTheory.Finiteness.Prod
 variable {R : Type*} [CommRing R]
 variable {K : Type*} [LieRing K] [LieAlgebra R K]
 variable {L : Type*} [LieRing L] [LieAlgebra R L]
+variable {L₂ : Type*} [LieRing L₂] [LieAlgebra R L₂]
 variable (ψ : L →ₗ⁅R⁆ LieDerivation R K K)
 
 open LieHom LieSubalgebra LieDerivation
@@ -76,6 +77,21 @@ lemma inr_lie_inl (x y) : ⁅inr ψ x, inl ψ y⁆ = inl ψ (ψ x y) := by
 
 lemma inl_lie_inr (x y) : ⁅inl ψ x, inr ψ y⁆ = -inl ψ (ψ y x) := by
   simp
+
+@[simps !]
+def lift (f : K →ₗ⁅R⁆ L₂) (g : L →ₗ⁅R⁆ L₂)
+    (h : ∀ (x : L), f.toLinearMap ∘ₗ (ψ x).toLinearMap = ad R L₂ (g x) ∘ₗ f.toLinearMap) :
+    (K ⋊⁅ψ⁆ L) →ₗ⁅R⁆ L₂ where
+  toLinearMap := LinearMap.coprod f g ∘ₗ (toProdl ψ).toLinearMap
+  map_lie' {x y} := by
+    convert_to ∀ (x : L) (y : K), f ((ψ x) y) = ⁅g x, f y⁆ at h
+    · simp [DFunLike.ext_iff]
+    obtain ⟨x₁, x₂⟩ := x
+    obtain ⟨y₁, y₂⟩ := y
+    convert_to ⁅f x₁, f y₁⁆ + ⁅g x₂, f y₁⁆ - ⁅g y₂, f x₁⁆ + ⁅g x₂, g y₂⁆ =
+        ⁅f x₁, f y₁⁆ + ⁅g x₂, f y₁⁆ + (⁅f x₁, g y₂⁆ + ⁅g x₂, g y₂⁆) using 0
+    · simp [h]
+    grind [=_ lie_skew]
 
 end SemiDirectSum
 

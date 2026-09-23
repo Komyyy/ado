@@ -122,6 +122,7 @@ variable [LieRing 𝔞] [LieAlgebra K 𝔞] [LieRing 𝔥] [LieAlgebra K 𝔥]
 variable (ψ : 𝔥 →ₗ⁅K⁆ LieDerivation K 𝔞 𝔞)
 
 namespace LieAlgebra.SemiDirectSum
+open UniversalEnvelopingAlgebra renaming lift → liftᵤ
 
 attribute [local instance 100] LieRing.ofAssociativeRing
 
@@ -415,7 +416,7 @@ instance [IsAdo K 𝔞] [FiniteDimensional K 𝔞] :
     mkAlgHom_tprod_mem_nilSubmodule f hn]
 
 lemma nilSubmodule_le_ker_lift_toEnd_adoSpace [IsAdo K 𝔞] [LieRing.IsNilpotent 𝔞] :
-    nilSubmodule K 𝔞 ≤ LinearMap.ker (lift K (toEnd K 𝔞 (AdoSpace K 𝔞))).toLinearMap := by
+    nilSubmodule K 𝔞 ≤ LinearMap.ker (liftᵤ K (toEnd K 𝔞 (AdoSpace K 𝔞))).toLinearMap := by
   simp_rw [nilSubmodule_eq_span_exists_eq_mkAlgHom_tprod, Submodule.span_le, ofPred_subset,
     SetLike.mem_coe, LinearMap.mem_ker, AlgHom.toLinearMap_apply]
   rintro _ ⟨n, f, hn, rfl⟩
@@ -433,7 +434,7 @@ lemma injective_quotient_mk_nilSubmodule [IsAdo K 𝔞] [LieRing.IsNilpotent �
     Injective (fun x ↦
       (Submodule.Quotient.mk (.ι K x) : UniversalEnvelopingAlgebra K 𝔞 ⧸ nilSubmodule K 𝔞)) := by
   apply Function.Injective.of_comp
-      (f := (nilSubmodule K 𝔞).liftQ (lift K (toEnd K 𝔞 (AdoSpace K 𝔞))).toLinearMap
+      (f := (nilSubmodule K 𝔞).liftQ (liftᵤ K (toEnd K 𝔞 (AdoSpace K 𝔞))).toLinearMap
         nilSubmodule_le_ker_lift_toEnd_adoSpace)
   simpa [comp_def] using IsFaithful.injective_toEnd
 
