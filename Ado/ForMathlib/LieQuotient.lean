@@ -9,17 +9,25 @@ public import Ado.ForMathlib.LieModuleHom
 
 @[expose] public section
 
-open Function LieModuleHom LieModule
+open Function LieModule
 
 namespace LieIdeal.Quotient
 
-variable {R L : Type*} [CommRing R] [LieRing L] [LieAlgebra R L]
+open LieHom
 
-@[simps]
+variable {R L L₂ : Type*} [CommRing R] [LieRing L] [LieAlgebra R L] [LieRing L₂] [LieAlgebra R L₂]
+
+abbrev mk {s : LieIdeal R L} : L → L ⧸ s :=
+  LieSubmodule.Quotient.mk
+
 def mk' (s : LieIdeal R L) : L →ₗ⁅R⁆ L ⧸ s :=
   { s.toSubmodule.mkQ with
     toFun := LieSubmodule.Quotient.mk
     map_lie' {_ _} := rfl }
+
+@[simp]
+lemma mk'_apply (s : LieIdeal R L) (x) : mk' s x = mk x :=
+  rfl
 
 @[simp]
 theorem surjective_mk' (s : LieIdeal R L) : Surjective (mk' s) :=
@@ -37,9 +45,33 @@ instance {R L : Type*} [CommRing R] [LieRing L] [LieAlgebra R L]
     [LieAlgebra.IsSolvable L] (s : LieIdeal R L) : LieAlgebra.IsSolvable (L ⧸ s) :=
   (LieIdeal.Quotient.surjective_mk' s).lieAlgebra_isSolvable
 
+def lift (I : LieIdeal R L) (f : L →ₗ⁅R⁆ L₂) (h : I ≤ ker f) : L ⧸ I →ₗ⁅R⁆ L₂ where
+  toLinearMap := I.toSubmodule.liftQ f.toLinearMap (by exact h)
+  map_lie' {x y} := by
+    obtain ⟨x, rfl⟩ := LieIdeal.Quotient.surjective_mk' I x
+    obtain ⟨y, rfl⟩ := LieIdeal.Quotient.surjective_mk' I y
+    simp_rw [← map_lie, LieIdeal.Quotient.mk'_apply, LieIdeal.Quotient.mk, LieSubmodule.Quotient.mk,
+      AddHom.toFun_eq_coe, LinearMap.coe_toAddHom]
+    conv_lhs => apply Submodule.liftQ_apply
+    conv_rhs => arg 1; apply Submodule.liftQ_apply
+    conv_rhs => arg 2; apply Submodule.liftQ_apply
+    simp
+
+@[simp]
+lemma lift_apply (I : LieIdeal R L) (f : L →ₗ⁅R⁆ L₂) {h : I ≤ ker f} (x) :
+    lift I f h (mk x) = f x :=
+  I.toSubmodule.liftQ_apply ..
+
+@[simp]
+lemma lift_mk' (I : LieIdeal R L) (f : L →ₗ⁅R⁆ L₂) (h : I ≤ ker f) :
+    LieHom.comp (lift I f h) (mk' I) = f := by
+  ext x; simp
+
 end LieIdeal.Quotient
 
 namespace LieSubmodule.Quotient
+
+open LieModuleHom
 
 variable {R L M M₂ : Type*} [CommRing R] [LieRing L] [AddCommGroup M] [AddCommGroup M₂]
 variable [Module R M] [Module R M₂] [LieRingModule L M] [LieRingModule L M₂]
