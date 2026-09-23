@@ -5,7 +5,7 @@ defaultTargets = ["Ado"]
 
 [leanOptions]
 pp.unicode.fun = true
-relaxedAutoImplicit = false
+autoImplicit = false
 maxSynthPendingDepth = 3
 weak.linter.mathlibStandardSet = true
 linter.style.header = false

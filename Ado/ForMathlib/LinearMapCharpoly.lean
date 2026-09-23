@@ -8,7 +8,7 @@ public import Mathlib.LinearAlgebra.Charpoly.Basic
 
 public section
 
-variable {R : Type u} {M : Type v} [CommRing R]
+variable {R M : Type*} [CommRing R]
 variable [AddCommGroup M] [Module R M] [Module.Free R M] [Module.Finite R M] (f : M →ₗ[R] M)
 
 open Polynomial Module
