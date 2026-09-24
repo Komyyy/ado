@@ -5,8 +5,8 @@ Authors: Miyahara Kō
 -/
 module
 public import Ado.Nilpotent
-public import Ado.LieTheoremCorollary
-public import Ado.PBWSpan
+public import Ado.ForMathlib.LieTheoremCorollary
+public import Ado.ForMathlib.PBWSpan
 public import Ado.ForMathlib.UniversalEnvelopingAlgebraIdeal
 public import Ado.ForMathlib.MatrixTriangular
 public import Ado.ForMathlib.LieBaseChange
