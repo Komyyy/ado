@@ -42,7 +42,7 @@ namespace LieSubmodule
 set_option maxHeartbeats 300000 in
 -- `LinearMap.IsProj (W : Submodule K V) pt.toLinearMap` での `simp` で失敗する
 instance complementedLattice_of_isKilling {K L V}
-    [Field K] [LieRing L] [LieAlgebra K L] [IsKilling K L] [IsSemisimple K L]
+    [Field K] [LieRing L] [LieAlgebra K L] [IsKilling K L]
     [AddCommGroup V] [Module K V] [LieRingModule L V] [LieModule K L V] :
     ComplementedLattice (LieSubmodule K L V) where
   exists_isCompl W := by
