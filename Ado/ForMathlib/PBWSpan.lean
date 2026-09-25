@@ -34,7 +34,7 @@ end List
 namespace UniversalEnvelopingAlgebra
 
 set_option allowUnsafeReducibility true in
-attribute [reducible] AlgHom.toLinearMap
+attribute [local reducible] AlgHom.toLinearMap
 
 attribute [- simp] TensorAlgebra.tprod_apply
 
