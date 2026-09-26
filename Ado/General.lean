@@ -14,17 +14,104 @@ public import Ado.Solvable
 set_option backward.privateInPublic true
 set_option backward.privateInPublic.warn false
 
+section ForMathlib
+
+public section BilinFormDualBasis
+
+open Module
+
+namespace LinearMap.BilinForm
+
+@[simp]
+lemma dualBasis_reindex {K V} [Field K] [AddCommGroup V] [Module K V]
+    {ι ι'} [DecidableEq ι] [DecidableEq ι'] [Finite ι] [Finite ι']
+    (B : LinearMap.BilinForm K V) (hB : B.Nondegenerate) (b : Basis ι K V) (e : ι ≃ ι') :
+    dualBasis B hB (Basis.reindex b e) = Basis.reindex (dualBasis B hB b) e := by
+  ext; simp [dualBasis, LinearMap.ext_iff]
+
+end LinearMap.BilinForm
+
+end BilinFormDualBasis
+
+end ForMathlib
+
+public section Casimir
+
+open Module LinearMap.BilinForm LieModule LieHom
+open LieAlgebra hiding Basis
+
+attribute [local instance 100] LieRing.ofAssociativeRing
+
+variable {K L V : Type*}
+variable [Field K] [LieRing L] [LieAlgebra K L]
+  [AddCommGroup V] [Module K V] [LieRingModule L V] [LieModule K L V]
+variable [FiniteDimensional K L] [FiniteDimensional K V] [IsKilling K L] [IsFaithful K L V]
+
+namespace UniversalEnvelopingAlgebra
+
+variable (K L V) in
+lemma LieAlgebra.IsKilling.traceForm_ker_toEnd_compl_nondegenerate :
+    (traceForm K L V).Nondegenerate := by
+  sorry
+
+private noncomputable def casimirOfBasis {n : Type*} [Fintype n] [DecidableEq n]
+    (B : Basis n K ↥(ker (toEnd K L V))ᶜ) :
+    UniversalEnvelopingAlgebra K L :=
+  ∑ i, ι K (B i) * ι K (dualBasis (killingForm K L) (IsKilling.killingForm_nondegenerate K L) B i)
+
+-- `dualBasis B hB (Basis.map b f)` という式が簡単に表せないため証明がこのように複雑になっている。
+private lemma casimirOfBasis_eq_of_same_index {n : Type*} [Fintype n] [DecidableEq n]
+    (B B' : Basis n K L) : casimirOfBasis B = casimirOfBasis B' := by
+  unfold casimirOfBasis
+  set DB := dualBasis (ι := n) (killingForm K L) (IsKilling.killingForm_nondegenerate K L)
+  have h i : Basis.equivFun (DB B) (DB B' i) = fun j ↦ Basis.repr B' (B j) i
+  · ext j : 1
+    convert_to
+        killingForm K L (DB B' i) (∑ i, Basis.repr B' (B j) i • B' i) = Basis.repr B' (B j) i
+    · simp [DB]
+    simp_rw [map_sum]
+    simp [DB, apply_dualBasis_left]
+  simp_rw [← LinearEquiv.eq_symm_apply, Basis.equivFun_symm_apply] at h
+  simp_rw [h]
+  convert_to _ = ∑ j, (∑ i, Basis.repr B' (B j) i • ι K (B' i)) * ι K (DB B j)
+  · simp [Finset.mul_sum, Finset.sum_mul, iff_true_intro Finset.sum_comm, - ι_apply]
+  simp_rw [← map_smul, ← map_sum, Basis.sum_repr]
+
+private lemma casimirOfBasis_eq
+    {m n : Type*} [Fintype m] [Fintype n] [DecidableEq m] [DecidableEq n]
+    (B : Basis m K L) (B' : Basis n K L) : casimirOfBasis B = casimirOfBasis B' := by
+  convert_to _ = casimirOfBasis (Basis.reindex B' (Basis.indexEquiv B' B))
+  · simp [casimirOfBasis, ← Basis.indexEquiv B' B |>.sum_comp, - ι_apply]
+  apply casimirOfBasis_eq_of_same_index
+
+variable (K L) in
+noncomputable def casimir [FiniteDimensional K L] : UniversalEnvelopingAlgebra K L :=
+  casimirOfBasis (finBasis K L)
+
+lemma casimir_eq {_ : FiniteDimensional K L} {n : Type*} [Fintype n] [DecidableEq n]
+    (B : Basis n K L) :
+    casimir K L = ∑ i, ι K (B i) *
+      ι K (dualBasis (killingForm K L) (IsKilling.killingForm_nondegenerate K L) B i) :=
+  casimirOfBasis_eq ..
+
+end UniversalEnvelopingAlgebra
+
+end Casimir
+
 section WhiteheadFirst
 
 open Function LieAlgebra
 
 variable {K L V} [Field K] [LieRing L] [LieAlgebra K L]
   [AddCommGroup V] [Module K V] [LieRingModule L V] [LieModule K L V]
-variable [FiniteDimensional K L] [FiniteDimensional K V]
+variable [FiniteDimensional K L] [FiniteDimensional K V] [IsKilling K L]
 
 namespace LieDerivation
 
-public axiom surjective_inner_of_isKilling [IsKilling K L] : Surjective (inner K L V)
+public axiom surjective_inner_of_isKilling_of_isNilpotent_casimir
+    (hc : _root_.IsNilpotent ()) : Surjective (inner K L V)
+
+public axiom surjective_inner_of_isKilling : Surjective (inner K L V)
 
 end LieDerivation
 
