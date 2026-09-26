@@ -14,13 +14,90 @@ public import Ado.Solvable
 set_option backward.privateInPublic true
 set_option backward.privateInPublic.warn false
 
+section ForMathlib
+
+public section LieTraceForm
+
+open LieHom LieAlgebra LieModule LinearEquiv LinearMap.BilinForm
+open LinearMap hiding Nondegenerate
+
+variable {R L M : Type*} [CommRing R] [LieRing L] [LieAlgebra R L]
+variable [AddCommGroup M] [Module R M] [LieRingModule L M] [LieModule R L M]
+
+attribute [local instance 100] LieRing.ofAssociativeRing
+
+namespace LieAlgebra
+
+attribute [mk_iff isKilling_iff_killingCompl_eq_bot] IsKilling
+
+lemma isKilling_iff_nondegenerate_killingForm :
+    IsKilling R L ↔ Nondegenerate (killingForm R L) := by
+  simp [isKilling_iff_killingCompl_eq_bot, ← LieSubmodule.toSubmodule_eq_bot,
+    orthogonal_top_eq_ker <| traceForm_isSymm R L L |>.isRefl,
+    separatingLeft_iff_ker_eq_bot,
+    traceForm_isSymm R L L |>.isRefl.nondegenerate_iff_separatingLeft]
+
+end LieAlgebra
+
+namespace LieModule
+
+lemma nondegenerate_traceForm_iff_isKilling [IsFaithful R L M] :
+    Nondegenerate (traceForm R L M) ↔ IsKilling R (range (toEnd R L M)) := by
+  simp_rw [isKilling_iff_killingCompl_eq_bot, eq_bot_iff, IsConcreteLE.le_iff,
+    LieIdeal.mem_killingCompl, LieSubmodule.mem_top, LieSubmodule.mem_bot, true_implies,
+    SetLike.forall, ← SetLike.mem_coe (p := range (toEnd R L M)), LieHom.coe_range,
+    SetCoe.forall', Set.forall_subtype_range_iff, traceForm_apply_apply,
+    ← trace_conj' _ (LieEquiv.ofInjective _ IsFaithful.injective_toEnd).symm.toLinearEquiv,
+    conj_apply, traceForm_isSymm R L M |>.isRefl.nondegenerate_iff_separatingLeft, SeparatingLeft,
+    traceForm_apply_apply, Subtype.ext_iff, ZeroMemClass.coe_zero, toEnd_eq_zero_iff]
+  sorry
+
+@[simp]
+lemma nondegenerate_traceForm_of_isKilling [IsKilling R L] [IsFaithful R L M] :
+    Nondegenerate (traceForm R L M) := by
+  simp_rw [traceForm_isSymm R L M |>.isRefl.nondegenerate_iff_separatingLeft,
+    LinearMap.SeparatingLeft, traceForm_apply_apply]
+  sorry
+
+end LieModule
+
+end LieTraceForm
+
+end ForMathlib
+
 section WhiteheadFirst
 
-open Function LieAlgebra
+open Function LieAlgebra LinearMap.BilinForm
 
-variable {K L V} [Field K] [LieRing L] [LieAlgebra K L]
+variable {K L V} [Field K] [CharZero K] [LieRing L] [LieAlgebra K L]
   [AddCommGroup V] [Module K V] [LieRingModule L V] [LieModule K L V]
 variable [FiniteDimensional K L] [FiniteDimensional K V]
+
+namespace LieModule
+
+@[simp]
+lemma nondegenerate_traceForm_of_isKilling₂ [IsKilling K L] [IsFaithful K L V] :
+    Nondegenerate (traceForm K L V) := by
+  suffices h :
+      IsSolvable (InvariantForm.orthogonal (traceForm K L V) (traceForm_lieInvariant _ _ _) ⊤)
+  · replace h := HasTrivialRadical.eq_bot_of_isSolvable _ (hI := h)
+    simp_rw [← LieSubmodule.toSubmodule_eq_bot, InvariantForm.orthogonal_toSubmodule,
+      LieSubmodule.top_toSubmodule, orthogonal_top_eq_ker <| traceForm_isSymm K L V |>.isRefl] at h
+    simp_rw [traceForm_isSymm K L V |>.isRefl.nondegenerate_iff_separatingLeft,
+      LinearMap.separatingLeft_iff_ker_eq_bot, h]
+  apply LieIdeal.isSolvable_of_killingForm_apply_lie_eq_zero
+  convert_to
+      letI I := InvariantForm.orthogonal (traceForm K L V) (traceForm_lieInvariant _ _ _) ⊤
+      ⁅I, I⁆ ≤ LieIdeal.killingCompl K L I using 1
+  · simp [IsConcreteLE.le_iff, iff_true_intro forall₂_comm]
+  simp_rw [LieIdeal.isCompl_killingCompl (InvariantForm.orthogonal (traceForm K L V)
+    (traceForm_lieInvariant _ _ _) ⊤) |>.symm.eq_compl, le_compl_iff_disjoint_left, disjoint_iff,
+    LieSubmodule.eq_bot_iff, LieSubmodule.mem_inf]
+  sorry
+
+end LieModule
+
+#exit
 
 namespace LieDerivation
 
