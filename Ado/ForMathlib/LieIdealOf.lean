@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Miyahara Kō
 -/
 module
-public import Mathlib.Algebra.Lie.Ideal
+public import Mathlib.Algebra.Lie.IdealOperations
 
 @[expose] public section
 
@@ -20,6 +20,11 @@ def lieIdealOf {R L : Type*} [CommRing R] [LieRing L] [LieAlgebra R L] (p q : Li
 lemma comap_incl {R L : Type*} [CommRing R] [LieRing L] [LieAlgebra R L] (p q : LieIdeal R L) :
     comap (incl q) p = lieIdealOf p q :=
   rfl
+
+@[simp]
+lemma map_lieIdealOf {R L : Type*} [CommRing R] [LieRing L] [LieAlgebra R L] (p q : LieIdeal R L) :
+    map (incl q) (lieIdealOf p q) = p ⊓ q := by
+  simp [← comap_incl, map_comap_incl, iff_true_intro <| inf_comm ..]
 
 @[simp]
 lemma mem_lieIdealOf {R L : Type*} [CommRing R] [LieRing L] [LieAlgebra R L]
