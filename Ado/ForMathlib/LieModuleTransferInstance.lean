@@ -66,6 +66,9 @@ lemma Function.Injective.isFaithful [IsFaithful R L M₁] (f : M₁ →ₗ⁅R,L
   intro m
   rw [zero_lie, ← hf.eq_iff, f.map_lie, map_zero, hx]
 
+instance (I : LieIdeal R L) [IsFaithful R L M₁] : IsFaithful R I M₁ :=
+  inferInstanceAs (IsFaithful R I.toLieSubalgebra M₁)
+
 lemma LieModuleEquiv.isFaithful_iff (e : M₁ ≃ₗ⁅R,L⁆ M₂) :
     IsFaithful R L M₁ ↔ IsFaithful R L M₂ where
   mp _ := e.toEquiv.injective.isFaithful e.toLieModuleHom

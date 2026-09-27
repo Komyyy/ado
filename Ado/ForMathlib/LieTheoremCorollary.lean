@@ -6,6 +6,7 @@ Authors: Miyahara Kō
 module
 public import Ado.ForMathlib.LieBaseChange
 public import Ado.ForMathlib.MatrixTriangular
+public import Ado.ForMathlib.LieSolvable
 
 /-!
 ## Lie の定理の重要な系
@@ -139,13 +140,9 @@ public instance LieDerivation.isNilpotent_lieSpan_range {K L} [Field K] [CharZer
         simp [LieIdeal.map_le_iff_le_comap, Set.range_subset_iff, ψ]
     intro x
     apply lie_mem_lie <;> simp
-  suffices h : IsSolvable (derivedSeries K (L ⋊⁅ψ⁆ K) 1)
-  · simp only [isSolvable_iff K, LieIdeal.derivedSeries_eq_derivedSeriesOfIdeal_comap,
-      LieIdeal.comap_incl_eq_bot, disjoint_iff, ← derivedSeriesOfIdeal_add,
-      inf_eq_right.mpr, derivedSeriesOfIdeal_le, le_refl, le_add_self] at h ⊢
-    exact h.imp' (· + 1) (fun _ h ↦ h)
   suffices h : derivedSeries K (L ⋊⁅ψ⁆ K) 1 ≤ LieHom.idealRange (inl ψ)
-  · apply le_solvable_ideal_solvable h
+  · rw [← isSolvable_derivedSeries_iff K 1]
+    apply le_solvable_ideal_solvable h
     rwa [← solvable_iff_equiv_solvable (equivIdealRangeInl ψ)]
   simp [lie_le_iff, trivial_lie_zero]
 

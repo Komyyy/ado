@@ -5,6 +5,7 @@ Authors: Miyahara Kō
 -/
 module
 public import Ado.Solvable
+public import Ado.ForMathlib.LieModuleCartanCriterion
 
 /-!
 ## 一般の場合の Ado の定理
