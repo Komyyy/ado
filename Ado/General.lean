@@ -15,17 +15,81 @@ public import Ado.ForMathlib.LieModuleCartanCriterion
 set_option backward.privateInPublic true
 set_option backward.privateInPublic.warn false
 
+public section HasNondegenerateTraceForm
+
+open LinearMap.BilinForm LieAlgebra LieModule
+open LinearMap hiding Nondegenerate
+
+variable {R L M : Type*} [CommRing R] [LieRing L] [LieAlgebra R L]
+variable [AddCommGroup M] [Module R M] [LieRingModule L M] [LieModule R L M]
+
+attribute [mk_iff LieAlgebra.isKilling_iff_killingCompl_top_eq_bot] IsKilling
+
+namespace LieModule
+
+-- `IsKilling` の Lie 加群バージョン
+@[mk_iff hasNondegenerateTraceForm_def]
+class HasNondegenerateTraceForm (R L M : Type*)
+    [CommRing R] [LieRing L] [LieAlgebra R L]
+    [AddCommGroup M] [Module R M] [LieRingModule L M] [LieModule R L M] where
+  nondegenerate_traceForm : Nondegenerate (traceForm R L M)
+
+attribute [simp] HasNondegenerateTraceForm.nondegenerate_traceForm
+
+@[simp]
+lemma hasNondegenerateTraceForm_iff_isKilling :
+    HasNondegenerateTraceForm R L L ↔ IsKilling R L := by
+  simp_rw [hasNondegenerateTraceForm_def, isKilling_iff_killingCompl_top_eq_bot,
+    traceForm_isSymm R L L |>.isRefl.nondegenerate_iff_separatingLeft,
+    separatingLeft_iff_ker_eq_bot, ← LieSubmodule.toSubmodule_eq_bot,
+    ← LieIdeal.toLieSubalgebra_toSubmodule, LieIdeal.coe_killingCompl_top]
+
+instance [IsKilling R L] : HasNondegenerateTraceForm R L L :=
+  hasNondegenerateTraceForm_iff_isKilling.mpr inferInstance
+
+instance [CharZero R] [IsDomain R] [IsNoetherian R M] [Module.Free R M] [HasTrivialRadical R L]
+    [IsFaithful R L M] : HasNondegenerateTraceForm R L M := by
+  suffices h :
+      IsSolvable (InvariantForm.orthogonal (traceForm R L M) (traceForm_lieInvariant _ _ _) ⊤)
+  · replace h := HasTrivialRadical.eq_bot_of_isSolvable _ (hI := h)
+    simp_rw [← LieSubmodule.toSubmodule_eq_bot, InvariantForm.orthogonal_toSubmodule,
+      LieSubmodule.top_toSubmodule, orthogonal_top_eq_ker <| traceForm_isSymm R L M |>.isRefl] at h
+    simp_rw [hasNondegenerateTraceForm_def,
+      traceForm_isSymm R L M |>.isRefl.nondegenerate_iff_separatingLeft,
+      LinearMap.separatingLeft_iff_ker_eq_bot, h]
+  apply LieIdeal.isSolvable_of_traceFrom_apply_lie_eq_zero_of_isFaithful M
+  convert_to
+    letI I := InvariantForm.orthogonal (traceForm R L M) (traceForm_lieInvariant _ _ _) ⊤
+    ⁅I, I⁆ ≤ I
+  · simp only [IsConcreteLE.le_iff, InvariantForm.mem_orthogonal, LieSubmodule.mem_top,
+      forall_const]
+    grind only
+  simp_rw +contextual [LieSubmodule.lie_le_iff, InvariantForm.mem_orthogonal, LieSubmodule.mem_top,
+    true_implies, ← traceForm_apply_lie_apply, implies_true]
+
+end LieModule
+
+namespace LieAlgebra
+
+instance [HasNondegenerateTraceForm R L L] : IsKilling R L :=
+  hasNondegenerateTraceForm_iff_isKilling.mp inferInstance
+
+end LieAlgebra
+
+end HasNondegenerateTraceForm
+
 section WhiteheadFirst
 
-open Function LieAlgebra
+open Function LieAlgebra LieModule
 
-variable {K L V} [Field K] [LieRing L] [LieAlgebra K L]
+variable {K L V} [Field K] [CharZero K] [LieRing L] [LieAlgebra K L]
   [AddCommGroup V] [Module K V] [LieRingModule L V] [LieModule K L V]
 variable [FiniteDimensional K L] [FiniteDimensional K V]
 
 namespace LieDerivation
 
-public axiom surjective_inner_of_isKilling [IsKilling K L] : Surjective (inner K L V)
+public axiom surjective_inner_of_hasTrivialRadical [HasTrivialRadical K L] :
+  Surjective (inner K L V)
 
 end LieDerivation
 
@@ -42,10 +106,10 @@ namespace LieSubmodule
 
 set_option maxHeartbeats 300000 in
 -- `LinearMap.IsProj (W : Submodule K V) pt.toLinearMap` での `simp` で失敗する
-instance complementedLattice_of_isKilling {K L V}
-    [Field K] [LieRing L] [LieAlgebra K L] [IsKilling K L]
-    [AddCommGroup V] [Module K V] [LieRingModule L V] [LieModule K L V] :
-    ComplementedLattice (LieSubmodule K L V) where
+instance complementedLattice_of_hasTrivialRadical {K L V}
+    [Field K] [CharZero K] [LieRing L] [LieAlgebra K L]
+    [AddCommGroup V] [Module K V] [LieRingModule L V] [LieModule K L V]
+    [HasTrivialRadical K L] : ComplementedLattice (LieSubmodule K L V) where
   exists_isCompl W := by
     let LW : Submodule K (End K V) :=
       { carrier := {t | LinearMap.range t ≤ W ∧ Submodule.map t W = ⊥}
@@ -105,7 +169,7 @@ instance complementedLattice_of_isKilling {K L V}
           simp only [LinearMap.coe_mk, AddHom.coe_mk, AddSubgroupClass.coe_sub, LieHom.map_lie,
             hLW₃, ← lie_skew (projection W Wc hWc), lie_lie, lie_neg]
           abel }
-    obtain ⟨t, ht⟩ := LieDerivation.surjective_inner_of_isKilling f
+    obtain ⟨t, ht⟩ := LieDerivation.surjective_inner_of_hasTrivialRadical f
     convert_to ∀ (x : L) , ⁅toEnd K L V x, projection W Wc hWc + (t : End K V)⁆ = 0 using 0 at ht
     · simp [DFunLike.ext_iff, Subtype.ext_iff, hLW₃, f]; grind only
     let pt : V →ₗ⁅K, L⁆ V :=

@@ -8,18 +8,27 @@ public import Mathlib.Algebra.Lie.Solvable
 
 public section
 
-namespace LieAlgebra
+open LieAlgebra
 
 variable {R L} [CommRing R] [LieRing L] [LieAlgebra R L]
 
-variable (R) in
 @[simp]
-lemma isSolvable_derivedSeries_iff (n : ℕ) : IsSolvable (derivedSeries R L n) ↔ IsSolvable L where
-  mpr _ := inferInstance
+lemma LieIdeal.isSolvable_derivedSeriesOfIdeal_iff (I : LieIdeal R L) (n : ℕ) :
+    IsSolvable (derivedSeriesOfIdeal R L n I) ↔ IsSolvable I where
+  mpr := le_solvable_ideal_solvable (derivedSeriesOfIdeal_le_self I n)
   mp h := by
     simp only [isSolvable_iff R, LieIdeal.derivedSeries_eq_derivedSeriesOfIdeal_comap,
       LieIdeal.comap_incl_eq_bot, disjoint_iff, ← derivedSeriesOfIdeal_add,
-      inf_eq_right.mpr, derivedSeriesOfIdeal_le, le_refl, le_add_self] at h ⊢
+      inf_eq_right.mpr, derivedSeriesOfIdeal_le, le_refl, le_add_self,
+      derivedSeriesOfIdeal_le_self] at h ⊢
     exact h.imp' (· + n) (fun _ h ↦ h)
 
-end LieAlgebra
+variable (R L) in
+@[simp]
+lemma LieIdeal.isSolvable_top_iff : IsSolvable (⊤ : LieIdeal R L) ↔ IsSolvable L :=
+  solvable_iff_equiv_solvable LieIdeal.topEquiv
+
+variable (R) in
+lemma LieAlgebra.isSolvable_derivedSeries_iff (n : ℕ) :
+    IsSolvable (derivedSeries R L n) ↔ IsSolvable L := by
+  simp
