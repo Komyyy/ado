@@ -6,7 +6,7 @@ Authors: Miyahara Kō
 module
 public import Mathlib.Algebra.Lie.Submodule
 
-public section
+@[expose] public section
 
 open LieModuleHom LieSubmodule
 
@@ -14,6 +14,45 @@ variable {R L M M₂ M₃ : Type*} [CommRing R] [LieRing L]
 variable [AddCommGroup M] [AddCommGroup M₂] [AddCommGroup M₃]
 variable [Module R M] [Module R M₂] [Module R M₃]
 variable [LieRingModule L M] [LieRingModule L M₂] [LieRingModule L M₃]
+
+namespace LieModuleHom
+
+instance : Mul (M →ₗ⁅R,L⁆ M) where
+  mul f g := LieModuleHom.comp f g
+
+theorem mul_eq_comp (f g : M →ₗ⁅R,L⁆ M) : f * g = f.comp g := rfl
+
+@[simp]
+theorem mul_apply (f g : M →ₗ⁅R,L⁆ M) (x : M) : (f * g) x = f (g x) := rfl
+
+variable (R L M) in
+@[simp, norm_cast]
+lemma toLinearMap_one : (1 : M →ₗ⁅R,L⁆ M).toLinearMap = 1 :=
+  rfl
+
+lemma one_eq_id : (1 : M →ₗ⁅R,L⁆ M) = LieModuleHom.id :=
+  rfl
+
+lemma range_id : range (LieModuleHom.id : M →ₗ⁅R,L⁆ M) = ⊤ := by
+  ext; simp
+
+lemma range_comp (f : M₂ →ₗ⁅R,L⁆ M₃) (g : M →ₗ⁅R,L⁆ M₂) : range (comp f g) = map f (range g) := by
+  ext; simp
+
+@[simp, norm_cast]
+lemma toLinearMap_mul (f g : M →ₗ⁅R,L⁆ M) : (f * g).toLinearMap = f.toLinearMap * g.toLinearMap :=
+  rfl
+
+instance : Monoid (M →ₗ⁅R,L⁆ M) where
+  mul_assoc _ _ _ := DFunLike.ext _ _ fun _ ↦ rfl
+  mul_one _ := DFunLike.ext _ _ fun _ ↦ rfl
+  one_mul _ := DFunLike.ext _ _ fun _ ↦ rfl
+
+@[simp, norm_cast]
+lemma toLinearMap_pow (f : M →ₗ⁅R,L⁆ M) (n : ℕ) : (f ^ n).toLinearMap = f.toLinearMap ^ n := by
+  induction n <;> simp [pow_succ, *]
+
+end LieModuleHom
 
 namespace LieSubmodule
 
