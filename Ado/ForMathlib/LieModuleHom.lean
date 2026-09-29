@@ -48,9 +48,31 @@ instance : Monoid (M →ₗ⁅R,L⁆ M) where
   mul_one _ := DFunLike.ext _ _ fun _ ↦ rfl
   one_mul _ := DFunLike.ext _ _ fun _ ↦ rfl
 
+instance : IsZeroApply (M →ₗ⁅R,L⁆ M₂) M M₂ where
+
+instance : IsMulApplyEqComp (M →ₗ⁅R,L⁆ M) M where
+
 @[simp, norm_cast]
 lemma toLinearMap_pow (f : M →ₗ⁅R,L⁆ M) (n : ℕ) : (f ^ n).toLinearMap = f.toLinearMap ^ n := by
   induction n <;> simp [pow_succ, *]
+
+@[simps ! toLinearMap]
+def restrict (f : M →ₗ⁅R,L⁆ M₂) {N : LieSubmodule R L M} {N₂ : LieSubmodule R L M₂}
+    (h : ∀ x ∈ N, f x ∈ N₂) : N →ₗ⁅R,L⁆ N₂ where
+  toLinearMap := LinearMap.restrict f.toLinearMap (p := N.toSubmodule) (q := N₂.toSubmodule) h
+  map_lie' {x m} := Subtype.ext <| f.map_lie x m
+
+@[simp]
+lemma coe_restrict (f : M →ₗ⁅R,L⁆ M₂) {N : LieSubmodule R L M} {N₂ : LieSubmodule R L M₂}
+    (h : ∀ x ∈ N, f x ∈ N₂) : ⇑(restrict f h) = Set.MapsTo.restrict f N N₂ h :=
+  rfl
+
+@[simp]
+lemma isNilpotent_toLinearMap (f : M →ₗ⁅R,L⁆ M) : IsNilpotent (f : M →ₗ[R] M) ↔ IsNilpotent f := by
+  simp [IsNilpotent, DFunLike.ext_iff, Module.End.pow_apply, pow_apply_eq_iterate]
+
+attribute [norm_cast] ker_toSubmodule toSubmodule_range isCompl_toSubmodule
+  iSup_toSubmodule iInf_toSubmodule
 
 end LieModuleHom
 

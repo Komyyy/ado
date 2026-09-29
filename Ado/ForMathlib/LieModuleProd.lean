@@ -58,6 +58,18 @@ def inr : N →ₗ⁅R,L⁆ M × N where
   toLinearMap := LinearMap.inr R M N
   map_lie' {x n} := by simp
 
+variable (R L M N) in
+@[simps ! apply toLinearMap]
+def fst : M × N →ₗ⁅R,L⁆ M where
+  toLinearMap := LinearMap.fst R M N
+  map_lie' {x m} := by simp
+
+variable (R L M N) in
+@[simps ! apply toLinearMap]
+def snd : M × N →ₗ⁅R,L⁆ N where
+  toLinearMap := LinearMap.snd R M N
+  map_lie' {x n} := by simp
+
 end LieModuleHom
 
 namespace LieSubmodule

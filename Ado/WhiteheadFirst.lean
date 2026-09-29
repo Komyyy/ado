@@ -186,7 +186,7 @@ end LinearMap.BilinForm
 
 end BilinFormDualBasis
 
-public section LieIdealBoolean
+public section LieSemisimple
 
 open LieAlgebra LieHom LieModule
 
@@ -201,57 +201,58 @@ instance : IsFaithful R ↥(LieModule.ker R L M)ᶜ M := by
 
 end LieIdeal
 
-end LieIdealBoolean
+namespace LieAlgebra
 
-@[expose] public section LieIdealCompl
+variable (R L) in
+lemma derivedSeries_one_eq_top_of_isSemisimple : derivedSeries R L 1 = ⊤ := by
+  suffices h : IsSolvable ↥(derivedSeries R L 1)ᶜ
+  · simpa using HasTrivialRadical.eq_bot_of_isSolvable (derivedSeries R L 1)ᶜ
+  apply IsSolvable.mk (R := R) (k := 1)
+  simp_rw [LieIdeal.derivedSeries_eq_bot_iff, eq_bot_iff,
+    ← inf_compl_eq_bot (a := derivedSeries R L 1), le_inf_iff,
+    derivedSeriesOfIdeal_le le_top le_rfl, true_and, derivedSeriesOfIdeal_succ,
+    derivedSeriesOfIdeal_zero, LieSubmodule.lie_le_left]
 
-open LieModule LieSubmodule
+end LieAlgebra
 
-variable {R L : Type*} [CommRing R] [LieRing L] [LieAlgebra R L]
+end LieSemisimple
 
-namespace LieIdeal
+@[expose] public section LieSubmoduleCompl
 
-lemma isTrivial_of_disjoint {I J : LieIdeal R L} (h : Disjoint I J) : IsTrivial I J := by
-  constructor
-  rintro ⟨x, hx⟩ ⟨y, hy⟩
-  suffices h₂ : ⁅x, y⁆ ∈ I ⊓ J
-  · simpa [h.eq_bot, Subtype.ext_iff] using h₂
-  rw [mem_inf, show ⁅x, y⁆ ∈ I ↔ -⁅y, x⁆ ∈ I by rw [lie_skew], neg_mem_iff]
-  exact ⟨I.lie_mem hx, J.lie_mem hy⟩
+open LieModule LieSubmodule LieModuleHom
 
-@[simps !]
-noncomputable def prodEquivOfIsCompl (I J : LieIdeal R L) (h : IsCompl I J) : (I × J) ≃ₗ⁅R⁆ L where
-  __ := Submodule.prodEquivOfIsCompl I.toSubmodule J.toSubmodule (by simp [h])
-  map_lie' := by
-    rintro ⟨x₁, x₂⟩ ⟨y₁, y₂⟩
-    have := isTrivial_of_disjoint h.disjoint
-    have := isTrivial_of_disjoint h.disjoint.symm
-    convert_to (↑⁅x₁, y₁⁆ : L) + ↑⁅x₂, y₂⁆ = ↑⁅x₁, y₁⁆ + ↑⁅x₂, y₁⁆ + (↑⁅x₁, y₂⁆ + ↑⁅x₂, y₂⁆) using 0
-    · simp
-    simp_rw [trivial_lie_zero]
-    simp
+variable {R L M : Type*} [CommRing R] [LieRing L] [LieAlgebra R L]
+variable [AddCommGroup M] [Module R M] [LieRingModule L M] [LieModule R L M]
 
-end LieIdeal
+namespace LieSubmodule
 
-end LieIdealCompl
+noncomputable def prodEquivOfIsCompl (N N' : LieSubmodule R L M) (h : IsCompl N N') :
+    (N × N') ≃ₗ⁅R,L⁆ M where
+  __ := Submodule.prodEquivOfIsCompl N.toSubmodule N'.toSubmodule (by simp [h])
+  map_lie' := by rintro x ⟨m₁, m₂⟩; simp
 
-public section LieProd
+noncomputable def projectionOnto (N N' : LieSubmodule R L M) (h : IsCompl N N') : M →ₗ⁅R,L⁆ N :=
+  comp (fst R L N N') (prodEquivOfIsCompl N N' h).symm
 
-open LieAlgebra
+noncomputable def projection (N N' : LieSubmodule R L M) (h : IsCompl N N') : M →ₗ⁅R,L⁆ M :=
+  comp (incl N) (projectionOnto N N' h)
 
-variable {R L₁ L₂ : Type*}
-variable [CommRing R] [LieRing L₁] [LieAlgebra R L₁] [LieRing L₂] [LieAlgebra R L₂]
+variable {N N' : LieSubmodule R L M} (h : IsCompl N N')
 
-namespace Prod
+omit [LieAlgebra R L] [LieModule R L M] in
+@[simp]
+lemma coe_projectionOnto_apply (x) :
+    (projectionOnto N N' h x : M) = projection N N' h x :=
+  rfl
 
-variable (R L₁ L₂) in
-lemma ad_apply_eq (x : L₁ × L₂) :
-    ad R (L₁ × L₂) x = LinearMap.prodMap (ad R L₁ x.1) (ad R L₂ x.2) := by
-  simp [DFunLike.ext_iff]
+omit [LieAlgebra R L] [LieModule R L M] in
+lemma projection_add_projection_eq_self (x) :
+    projection N N' h x + projection N' N h.symm x = x :=
+  Submodule.projection_add_projection_eq_self (mod_cast h) x
 
-end Prod
+end LieSubmodule
 
-end LieProd
+end LieSubmoduleCompl
 
 public section Casimir
 
@@ -326,31 +327,132 @@ axiom lift_casimir_comm (x : L) (v : V) :
     lift K (toEnd K L V) (casimir K L V) ⁅x, v⁆ =
       ⁅x, lift K (toEnd K L V) (casimir K L V) v⁆
 
-axiom casimir_eq_add_of_isCompl (W₁ W₂ : LieSubmodule K L V) (h : IsCompl W₁ W₂) :
-  casimir K L V = casimir K L W₁ + casimir K L W₂
+axiom restrict_lift_casimir (W : LieSubmodule K L V)
+    (hW : ∀ v ∈ W, lift K (toEnd K L V) (casimir K L V) v ∈ W) :
+    LinearMap.restrict (lift K (toEnd K L V) (casimir K L V)) hW =
+      lift K (toEnd K L W) (casimir K L W)
 
 end UniversalEnvelopingAlgebra
 
 namespace LieDerivation
 
-axiom exists_eq_lift_casimir_lie (D : LieDerivation K L V) : ∃ v : V, ∀ x,
-    D x = lift K (toEnd K L V) (casimir K L V) ⁅x, v⁆
+axiom exists_lift_casimir_apply_eq_lie (D : LieDerivation K L V) : ∃ v : V, ∀ x,
+    lift K (toEnd K L V) (casimir K L V) (D x) = ⁅x, v⁆
 
 end LieDerivation
 
 end Casimir
 
+public section LinearMap
+
+open Submodule LinearMap
+
+variable {R M M₂ : Type*} [Ring R] [AddCommGroup M] [Module R M] [AddCommGroup M₂] [Module R M₂]
+
+lemma Submodule.map_le_iff_mapsTo {f : M →ₗ[R] M₂} {p q} : map f p ≤ q ↔ Set.MapsTo f p q :=
+  map_le_iff_le_comap
+
+@[simp]
+lemma Submodule.map_ker {f : M →ₗ[R] M₂} : map f (ker f) = ⊥ := by
+  simp [← le_ker_iff_map]
+
+end LinearMap
+
+public section SetMapsTo
+
+variable {α β : Type*}
+
+namespace Set
+
+lemma MapsTo.imp {f : α → β} {s : Set α} {t : Set β} (h : MapsTo f s t) : ∀ x ∈ s, f x ∈ t :=
+  h
+
+end Set
+
+end SetMapsTo
+
+public section Fitting
+
+open Filter LinearMap Module Submodule
+open Set hiding restrict range
+
+variable {R M : Type*} [Ring R] [AddCommGroup M] [Module R M] [IsArtinian R M] [IsNoetherian R M]
+
+namespace LinearMap
+
+-- Fitting の条件を満たす具体的な部分加群を記さないとLie加群に一般化出来ない。
+theorem fitting_explicit (f : End R M) :
+    letI N₀ := ⨆ n : ℕ, ker (f ^ n); letI N₁ := ⨅ n : ℕ, range (f ^ n)
+    IsCompl N₀ N₁ ∧
+      (∃ (hN₀ : MapsTo f N₀ N₀), IsNilpotent (restrict f hN₀)) ∧ BijOn f N₁ N₁ := by
+  suffices h : ∀ᶠ n in (atTop : Filter ℕ),
+      let N₀ : Submodule R M := ker (f ^ n); let N₁ : Submodule R M := range (f ^ n)
+      IsCompl N₀ N₁ ∧ (∃ (hN₀ : MapsTo f N₀ N₀), IsNilpotent (restrict f hN₀.imp)) ∧ BijOn f N₁ N₁
+  · apply (atTop : Filter ℕ).eventually_const.mp
+    filter_upwards [h, f.eventually_iSup_ker_pow_eq, f.eventually_iInf_range_pow_eq]
+      with n h hf₁ hf₂
+    rw [hf₁, hf₂]
+    exact h
+  filter_upwards [f.eventually_isCompl_ker_pow_range_pow, f.eventually_iSup_ker_pow_eq,
+    f.eventually_iInf_range_pow_eq]
+  -- 仮定の順序を動かせるタクティックがないせいで、`refold_let` の処理がややこしい
+  lift_lets
+  intro n N₀ N₁ hnc hnk hnr
+  refold_let N₀ N₁ at *
+  exists hnc
+  have hN₁r : map f N₁ = N₁
+  · simp_rw +zetaDelta [← LinearMap.range_comp, ← End.iterate_succ']
+    apply le_antisymm
+    · simp_rw [End.iterate_succ, LinearMap.range_comp, ← Submodule.map_top,
+        Submodule.map_mono le_top]
+    · simp_rw +zetaDelta [← hnr, iInf_le]
+  have hN₀k : ker f ≤ N₀
+  · rw [← hnk]; apply le_iSup_of_le 1; simp
+  have hN₁k : Disjoint N₁ (ker f)  := hnc.disjoint.symm.mono_right hN₀k
+  constructor
+  on_goal 2 =>
+    rw [disjoint_ker_iff_injOn] at hN₁k
+    convert ← hN₁k.bijOn_image
+    simpa using congr(($hN₁r : Set M))
+  have hN₀r : map f N₀ ≤ N₀
+  · simp_rw +zetaDelta [Submodule.map_le_iff_le_comap, ← LinearMap.ker_comp, ← End.iterate_succ,
+      End.iterate_succ', LinearMap.ker_comp, ← Submodule.comap_bot, Submodule.comap_mono bot_le]
+  existsi map_le_iff_mapsTo.mp hN₀r
+  apply IsNilpotent.mk _ n
+  -- 先述の `Set.MapsTo.imp` が無いと単純化してくれない！
+  simp +zetaDelta [← LinearMap.range_eq_bot, End.pow_restrict _, LinearMap.range_restrict]
+
+theorem fitting (f : End R M) : ∃ (N₀ N₁ : Submodule R M), IsCompl N₀ N₁ ∧
+    (∃ (hN₀ : MapsTo f N₀ N₀), IsNilpotent (restrict f hN₀.imp)) ∧ BijOn f N₁ N₁ :=
+  ⟨⨆ n : ℕ, ker (f ^ n), ⨅ n : ℕ, range (f ^ n), f.fitting_explicit⟩
+
+end LinearMap
+
+end Fitting
+
 public section LieModuleFitting
 
+open Set
+
 variable {R L M : Type*} [CommRing R] [LieRing L]
-variable [AddCommGroup M] [Module R M] [LieRingModule L M]
+variable [AddCommGroup M] [Module R M] [LieRingModule L M] [IsArtinian R M] [IsNoetherian R M]
 
 namespace LieModuleHom
 
-lemma isCompl_iSup_ker_pow_iInf_range_pow [IsArtinian R M] [IsNoetherian R M] (f : M →ₗ⁅R,L⁆ M) :
-    IsCompl (⨆ n : ℕ, ker (f ^ n)) (⨅ n : ℕ, range (f ^ n)) := by
-  simpa [← toLinearMap_pow, ← ker_toSubmodule, ← toSubmodule_range, ← LieSubmodule.iSup_toSubmodule,
-    ← LieSubmodule.iInf_toSubmodule] using f.toLinearMap.isCompl_iSup_ker_pow_iInf_range_pow
+lemma fitting_explicit (f : M →ₗ⁅R,L⁆ M) :
+    letI N₀ := ⨆ n : ℕ, ker (f ^ n); letI N₁ := ⨅ n : ℕ, range (f ^ n)
+    IsCompl N₀ N₁ ∧
+      (∃ (hN₀ : MapsTo f N₀ N₀), IsNilpotent (restrict f hN₀.imp)) ∧ BijOn f N₁ N₁ := by
+  have h := f.toLinearMap.fitting_explicit
+  norm_cast at h
+  convert h
+  simp only [← isNilpotent_toLinearMap, restrict_toLinearMap]
+  -- ここ狂気、`LinearMap.restrict` の依存型地獄
+  constructor <;> intro h <;> refine Module.End.isNilpotent_restrict_of_le ?_ h <;> simp
+
+theorem fitting (f : M →ₗ⁅R,L⁆ M) : ∃ (N₀ N₁ : LieSubmodule R L M), IsCompl N₀ N₁ ∧
+    (∃ (hN₀ : MapsTo f N₀ N₀), IsNilpotent (restrict f hN₀.imp)) ∧ BijOn f N₁ N₁ :=
+  ⟨⨆ n : ℕ, ker (f ^ n), ⨅ n : ℕ, range (f ^ n), f.fitting_explicit⟩
 
 end LieModuleHom
 
@@ -358,34 +460,67 @@ end LieModuleFitting
 
 section WhiteheadFirst
 
-open Function Filter LinearMap LieAlgebra LieModule LieSubmodule LieModuleHom
+open Function Filter LieAlgebra LieModule LieSubmodule LieModuleHom
 open UniversalEnvelopingAlgebra
+open LinearMap hiding restrict
 
-variable {K L V} [Field K] [CharZero K] [LieRing L] [LieAlgebra K L]
+variable (K L V) [Field K] [CharZero K] [LieRing L] [LieAlgebra K L]
   [AddCommGroup V] [Module K V] [LieRingModule L V] [LieModule K L V]
 variable [FiniteDimensional K L] [FiniteDimensional K V] [HasTrivialRadical K L]
 
 namespace LieDerivation
 
-public axiom surjective_inner_of_hasTrivialRadical_of_isNilpotent_casimir [CharZero K]
-    [FiniteDimensional K L] [FiniteDimensional K V] [HasTrivialRadical K L]
+lemma surjective_inner_of_hasTrivialRadical_of_isNilpotent_casimir
     (h : _root_.IsNilpotent (lift K (toEnd K L V) (casimir K L V))) :
-    Surjective (inner K L V)
+    Surjective (inner K L V) := by
+  apply isNilpotent_trace_of_isNilpotent at h
+  simp_rw [isNilpotent_iff_eq_zero, trace_lift_casimir, sub_eq_zero, Nat.cast_inj,
+    eq_comm (a := Module.finrank K L), ← eq_top_iff_finrank_eq, ← isTrivial_iff_ker] at h
+  intro D
+  existsi 0
+  suffices h : Submodule.map D.toLinearMap (derivedSeries K L 1) = ⊥
+  · simp_all [↓derivedSeries_one_eq_top_of_isSemisimple, LinearMap.range_eq_bot, DFunLike.ext_iff]
+  simp_rw [_root_.eq_bot_iff, coe_derivedSeries_one_eq, Submodule.map_span, Submodule.span_le,
+    Submodule.bot_coe, Set.subset_singleton_iff, Set.forall_mem_image, Set.mem_ofPred]
+  rintro _ ⟨x, y, rfl⟩
+  simp [trivial_lie_zero]
 
-public axiom surjective_inner_of_hasTrivialRadical_of_bijective_casimir [CharZero K]
-    [FiniteDimensional K L] [FiniteDimensional K V] [HasTrivialRadical K L]
+lemma surjective_inner_of_hasTrivialRadical_of_bijective_casimir
     (h : Bijective (lift K (toEnd K L V) (casimir K L V))) :
-    Surjective (inner K L V)
+    Surjective (inner K L V) := by
+  intro D
+  obtain ⟨v, hv⟩ := exists_lift_casimir_apply_eq_lie D
+  let e := LinearEquiv.ofBijective _ h
+  have he : ∀ (x : L) (v : V), e.symm ⁅x, v⁆ = ⁅x, e.symm v⁆
+  · simp_rw +zetaDelta +singlePass [e.surjective.forall, LinearEquiv.ofBijective_apply,
+      ← lift_casimir_comm, LinearEquiv.ofBijective_symm_apply_apply, implies_true]
+  existsi e.symm v
+  ext x
+  simp +zetaDelta [← he, LinearEquiv.symm_apply_eq, hv]
 
-public axiom surjective_inner_of_hasTrivialRadical :
-    Surjective (inner K L V) -- := by
-  -- let πc : V →ₗ⁅K,L⁆ V :=
-  --   { __ := lift K (toEnd K L V) (casimir K L V)
-  --     map_lie' := by simp [lift_casimir_comm] }
-  -- suffices h : ∀ᶠ n in (atTop : Filter ℕ),
-  --     ∃ (V₀ V₁ : LieSubmodule K L V), IsCompl V₀ V₁ ∧ sorry
-  -- · sorry
-  -- sorry
+public theorem surjective_inner_of_hasTrivialRadical :
+    Surjective (inner K L V) := by
+  let πc : V →ₗ⁅K,L⁆ V :=
+    { __ := lift K (toEnd K L V) (casimir K L V)
+      map_lie' := by simp [lift_casimir_comm] }
+  obtain ⟨W₀, W₁, hWc, ⟨hWm, hWn⟩, hWb⟩ := πc.fitting
+  simp_rw +zetaDelta [← isNilpotent_toLinearMap, restrict_toLinearMap, restrict_lift_casimir] at hWn
+  intro D
+  obtain ⟨v₀, hv₀⟩ :=
+    surjective_inner_of_hasTrivialRadical_of_isNilpotent_casimir K L W₀ hWn
+      (compCodomain D (projectionOnto W₀ W₁ hWc))
+  have hWb₂ : Bijective (LinearMap.restrict πc.toLinearMap hWb.mapsTo.imp) := hWb.bijective
+  rw [restrict_lift_casimir] at hWb₂
+  obtain ⟨v₁, hv₁⟩ :=
+    surjective_inner_of_hasTrivialRadical_of_bijective_casimir K L W₁ hWb₂
+      (compCodomain D (projectionOnto W₁ W₀ hWc.symm))
+  existsi v₀ + v₁
+  convert_to ∀ x : L, ⁅x, (v₀ : V)⁆ = projection W₀ W₁ hWc (D x) at hv₀
+  · simp [DFunLike.ext_iff, Subtype.ext_iff]
+  convert_to ∀ x : L, ⁅x, (v₁ : V)⁆ = projection W₁ W₀ hWc.symm (D x) at hv₁
+  · simp [DFunLike.ext_iff, Subtype.ext_iff]
+  ext x
+  simp [hv₀, hv₁, projection_add_projection_eq_self]
 
 end LieDerivation
 

@@ -31,3 +31,8 @@ lemma LieSubalgebra.ker_eq (L' : LieSubalgebra R L) :
 lemma LieIdeal.ker_eq (I : LieIdeal R L) :
     LieModule.ker R I M = comap I.incl (LieModule.ker R L M) := by
   ext x; simp
+
+variable (R) in
+lemma LieModule.isTrivial_iff_ker : IsTrivial L M ↔ LieModule.ker R L M = ⊤ := by
+  simp_rw [eq_top_iff, IsConcreteLE.le_iff, LieSubmodule.mem_top, true_implies, LieModule.mem_ker]
+  exact ⟨fun _ ↦ IsTrivial.trivial, IsTrivial.mk⟩
