@@ -6,6 +6,7 @@ Authors: Miyahara Kō
 module
 public import Mathlib.Algebra.Group.Pointwise.Set.ListOfFn
 public import Mathlib.Data.List.FinRange
+public import Mathlib.Data.List.OfFn
 
 public section
 
