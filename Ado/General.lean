@@ -18,7 +18,7 @@ set_option backward.privateInPublic.warn false
 public section WeylReducibility
 
 open Module LieAlgebra LieModule
-open Submodule (projection)
+open Submodule renaming projection → projectionₗ
 
 attribute [local instance 100] LieRing.ofAssociativeRing
 
@@ -73,14 +73,15 @@ private instance complementedLattice_of_hasTrivialRadical {K L V}
         lie_smul r x t := by ext; simp [hLW₃] }
     obtain ⟨Wc, hWc⟩ := W.toSubmodule.exists_isCompl
     let f : LieDerivation K L LW :=
-      { toFun x := ⟨⁅projection W Wc hWc, toEnd K L V x⁆, by
+      { toFun x := ⟨⁅projectionₗ W Wc hWc, toEnd K L V x⁆, by
           simp_rw [hLW₁]
           split_ands
           · simp_rw [LieRing.of_associative_ring_bracket, End.mul_eq_comp, sub_eq_add_neg]
             grw [LinearMap.range_add_le, LinearMap.range_neg, LinearMap.range_comp,
               LinearMap.range_comp, Submodule.range_projection, coe_map_toEnd_le,
               LinearMap.map_le_range, Submodule.range_projection, sup_idem]
-          · convert_to ∀ y ∈ W, projection W Wc hWc ⁅x, y⁆ - ⁅x, projection W Wc hWc y⁆ = 0 using 0
+          · convert_to ∀ y ∈ W,
+              projectionₗ W Wc hWc ⁅x, y⁆ - ⁅x, projectionₗ W Wc hWc y⁆ = 0 using 0
             · simp [Submodule.eq_bot_iff]
             intro y hy
             simp [Submodule.projection_apply_of_mem_left, hy, show ⁅x, y⁆ ∈ W from W.lie_mem hy]⟩
@@ -89,19 +90,19 @@ private instance complementedLattice_of_hasTrivialRadical {K L V}
         leibniz' x y := by
           ext : 1
           simp only [LinearMap.coe_mk, AddHom.coe_mk, AddSubgroupClass.coe_sub, LieHom.map_lie,
-            hLW₃, ← lie_skew (projection W Wc hWc), lie_lie, lie_neg]
+            hLW₃, ← lie_skew (projectionₗ W Wc hWc), lie_lie, lie_neg]
           abel }
-    obtain ⟨t, ht⟩ := LieDerivation.surjective_inner_of_hasTrivialRadical f
-    convert_to ∀ (x : L) , ⁅toEnd K L V x, projection W Wc hWc + (t : End K V)⁆ = 0 using 0 at ht
+    obtain ⟨t, ht⟩ := LieDerivation.surjective_inner_of_hasTrivialRadical _ _ _ f
+    convert_to ∀ (x : L) , ⁅toEnd K L V x, projectionₗ W Wc hWc + (t : End K V)⁆ = 0 using 0 at ht
     · simp [DFunLike.ext_iff, Subtype.ext_iff, hLW₃, f]; grind only
     let pt : V →ₗ⁅K, L⁆ V :=
-      { toLinearMap := projection W Wc hWc + t
+      { toLinearMap := projectionₗ W Wc hWc + t
         map_lie' {x} := by
           convert ht x using 0
           simp [DFunLike.ext_iff]; grind only }
     have hpt : LinearMap.IsProj (W : Submodule K V) pt.toLinearMap
     · constructor
-      · convert_to LinearMap.range (projection W Wc hWc + (t : End K V)) ≤ (W : Submodule K V)
+      · convert_to LinearMap.range (projectionₗ W Wc hWc + (t : End K V)) ≤ (W : Submodule K V)
           using 0
         · simp [IsConcreteLE.le_iff, pt]
         grw [LinearMap.range_add_le, Submodule.range_projection, (hLW₂ t).1, sup_idem]
