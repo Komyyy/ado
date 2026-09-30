@@ -6,6 +6,9 @@ Authors: Miyahara Kō
 module
 public import Ado.Solvable
 public import Ado.ForMathlib.LieModuleCartanCriterion
+public import Ado.ForMathlib.LieSemisimple
+public import Ado.ForMathlib.LieModuleCompl
+public import Ado.ForMathlib.LieFitting
 
 /-!
 ## Whitehead の第一補題
@@ -186,74 +189,6 @@ end LinearMap.BilinForm
 
 end BilinFormDualBasis
 
-public section LieSemisimple
-
-open LieAlgebra LieHom LieModule
-
-variable {R L M : Type*} [CommRing R] [LieRing L] [LieAlgebra R L] [IsSemisimple R L]
-variable [AddCommGroup M] [Module R M] [LieRingModule L M] [LieModule R L M]
-
-namespace LieIdeal
-
-instance : IsFaithful R ↥(LieModule.ker R L M)ᶜ M := by
-  simp_rw [isFaithful_iff_ker_eq_bot, LieIdeal.ker_eq, LieIdeal.comap_incl_eq_bot,
-    disjoint_compl_left]
-
-end LieIdeal
-
-namespace LieAlgebra
-
-variable (R L) in
-lemma derivedSeries_one_eq_top_of_isSemisimple : derivedSeries R L 1 = ⊤ := by
-  suffices h : IsSolvable ↥(derivedSeries R L 1)ᶜ
-  · simpa using HasTrivialRadical.eq_bot_of_isSolvable (derivedSeries R L 1)ᶜ
-  apply IsSolvable.mk (R := R) (k := 1)
-  simp_rw [LieIdeal.derivedSeries_eq_bot_iff, eq_bot_iff,
-    ← inf_compl_eq_bot (a := derivedSeries R L 1), le_inf_iff,
-    derivedSeriesOfIdeal_le le_top le_rfl, true_and, derivedSeriesOfIdeal_succ,
-    derivedSeriesOfIdeal_zero, LieSubmodule.lie_le_left]
-
-end LieAlgebra
-
-end LieSemisimple
-
-@[expose] public section LieSubmoduleCompl
-
-open LieModule LieSubmodule LieModuleHom
-
-variable {R L M : Type*} [CommRing R] [LieRing L] [LieAlgebra R L]
-variable [AddCommGroup M] [Module R M] [LieRingModule L M] [LieModule R L M]
-
-namespace LieSubmodule
-
-noncomputable def prodEquivOfIsCompl (N N' : LieSubmodule R L M) (h : IsCompl N N') :
-    (N × N') ≃ₗ⁅R,L⁆ M where
-  __ := Submodule.prodEquivOfIsCompl N.toSubmodule N'.toSubmodule (by simp [h])
-  map_lie' := by rintro x ⟨m₁, m₂⟩; simp
-
-noncomputable def projectionOnto (N N' : LieSubmodule R L M) (h : IsCompl N N') : M →ₗ⁅R,L⁆ N :=
-  comp (fst R L N N') (prodEquivOfIsCompl N N' h).symm
-
-noncomputable def projection (N N' : LieSubmodule R L M) (h : IsCompl N N') : M →ₗ⁅R,L⁆ M :=
-  comp (incl N) (projectionOnto N N' h)
-
-variable {N N' : LieSubmodule R L M} (h : IsCompl N N')
-
-omit [LieAlgebra R L] [LieModule R L M] in
-@[simp]
-lemma coe_projectionOnto_apply (x) :
-    (projectionOnto N N' h x : M) = projection N N' h x :=
-  rfl
-
-omit [LieAlgebra R L] [LieModule R L M] in
-lemma projection_add_projection_eq_self (x) :
-    projection N N' h x + projection N' N h.symm x = x :=
-  Submodule.projection_add_projection_eq_self (mod_cast h) x
-
-end LieSubmodule
-
-end LieSubmoduleCompl
-
 public section Casimir
 
 open Module LinearMap.BilinForm LieModule UniversalEnvelopingAlgebra
@@ -342,121 +277,6 @@ axiom exists_lift_casimir_apply_eq_lie (D : LieDerivation K L V) : ∃ v : V, �
 end LieDerivation
 
 end Casimir
-
-public section LinearMap
-
-open Submodule LinearMap
-
-variable {R M M₂ : Type*} [Ring R] [AddCommGroup M] [Module R M] [AddCommGroup M₂] [Module R M₂]
-
-lemma Submodule.map_le_iff_mapsTo {f : M →ₗ[R] M₂} {p q} : map f p ≤ q ↔ Set.MapsTo f p q :=
-  map_le_iff_le_comap
-
-@[simp]
-lemma Submodule.map_ker {f : M →ₗ[R] M₂} : map f (ker f) = ⊥ := by
-  simp [← le_ker_iff_map]
-
-end LinearMap
-
-public section SetMapsTo
-
-variable {α β : Type*}
-
-namespace Set
-
-lemma MapsTo.imp {f : α → β} {s : Set α} {t : Set β} (h : MapsTo f s t) : ∀ x ∈ s, f x ∈ t :=
-  h
-
-end Set
-
-end SetMapsTo
-
-public section Fitting
-
-open Filter LinearMap Module Submodule
-open Set hiding restrict range
-
-variable {R M : Type*} [Ring R] [AddCommGroup M] [Module R M] [IsArtinian R M] [IsNoetherian R M]
-
-namespace LinearMap
-
--- Fitting の条件を満たす具体的な部分加群を記さないとLie加群に一般化出来ない。
-theorem fitting_explicit (f : End R M) :
-    letI N₀ := ⨆ n : ℕ, ker (f ^ n); letI N₁ := ⨅ n : ℕ, range (f ^ n)
-    IsCompl N₀ N₁ ∧
-      (∃ (hN₀ : MapsTo f N₀ N₀), IsNilpotent (restrict f hN₀)) ∧ BijOn f N₁ N₁ := by
-  suffices h : ∀ᶠ n in (atTop : Filter ℕ),
-      let N₀ : Submodule R M := ker (f ^ n); let N₁ : Submodule R M := range (f ^ n)
-      IsCompl N₀ N₁ ∧ (∃ (hN₀ : MapsTo f N₀ N₀), IsNilpotent (restrict f hN₀.imp)) ∧ BijOn f N₁ N₁
-  · apply (atTop : Filter ℕ).eventually_const.mp
-    filter_upwards [h, f.eventually_iSup_ker_pow_eq, f.eventually_iInf_range_pow_eq]
-      with n h hf₁ hf₂
-    rw [hf₁, hf₂]
-    exact h
-  filter_upwards [f.eventually_isCompl_ker_pow_range_pow, f.eventually_iSup_ker_pow_eq,
-    f.eventually_iInf_range_pow_eq]
-  -- 仮定の順序を動かせるタクティックがないせいで、`refold_let` の処理がややこしい
-  lift_lets
-  intro n N₀ N₁ hnc hnk hnr
-  refold_let N₀ N₁ at *
-  exists hnc
-  have hN₁r : map f N₁ = N₁
-  · simp_rw +zetaDelta [← LinearMap.range_comp, ← End.iterate_succ']
-    apply le_antisymm
-    · simp_rw [End.iterate_succ, LinearMap.range_comp, ← Submodule.map_top,
-        Submodule.map_mono le_top]
-    · simp_rw +zetaDelta [← hnr, iInf_le]
-  have hN₀k : ker f ≤ N₀
-  · rw [← hnk]; apply le_iSup_of_le 1; simp
-  have hN₁k : Disjoint N₁ (ker f)  := hnc.disjoint.symm.mono_right hN₀k
-  constructor
-  on_goal 2 =>
-    rw [disjoint_ker_iff_injOn] at hN₁k
-    convert ← hN₁k.bijOn_image
-    simpa using congr(($hN₁r : Set M))
-  have hN₀r : map f N₀ ≤ N₀
-  · simp_rw +zetaDelta [Submodule.map_le_iff_le_comap, ← LinearMap.ker_comp, ← End.iterate_succ,
-      End.iterate_succ', LinearMap.ker_comp, ← Submodule.comap_bot, Submodule.comap_mono bot_le]
-  existsi map_le_iff_mapsTo.mp hN₀r
-  apply IsNilpotent.mk _ n
-  -- 先述の `Set.MapsTo.imp` が無いと単純化してくれない！
-  simp +zetaDelta [← LinearMap.range_eq_bot, End.pow_restrict _, LinearMap.range_restrict]
-
-theorem fitting (f : End R M) : ∃ (N₀ N₁ : Submodule R M), IsCompl N₀ N₁ ∧
-    (∃ (hN₀ : MapsTo f N₀ N₀), IsNilpotent (restrict f hN₀.imp)) ∧ BijOn f N₁ N₁ :=
-  ⟨⨆ n : ℕ, ker (f ^ n), ⨅ n : ℕ, range (f ^ n), f.fitting_explicit⟩
-
-end LinearMap
-
-end Fitting
-
-public section LieModuleFitting
-
-open Set
-
-variable {R L M : Type*} [CommRing R] [LieRing L]
-variable [AddCommGroup M] [Module R M] [LieRingModule L M] [IsArtinian R M] [IsNoetherian R M]
-
-namespace LieModuleHom
-
-lemma fitting_explicit (f : M →ₗ⁅R,L⁆ M) :
-    letI N₀ := ⨆ n : ℕ, ker (f ^ n); letI N₁ := ⨅ n : ℕ, range (f ^ n)
-    IsCompl N₀ N₁ ∧
-      (∃ (hN₀ : MapsTo f N₀ N₀), IsNilpotent (restrict f hN₀.imp)) ∧ BijOn f N₁ N₁ := by
-  have h := f.toLinearMap.fitting_explicit
-  norm_cast at h
-  convert h
-  simp only [← isNilpotent_toLinearMap, restrict_toLinearMap]
-  -- ここ狂気、`LinearMap.restrict` の依存型地獄
-  constructor <;> intro h <;> refine Module.End.isNilpotent_restrict_of_le ?_ h <;> simp
-
-theorem fitting (f : M →ₗ⁅R,L⁆ M) : ∃ (N₀ N₁ : LieSubmodule R L M), IsCompl N₀ N₁ ∧
-    (∃ (hN₀ : MapsTo f N₀ N₀), IsNilpotent (restrict f hN₀.imp)) ∧ BijOn f N₁ N₁ :=
-  ⟨⨆ n : ℕ, ker (f ^ n), ⨅ n : ℕ, range (f ^ n), f.fitting_explicit⟩
-
-end LieModuleHom
-
-end LieModuleFitting
 
 section WhiteheadFirst
 
