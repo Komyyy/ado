@@ -10,8 +10,8 @@ public import Ado.ForMathlib.LieModuleProd
 
 open LieModule LieSubmodule LieModuleHom
 
-variable {R L M : Type*} [CommRing R] [LieRing L] [LieAlgebra R L]
-variable [AddCommGroup M] [Module R M] [LieRingModule L M] [LieModule R L M]
+variable {R L M : Type*} [CommRing R] [LieRing L]
+variable [AddCommGroup M] [Module R M] [LieRingModule L M]
 
 namespace LieSubmodule
 
@@ -28,15 +28,26 @@ noncomputable def projection (N N' : LieSubmodule R L M) (h : IsCompl N N') : M 
 
 variable {N N' : LieSubmodule R L M} (h : IsCompl N N')
 
-omit [LieAlgebra R L] [LieModule R L M] in
 @[simp]
 lemma coe_projectionOnto_apply (x) :
     (projectionOnto N N' h x : M) = projection N N' h x :=
   rfl
 
-omit [LieAlgebra R L] [LieModule R L M] in
 lemma projection_add_projection_eq_self (x) :
     projection N N' h x + projection N' N h.symm x = x :=
   Submodule.projection_add_projection_eq_self (mod_cast h) x
+
+include h in
+lemma existsUnique_add_of_isCompl_prod (x : M)
+    : ∃! u : N × N', (u.1 : M) + u.2 = x :=
+  Submodule.existsUnique_add_of_isCompl_prod (mod_cast h) x
+
+@[simp]
+theorem projection_apply_left (x : N) : projection N N' h x = x :=
+  Submodule.projection_apply_left (mod_cast h) x
+
+@[simp]
+theorem projection_apply_right (x : N') : projection N N' h x = 0 :=
+  Submodule.projection_apply_right (mod_cast h) x
 
 end LieSubmodule

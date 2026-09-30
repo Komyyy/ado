@@ -15,7 +15,8 @@ open TensorAlgebra hiding ι
 
 attribute [local instance 100] LieRing.ofAssociativeRing
 
-variable {R L L₂ : Type*} [CommRing R] [LieRing L] [LieAlgebra R L] [LieRing L₂] [LieAlgebra R L₂]
+variable {R L L₂ A : Type*} [CommRing R] [LieRing L] [LieAlgebra R L]
+  [LieRing L₂] [LieAlgebra R L₂] [Ring A] [Algebra R A]
 
 namespace UniversalEnvelopingAlgebra
 
@@ -109,5 +110,15 @@ lemma map_mkAlgHom (f : L →ₗ⁅R⁆ L₂) (x) :
 
 lemma comp_map_ι (f : L →ₗ⁅R⁆ L₂) : LieHom.comp (map R f) (ι R) = LieHom.comp (ι R) f := by
   ext; simp
+
+@[simp]
+lemma lift_comp_map (f : L₂ →ₗ⁅R⁆ A) (g : L →ₗ⁅R⁆ L₂) :
+    AlgHom.comp (lift R f) (map R g) = lift R (LieHom.comp f g) := by
+  simp [← lift_unique, funext_iff]
+
+@[simp]
+lemma lift_map (f : L₂ →ₗ⁅R⁆ A) (g : L →ₗ⁅R⁆ L₂) (x) :
+    lift R f (map R g x) = lift R (LieHom.comp f g) x :=
+  DFunLike.congr_fun (lift_comp_map f g) x
 
 end UniversalEnvelopingAlgebra

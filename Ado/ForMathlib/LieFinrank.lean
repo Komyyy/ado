@@ -54,6 +54,11 @@ lemma eq_top_iff_finrank_eq {K L V : Type*} [Field K] [LieRing L] [LieAlgebra K 
     W = ⊤ ↔ Module.finrank K W = Module.finrank K V := by
   simpa using W.toSubmodule.eq_top_iff_finrank_eq
 
+lemma finrank_add_eq_of_isCompl {K L V : Type*} [Field K] [LieRing L] [LieAlgebra K L]
+    [AddCommGroup V] [Module K V] [FiniteDimensional K V] [LieRingModule L V]
+    {W₁ W₂ : LieSubmodule K L V} (h : IsCompl W₁ W₂) : finrank K W₁ + finrank K W₂ = finrank K V :=
+  Submodule.finrank_add_eq_of_isCompl <| isCompl_toSubmodule.mpr h
+
 end LieSubmodule
 
 namespace LieIdeal

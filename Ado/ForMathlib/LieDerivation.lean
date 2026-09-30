@@ -11,6 +11,7 @@ public import Mathlib.Algebra.Lie.Ideal
 
 variable {R : Type*} [CommRing R]
 variable {L : Type*} [LieRing L] [LieAlgebra R L]
+variable {L₂ : Type*} [LieRing L₂] [LieAlgebra R L₂]
 variable {M : Type*} [AddCommGroup M] [Module R M] [LieRingModule L M] [LieModule R L M]
 variable {M₂ : Type*} [AddCommGroup M₂] [Module R M₂] [LieRingModule L M₂] [LieModule R L M₂]
 
@@ -32,5 +33,17 @@ def adIdeal (I : LieIdeal R L) : L →ₗ⁅R⁆ LieDerivation R I I where
 def compCodomain (D : LieDerivation R L M) (f : M →ₗ⁅R,L⁆ M₂) : LieDerivation R L M₂ where
   toLinearMap := f.toLinearMap ∘ₗ D.toLinearMap
   leibniz' x y := by simp
+
+def restrictDomainIdeal (D : LieDerivation R L M) (I : LieIdeal R L) : LieDerivation R I M where
+  toLinearMap := D.toLinearMap ∘ₗ (LieIdeal.incl I).toLinearMap
+  leibniz' x y := by
+    -- `SetLike` の判別木問題で少し面倒
+    simp [- LieIdeal.incl_coe]
+
+-- `SetLike` の判別木問題で正しい `simp` 補題が作られない
+@[simp]
+lemma restrictDomainIdeal_apply (D : LieDerivation R L M) (I : LieIdeal R L) (x) :
+    restrictDomainIdeal D I x = D x :=
+  rfl
 
 end LieDerivation

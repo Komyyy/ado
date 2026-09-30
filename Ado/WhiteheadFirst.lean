@@ -7,7 +7,6 @@ module
 public import Ado.Solvable
 public import Ado.ForMathlib.LieModuleCartanCriterion
 public import Ado.ForMathlib.LieSemisimple
-public import Ado.ForMathlib.LieModuleCompl
 public import Ado.ForMathlib.LieFitting
 
 /-!
@@ -191,7 +190,7 @@ end BilinFormDualBasis
 
 public section Casimir
 
-open Module LinearMap.BilinForm LieIdeal LieModule UniversalEnvelopingAlgebra
+open Module LinearMap.BilinForm LieIdeal LieModule UniversalEnvelopingAlgebra LieDerivation
 open LieAlgebra hiding Basis
 open LieHom hiding ker
 open LieModule renaming ker → mker
@@ -247,6 +246,7 @@ private lemma casimirOfBasis_eq
 variable [FiniteDimensional K L]
 
 variable (K L V) in
+/-- TODO: `casimir` が忠実ならこれと等しい事に示して統一 -/
 noncomputable def casimirOfFaithful : UniversalEnvelopingAlgebra K L :=
   casimirOfBasis V (finBasis K L)
 
@@ -258,39 +258,154 @@ lemma casimirOfFaithful_eq {_ : FiniteDimensional K L} {n : Type*} [Fintype n] [
       ∑ i, ι K (B i) * ι K (dualBasis (traceForm K L V) (by simp) B i) :=
   casimirOfBasis_eq ..
 
+variable (K L V) in
+lemma trace_lift_casimirOfFaithful :
+    LinearMap.trace _ _ (lift K (toEnd K L V) (casimirOfFaithful K L V)) = finrank K L := by
+  let B := traceForm K L V
+  obtain ⟨ι, _, _, ⟨b⟩⟩ : ∃ (ι : Type) (_ : DecidableEq ι) (_ : Fintype ι),
+      Nonempty (Basis ι K L) :=
+    ⟨_, inferInstance, inferInstance, ⟨finBasis K L⟩⟩
+  let b' := dualBasis B (by simp [B]) b
+  conv_lhs =>
+    equals ∑ i, B (b i) (b' i) =>
+      simp +zetaDelta [casimirOfFaithful_eq V b, traceForm_apply_apply, End.mul_eq_comp]
+  simp +zetaDelta [apply_dualBasis_right,
+    LinearMap.BilinForm.isSymm_iff.mpr <| traceForm_isSymm _ _ _, Module.finrank_eq_card_basis b]
+
+variable (K) in
+lemma lift_casimirOfFaithful_comm (x : L) (v : V) :
+    lift K (toEnd K L V) (casimirOfFaithful K L V) ⁅x, v⁆ =
+      ⁅x, lift K (toEnd K L V) (casimirOfFaithful K L V) v⁆ := by
+  let B := traceForm K L V
+  obtain ⟨ι, _, _, ⟨b⟩⟩ : ∃ (ι : Type) (_ : DecidableEq ι) (_ : Fintype ι),
+      Nonempty (Basis ι K L) :=
+    ⟨_, inferInstance, inferInstance, ⟨finBasis K L⟩⟩
+  let b' := dualBasis B (by simp [B]) b
+  conv => equals ∑ i, ⁅b i, ⁅b' i, ⁅x, v⁆⁆⁆ = ⁅x, ∑ i, ⁅b i, ⁅b' i, v⁆⁆⁆ =>
+    simp +zetaDelta [casimirOfFaithful_eq V b]
+  simp_rw [lie_sum]
+  conv_rhs =>
+    enter [2, i]
+    rw [leibniz_lie x (b i)]
+    enter [1, 1]
+    equals ∑ j, B ⁅x, b i⁆ (b' j) • b j =>
+      symm
+      convert Basis.sum_repr (dualBasis B (by simp [B]) b') ⁅x, b i⁆ <;>
+        [simp +zetaDelta;
+          simp +zetaDelta [LinearMap.BilinForm.isSymm_iff.mpr <| traceForm_isSymm _ _ _]]
+  conv_rhs =>
+    enter [2, i, 2]
+    rw [leibniz_lie x (b' i)]
+    enter [2, 1, 1]
+    equals ∑ j, B ⁅x, b' i⁆ (b j) • b' j =>
+      symm
+      convert Basis.sum_repr b' ⁅x, b' i⁆
+      simp +zetaDelta
+    skip
+  simp only [sum_lie, lie_sum, lie_add, Finset.sum_add_distrib, smul_lie, lie_smul, ← add_assoc]
+  symm
+  simp_rw [add_eq_right, B, traceForm_apply_lie_apply' K L V x (b _) (b' _),
+    traceForm_comm K L V (b _) ⁅x, b' _⁆, neg_smul, Finset.sum_neg_distrib, neg_add_eq_zero,
+    iff_true_intro Finset.sum_comm]
+
+-- axiom restrict_lift_casimirOfFaithful (W : LieSubmodule K L V) [IsFaithful K L W]
+--     (hW : ∀ v ∈ W, lift K (toEnd K L V) (casimirOfFaithful K L V) v ∈ W) :
+--     LinearMap.restrict (lift K (toEnd K L V) (casimirOfFaithful K L V)) hW =
+--       lift K (toEnd K L W) (casimirOfFaithful K L W)
+
 end Faithful
 
 variable [FiniteDimensional K L]
 
 variable (K L V) in
 noncomputable def casimir : UniversalEnvelopingAlgebra K L :=
-  mapᵤ K (incl (mker K L V)ᶜ) (casimirOfBasis V (finBasis K ↥(mker K L V)ᶜ))
+  mapᵤ K (incl (mker K L V)ᶜ) (casimirOfFaithful K ↥(mker K L V)ᶜ V)
 
 variable (K L V) in
-axiom trace_lift_casimir :
+lemma lift_casimir_eq_lift_casimirOfFaithful :
+    lift K (toEnd K L V) (casimir K L V) =
+      lift K (toEnd K ↥(mker K L V)ᶜ V) (casimirOfFaithful K ↥(mker K L V)ᶜ V) := by
+  simp_rw [casimir, lift_map]
+  congr!
+
+variable (K L V) in
+lemma trace_lift_casimir :
     LinearMap.trace _ _ (lift K (toEnd K L V) (casimir K L V)) =
-      finrank K L - finrank K (mker K L V)
+      finrank K L - finrank K (mker K L V) := by
+  simp [lift_casimir_eq_lift_casimirOfFaithful, trace_lift_casimirOfFaithful]
 
 variable (K) in
-axiom lift_casimir_comm (x : L) (v : V) :
+lemma lift_casimir_comm (x : L) (v : V) :
     lift K (toEnd K L V) (casimir K L V) ⁅x, v⁆ =
-      ⁅x, lift K (toEnd K L V) (casimir K L V) v⁆
+      ⁅x, lift K (toEnd K L V) (casimir K L V) v⁆ := by
+  simp_rw [← projectionOnto_lieModule_ker_compl_lie K x, lift_casimir_eq_lift_casimirOfFaithful,
+    lift_casimirOfFaithful_comm]
 
 axiom restrict_lift_casimir (W : LieSubmodule K L V)
     (hW : ∀ v ∈ W, lift K (toEnd K L V) (casimir K L V) v ∈ W) :
     LinearMap.restrict (lift K (toEnd K L V) (casimir K L V)) hW =
       lift K (toEnd K L W) (casimir K L W)
 
+lemma _root_.LieDerivation.exists_lift_casimir_apply_eq_lie (D : LieDerivation K L V) :
+    ∃ v : V, ∀ x, lift K (toEnd K L V) (casimir K L V) (D x) = ⁅x, v⁆ := by
+  let B := traceForm K ↥(mker K L V)ᶜ V
+  obtain ⟨ι, _, _, ⟨b⟩⟩ : ∃ (ι : Type) (_ : DecidableEq ι) (_ : Fintype ι),
+      Nonempty (Basis ι K ↥(mker K L V)ᶜ) :=
+    ⟨_, inferInstance, inferInstance, ⟨finBasis K ↥(mker K L V)ᶜ⟩⟩
+  let b' := dualBasis B (by simp [B]) b
+  let v := ∑ i, ⁅(b i : L), D (b' i)⁆
+  existsi v
+  intro x
+  convert_to _ = (∑ i, ⁅(b i : L), ⁅x, D (b' i)⁆⁆) + (∑ i, ⁅⁅x, (b i : L)⁆, D (b' i)⁆)
+  · simp_rw [v, lie_lie, Finset.sum_sub_distrib, lie_sum]; abel
+  conv_rhs =>
+    enter [2, 2, i, 1]
+    equals ∑ j, B ⁅x, b i⁆ (b' j) • (b j : L) =>
+      norm_cast
+      symm
+      convert Basis.sum_repr (dualBasis B (by simp [B]) b') ⁅x, b i⁆ <;>
+        [simp +zetaDelta;
+          simp +zetaDelta [LinearMap.BilinForm.isSymm_iff.mpr <| traceForm_isSymm _ _ _]]
+  conv_rhs =>
+    enter [2, 2, i, 1]
+    equals -∑ j, B ⁅x, b' j⁆ (b i) • (b j : L) =>
+      obtain ⟨⟨x₁, x₂⟩, rfl⟩ :=
+        LieSubmodule.existsUnique_add_of_isCompl_prod
+          (isCompl_compl (x := LieModule.ker K L V)).symm x |>.exists
+      suffices h : ∀ (y z : ↥(mker K L V)ᶜ), B ⁅(x₂ : L), y⁆ z = 0
+      · simp_rw [add_lie, LinearMap.map_add₂, h, add_zero, ← LieIdeal.coe_bracket_of_module,
+          B, traceForm_apply_lie_apply, ← lie_skew (b _)]
+        simp
+      simp_rw [B, traceForm_apply_apply]
+      conv =>
+        enter [y, z, 1, 2, 1]
+        equals 0 => ext; simp [LieModule.mem_ker _ _ _ _ |>.mp x₂.2]
+      simp
+  simp_rw [neg_lie, Finset.sum_neg_distrib, ← sub_eq_add_neg]
+  have h j : ⁅x, b' j⁆ = ∑ k, B ⁅x, b' j⁆ (b k) • b' k
+  · symm
+    convert Basis.sum_repr b' ⁅x, b' j⁆
+    simp +zetaDelta
+  simp_rw +singlePass [h, LinearMap.BilinForm.sum_left, LinearMap.BilinForm.smul_left]
+  conv_rhs =>
+    enter [2, 2, i, 1, 2, j, 1]
+    equals B ⁅x, b' j⁆ (b i) =>
+      simp_rw +zetaDelta [apply_dualBasis_left, mul_ite, mul_zero, mul_one,
+        Finset.sum_ite_eq_of_mem _ _ _ (Finset.mem_univ _)]
+  conv_rhs =>
+    enter [2]
+    equals ∑ i, ⁅(b i : L), D ⁅x, (b' i : L)⁆⁆ =>
+      norm_cast
+      conv_rhs => tactic =>
+        simp_rw +singlePass [h, AddSubmonoidClass.coe_finsetSum, map_sum, lie_sum, SetLike.val_smul,
+          map_smul, lie_smul]
+      conv_lhs => tactic =>
+        simp_rw +singlePass
+          [AddSubmonoidClass.coe_finsetSum, sum_lie, SetLike.val_smul, smul_lie, Finset.sum_comm]
+  conv_rhs => equals ∑ i, ⁅(b i : L), ⁅(b' i : L), D x⁆⁆ =>simp
+  simp +zetaDelta [casimir, casimirOfFaithful_eq V b]
+
 end UniversalEnvelopingAlgebra
-
-variable [FiniteDimensional K L]
-
-namespace LieDerivation
-
-axiom exists_lift_casimir_apply_eq_lie (D : LieDerivation K L V) : ∃ v : V, ∀ x,
-    lift K (toEnd K L V) (casimir K L V) (D x) = ⁅x, v⁆
-
-end LieDerivation
 
 end Casimir
 
