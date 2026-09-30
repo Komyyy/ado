@@ -191,66 +191,80 @@ end BilinFormDualBasis
 
 public section Casimir
 
-open Module LinearMap.BilinForm LieModule UniversalEnvelopingAlgebra
+open Module LinearMap.BilinForm LieIdeal LieModule UniversalEnvelopingAlgebra
 open LieAlgebra hiding Basis
 open LieHom hiding ker
 open LieModule renaming ker → mker
+open UniversalEnvelopingAlgebra renaming map → mapᵤ
 
 attribute [local instance 100] LieRing.ofAssociativeRing
 
 variable {K L V : Type*}
 variable [Field K] [CharZero K] [LieRing L] [LieAlgebra K L]
   [AddCommGroup V] [Module K V] [LieRingModule L V] [LieModule K L V]
-variable [FiniteDimensional K L] [FiniteDimensional K V] [HasTrivialRadical K L]
+variable [FiniteDimensional K V] [HasTrivialRadical K L]
 
 namespace UniversalEnvelopingAlgebra
 
+section Faithful
+
+variable [IsFaithful K L V]
+
 variable (V) in
 private noncomputable def casimirOfBasis {n : Type*} [Fintype n] [DecidableEq n]
-    (B : Basis n K ↥(mker K L V)ᶜ) : UniversalEnvelopingAlgebra K L :=
-  ∑ i, ι K (B i : L) * ι K (dualBasis (traceForm K ↥(mker K L V)ᶜ V) (by simp) B i : L)
+    (B : Basis n K L) : UniversalEnvelopingAlgebra K L :=
+  ∑ i, ι K (B i) * ι K (dualBasis (traceForm K L V) (by simp) B i)
 
 variable (V) in
 -- `dualBasis B hB (Basis.map b f)` という式が簡単に表せないため証明がこのように複雑になっている。
 private lemma casimirOfBasis_eq_of_same_index {n : Type*} [Fintype n] [DecidableEq n]
-    (B B' : Basis n K ↥(mker K L V)ᶜ) : casimirOfBasis V B = casimirOfBasis V B' := by
+    (B B' : Basis n K L) : casimirOfBasis V B = casimirOfBasis V B' := by
   unfold casimirOfBasis
-  set DB := dualBasis (ι := n) (traceForm K ↥(mker K L V)ᶜ V) (by simp)
+  set DB := dualBasis (ι := n) (traceForm K L V) (by simp)
   have h i : Basis.equivFun (DB B) (DB B' i) = fun j ↦ Basis.repr B' (B j) i
   · ext j : 1
     convert_to
-        traceForm K ↥(mker K L V)ᶜ V (DB B' i) (∑ i, Basis.repr B' (B j) i • B' i) =
+        traceForm K L V (DB B' i) (∑ i, Basis.repr B' (B j) i • B' i) =
           Basis.repr B' (B j) i
     · simp [DB]
     simp_rw [map_sum]
     simp [DB, apply_dualBasis_left]
   simp_rw [← LinearEquiv.eq_symm_apply, Basis.equivFun_symm_apply] at h
   simp_rw [h]
-  convert_to _ = ∑ j, (∑ i, Basis.repr B' (B j) i • ι K (B' i : L)) * ι K (DB B j : L)
+  convert_to _ = ∑ j, (∑ i, Basis.repr B' (B j) i • ι K (B' i)) * ι K (DB B j)
   · simp [Finset.mul_sum, Finset.sum_mul, iff_true_intro Finset.sum_comm, - ι_apply]
-  simp_rw [← map_smul, ← map_sum, ← LieSubmodule.coe_smul, ← AddSubmonoidClass.coe_finsetSum,
-    Basis.sum_repr]
+  simp_rw [← map_smul, ← map_sum, Basis.sum_repr]
 
 variable (V) in
 private lemma casimirOfBasis_eq
     {m n : Type*} [Fintype m] [Fintype n] [DecidableEq m] [DecidableEq n]
-    (B : Basis m K ↥(mker K L V)ᶜ) (B' : Basis n K ↥(mker K L V)ᶜ) :
+    (B : Basis m K L) (B' : Basis n K L) :
     casimirOfBasis V B = casimirOfBasis V B' := by
   convert_to _ = casimirOfBasis V (Basis.reindex B' (Basis.indexEquiv B' B))
   · simp [casimirOfBasis, ← Basis.indexEquiv B' B |>.sum_comp, - ι_apply]
   apply casimirOfBasis_eq_of_same_index
 
+variable [FiniteDimensional K L]
+
 variable (K L V) in
-noncomputable def casimir : UniversalEnvelopingAlgebra K L :=
-  casimirOfBasis V (finBasis K ↥(mker K L V)ᶜ)
+noncomputable def casimirOfFaithful : UniversalEnvelopingAlgebra K L :=
+  casimirOfBasis V (finBasis K L)
 
 omit [FiniteDimensional K L] in
 variable (V) in
-lemma casimir_eq {_ : FiniteDimensional K L} {n : Type*} [Fintype n] [DecidableEq n]
-    (B : Basis n K ↥(mker K L V)ᶜ) :
-    casimir K L V =
-      ∑ i, ι K (B i : L) * ι K (dualBasis (traceForm K ↥(mker K L V)ᶜ V) (by simp) B i : L) :=
+lemma casimirOfFaithful_eq {_ : FiniteDimensional K L} {n : Type*} [Fintype n] [DecidableEq n]
+    (B : Basis n K L) :
+    casimirOfFaithful K L V =
+      ∑ i, ι K (B i) * ι K (dualBasis (traceForm K L V) (by simp) B i) :=
   casimirOfBasis_eq ..
+
+end Faithful
+
+variable [FiniteDimensional K L]
+
+variable (K L V) in
+noncomputable def casimir : UniversalEnvelopingAlgebra K L :=
+  mapᵤ K (incl (mker K L V)ᶜ) (casimirOfBasis V (finBasis K ↥(mker K L V)ᶜ))
 
 variable (K L V) in
 axiom trace_lift_casimir :
@@ -268,6 +282,8 @@ axiom restrict_lift_casimir (W : LieSubmodule K L V)
       lift K (toEnd K L W) (casimir K L W)
 
 end UniversalEnvelopingAlgebra
+
+variable [FiniteDimensional K L]
 
 namespace LieDerivation
 
