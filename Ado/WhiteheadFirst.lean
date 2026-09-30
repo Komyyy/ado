@@ -138,11 +138,6 @@ lemma lift_casimirOfFaithful_comm (x : L) (v : V) :
     traceForm_comm K L V (b _) ⁅x, b' _⁆, neg_smul, Finset.sum_neg_distrib, neg_add_eq_zero,
     iff_true_intro Finset.sum_comm]
 
--- axiom restrict_lift_casimirOfFaithful (W : LieSubmodule K L V) [IsFaithful K L W]
---     (hW : ∀ v ∈ W, lift K (toEnd K L V) (casimirOfFaithful K L V) v ∈ W) :
---     LinearMap.restrict (lift K (toEnd K L V) (casimirOfFaithful K L V)) hW =
---       lift K (toEnd K L W) (casimirOfFaithful K L W)
-
 end Faithful
 
 variable [FiniteDimensional K L]
@@ -171,10 +166,43 @@ lemma lift_casimir_comm (x : L) (v : V) :
   simp_rw [← projectionOnto_lieModule_ker_compl_lie K x, lift_casimir_eq_lift_casimirOfFaithful,
     lift_casimirOfFaithful_comm]
 
+-- open Sum in
 axiom restrict_lift_casimir (W : LieSubmodule K L V)
     (hW : ∀ v ∈ W, lift K (toEnd K L V) (casimir K L V) v ∈ W) :
     LinearMap.restrict (lift K (toEnd K L V) (casimir K L V)) hW =
-      lift K (toEnd K L W) (casimir K L W)
+      lift K (toEnd K L W) (casimir K L W) -- := by
+  -- have h : (mker K L W)ᶜ ≤ (mker K L V)ᶜ
+  -- · simp +contextual [LieModule.ker, le_ker_iff, DFunLike.ext_iff, Subtype.ext_iff]
+  -- obtain ⟨ι, _, _, ⟨b⟩⟩ : ∃ (ι : Type) (_ : DecidableEq ι) (_ : Fintype ι),
+  --     Nonempty (Basis ι K ↥(mker K L W)ᶜ) :=
+  --   ⟨_, inferInstance, inferInstance, ⟨finBasis K ↥(mker K L W)ᶜ⟩⟩
+  -- obtain ⟨ι', _, _, B, hB⟩ : ∃ (ι' : Type) (_ : DecidableEq ι') (_ : Fintype ι')
+  --     (B : Basis (ι ⊕ ι') K ↥(mker K L V)ᶜ), ∀ i : ι, (B (Sum.inl i) : L) = b i := by
+  --   have hi : LinearIndependent K ((LieIdeal.inclusion h).toLinearMap ∘ b) :=
+  --     LinearMap.linearIndependent_iff_of_injOn _ (LieIdeal.inclusion_injective h).injOn |>.mpr
+  --       b.linearIndependent
+  --   have : Finite (Basis.sumExtendIndex hi) :=
+  --     @Finite.sum_right _ _ (Module.Basis.sumExtend hi).linearIndependent.finite
+  --   let B := Basis.reindex (Basis.sumExtend hi) (Equiv.sumCongr (Equiv.refl _) (equivShrink.{0} _))
+  --   existsi _, Classical.decEq _, Fintype.ofFinite _, B
+  --   intro
+  --   simp +zetaDelta only [Basis.sumExtend, Equiv.trans_def, Basis.coe_reindex,
+  --     Basis.coe_extend, Equiv.sumCongr_symm, Equiv.refl_symm, Function.comp_apply,
+  --     Equiv.sumCongr_apply, Equiv.coe_refl, Sum.map_inl, id_eq]
+  --   rfl
+  -- let b' := dualBasis (traceForm K ↥(mker K L W)ᶜ W) (by simp) b
+  -- let B' := dualBasis (traceForm K ↥(mker K L V)ᶜ V) (by simp) B
+  -- ext (x : W)
+  -- simp_rw [LinearMap.coe_restrict_apply, lift_casimir_eq_lift_casimirOfFaithful,
+  --   casimirOfFaithful_eq _ b, casimirOfFaithful_eq _ B]
+  -- -- `SetLike` の判別木問題で面倒
+  -- convert_to (∑ i, ⁅(B (inl i) : L), ⁅(B' (inl i) : L), (x : V)⁆⁆) +
+  --     (∑ j, ⁅(B (inr j) : L), ⁅(B' (inr j) : L), (x : V)⁆⁆) =
+  --       ∑ i, ⁅(b i : L), ⁅((b' i) : L), (x : V)⁆⁆
+  -- next => simp +zetaDelta
+  -- next => simp +zetaDelta [toEnd]
+  -- simp_rw [hB]
+  -- sorry
 
 lemma _root_.LieDerivation.exists_lift_casimir_apply_eq_lie (D : LieDerivation K L V) :
     ∃ v : V, ∀ x, lift K (toEnd K L V) (casimir K L V) (D x) = ⁅x, v⁆ := by
