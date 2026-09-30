@@ -23,13 +23,10 @@ open LinearMap hiding prod
 open Submodule hiding prod
 open TensorAlgebra renaming ι → ιₜ
 open Finsupp hiding prod
+open List renaming map → mapₗ
 
 variable {m R L : Type*} [LinearOrder m] [CommRing R] [LieRing L] [LieAlgebra R L]
 variable (B : Basis m R L)
-
-namespace List
-
-end List
 
 namespace UniversalEnvelopingAlgebra
 
@@ -40,23 +37,23 @@ attribute [- simp] TensorAlgebra.tprod_apply
 
 attribute [local instance 100] LieRing.ofAssociativeRing
 
-public lemma pbw_span : span R ((prod ∘ map (ι R ∘ B)) '' {l : List m | SortedLE l}) = ⊤ := by
-  have ht : span R (range (prod ∘ map (ιₜ R ∘ B))) = ⊤
+public lemma pbw_span : span R ((prod ∘ mapₗ (ι R ∘ B)) '' {l : List m | SortedLE l}) = ⊤ := by
+  have ht : span R (range (prod ∘ mapₗ (ιₜ R ∘ B))) = ⊤
   · let Bₜ : Basis (List m) R (TensorAlgebra R L) :=
       Basis.reindex (Basis.tensorAlgebra B) FreeMonoid.toList
-    have hbₜ l : Bₜ l = prod (map (ιₜ R ∘ B) l)
+    have hbₜ l : Bₜ l = prod (mapₗ (ιₜ R ∘ B) l)
     · simp [Bₜ, Basis.tensorAlgebra, FreeAlgebra.basisFreeMonoid,
         FreeAlgebra.equivMonoidAlgebraFreeMonoid, ← prod_hom, comp_def]
     convert Bₜ.span_eq
     ext l
     simp [hbₜ]
-  replace ht : span R (range (prod ∘ map (ι R ∘ B))) = ⊤
+  replace ht : span R (range (prod ∘ mapₗ (ι R ∘ B))) = ⊤
   · apply_fun Submodule.map (mkAlgHom R L).toLinearMap at ht
     simpa [comp_def, range_eq_top_of_surjective, mkAlgHom_surjective, Submodule.map_span,
       ← range_comp, ← prod_hom] using ht
   simp_rw [eq_top_iff, ← ht, span_le, range_subset_iff, Function.comp_apply, SetLike.mem_coe]
-  suffices h : ∀ l : List m, ∃ x ∈ span R ((prod ∘ map (ι R ∘ B)) '' {l' | length l' < length l}),
-      prod (map (ι R ∘ B) l) = prod (map (ι R ∘ B) (insertionSort (· ≤ ·) l)) + x
+  suffices h : ∀ l : List m, ∃ x ∈ span R ((prod ∘ mapₗ (ι R ∘ B)) '' {l' | length l' < length l}),
+      prod (mapₗ (ι R ∘ B) l) = prod (mapₗ (ι R ∘ B) (insertionSort (· ≤ ·) l)) + x
   · intro l
     induction hn : length l using Nat.strongRecOn generalizing l with
     | ind n hin =>
@@ -73,8 +70,8 @@ public lemma pbw_span : span R ((prod ∘ map (ι R ∘ B)) '' {l : List m | Sor
         simp_rw [span_le, Set.subset_def, forall_mem_image, mem_ofPred]
         exact hin
   suffices h : ∀ (l : List m) (a : m),
-      ∃ x ∈ span R ((prod ∘ map (ι R ∘ B)) '' {l' | length l' ≤ length l}),
-        prod (map (ι R ∘ B) (orderedInsert (· ≤ ·) a l)) = prod (map (ι R ∘ B) (a :: l)) + x
+      ∃ x ∈ span R ((prod ∘ mapₗ (ι R ∘ B)) '' {l' | length l' ≤ length l}),
+        prod (mapₗ (ι R ∘ B) (orderedInsert (· ≤ ·) a l)) = prod (mapₗ (ι R ∘ B) (a :: l)) + x
   · intro l
     induction l with
     | nil => exists 0; simp
@@ -104,7 +101,7 @@ public lemma pbw_span : span R ((prod ∘ map (ι R ∘ B)) '' {l : List m | Sor
     case pos => exists 0; simp
     case neg =>
       obtain ⟨x, hx, hil⟩ := hil
-      exists ι R (B b) * x + ⁅ι R (B b), ι R (B a)⁆ * prod (map (ι R ∘ B) l)
+      exists ι R (B b) * x + ⁅ι R (B b), ι R (B a)⁆ * prod (mapₗ (ι R ∘ B) l)
       constructor
       · replace hx := mul_mem_mul (mem_span_singleton_self (ι R (B b))) hx
         simp_rw [span_singleton_mul, smul_span, ← image_smul] at hx
@@ -116,7 +113,7 @@ public lemma pbw_span : span R ((prod ∘ map (ι R ∘ B)) '' {l : List m | Sor
           exists b :: l'
           simp [hl']
         · conv_rhs =>
-            equals ι R (linearCombination R B (B.repr ⁅B b, B a⁆)) * prod (map (ι R ∘ B) l) => simp
+            equals ι R (linearCombination R B (B.repr ⁅B b, B a⁆)) * prod (mapₗ (ι R ∘ B) l) => simp
           conv_rhs => arg 1; apply apply_linearCombination _ (ι R).toLinearMap
           simp_rw [LieHom.coe_toLinearMap, mem_span_image_iff_linearCombination]
           conv_rhs =>

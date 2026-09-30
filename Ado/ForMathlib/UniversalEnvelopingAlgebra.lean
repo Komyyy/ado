@@ -13,7 +13,9 @@ public section
 open Function LieRing LieModule
 open TensorAlgebra hiding ι
 
-variable {R L : Type*} [CommRing R] [LieRing L] [LieAlgebra R L]
+attribute [local instance 100] LieRing.ofAssociativeRing
+
+variable {R L L₂ : Type*} [CommRing R] [LieRing L] [LieAlgebra R L] [LieRing L₂] [LieAlgebra R L₂]
 
 namespace UniversalEnvelopingAlgebra
 
@@ -90,5 +92,22 @@ lemma mkAlgHom_tprod_lie_of_associative {n} (f : Fin n → L) (x : L) :
   simp_rw [tprod_apply, ← List.prod_hom, List.map_ofFn, comp_def, ← ι_apply,
     LieRing.list_prod_ofFn_lie_of_associative, ← LieHom.map_lie,
     apply_update (f := fun _ ↦ ι R) (g := f)]
+
+variable (R) in
+@[expose]
+def map (f : L →ₗ⁅R⁆ L₂) : UniversalEnvelopingAlgebra R L →ₐ[R] UniversalEnvelopingAlgebra R L₂ :=
+  lift R (LieHom.comp (ι R) f)
+
+@[simp]
+lemma map_ι (f : L →ₗ⁅R⁆ L₂) (x) : map R f (ι R x) = ι R (f x) := by
+  simp [map]
+
+@[simp]
+lemma map_mkAlgHom (f : L →ₗ⁅R⁆ L₂) (x) :
+    map R f (mkAlgHom R L (TensorAlgebra.ι R x)) = mkAlgHom R L₂ (TensorAlgebra.ι R (f x)) := by
+  simp [map]
+
+lemma comp_map_ι (f : L →ₗ⁅R⁆ L₂) : LieHom.comp (map R f) (ι R) = LieHom.comp (ι R) f := by
+  ext; simp
 
 end UniversalEnvelopingAlgebra
