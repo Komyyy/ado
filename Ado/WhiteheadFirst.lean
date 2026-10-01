@@ -9,28 +9,11 @@ public import Ado.ForMathlib.HasNondegenerateTraceForm
 public import Ado.ForMathlib.LieSemisimple
 public import Ado.ForMathlib.LieFitting
 public import Ado.ForMathlib.BilinFormDualBasis
+public import Ado.ForMathlib.Complemented
 
 /-!
 ## Whitehead の第一補題
 -/
-
-section ForMathlib
-
-public section Complemented
-
-variable {α} [Lattice α] [BoundedOrder α]
-
-lemma IsCompl.isComplemented {a b : α} (h : IsCompl a b) : IsComplemented a :=
-  ⟨b, h⟩
-
-alias IsCompl.isComplemented_left := IsCompl.isComplemented
-
-lemma IsCompl.isComplemented_right {a b : α} (h : IsCompl a b) : IsComplemented b :=
-  h.symm.isComplemented
-
-end Complemented
-
-end ForMathlib
 
 -- 公理を公開するために使用
 set_option backward.privateInPublic true
