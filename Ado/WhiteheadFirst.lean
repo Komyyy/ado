@@ -14,6 +14,24 @@ public import Ado.ForMathlib.BilinFormDualBasis
 ## Whitehead の第一補題
 -/
 
+section ForMathlib
+
+public section Complemented
+
+variable {α} [Lattice α] [BoundedOrder α]
+
+lemma IsCompl.isComplemented {a b : α} (h : IsCompl a b) : IsComplemented a :=
+  ⟨b, h⟩
+
+alias IsCompl.isComplemented_left := IsCompl.isComplemented
+
+lemma IsCompl.isComplemented_right {a b : α} (h : IsCompl a b) : IsComplemented b :=
+  h.symm.isComplemented
+
+end Complemented
+
+end ForMathlib
+
 -- 公理を公開するために使用
 set_option backward.privateInPublic true
 set_option backward.privateInPublic.warn false
@@ -138,11 +156,6 @@ lemma lift_casimirOfFaithful_comm (x : L) (v : V) :
     traceForm_comm K L V (b _) ⁅x, b' _⁆, neg_smul, Finset.sum_neg_distrib, neg_add_eq_zero,
     iff_true_intro Finset.sum_comm]
 
--- axiom restrict_lift_casimirOfFaithful (W : LieSubmodule K L V) [IsFaithful K L W]
---     (hW : ∀ v ∈ W, lift K (toEnd K L V) (casimirOfFaithful K L V) v ∈ W) :
---     LinearMap.restrict (lift K (toEnd K L V) (casimirOfFaithful K L V)) hW =
---       lift K (toEnd K L W) (casimirOfFaithful K L W)
-
 end Faithful
 
 variable [FiniteDimensional K L]
@@ -171,7 +184,8 @@ lemma lift_casimir_comm (x : L) (v : V) :
   simp_rw [← projectionOnto_lieModule_ker_compl_lie K x, lift_casimir_eq_lift_casimirOfFaithful,
     lift_casimirOfFaithful_comm]
 
-axiom restrict_lift_casimir (W : LieSubmodule K L V)
+/-- `IsComplemented W` は Wely の完全可約性から外せるが、そもそもそれを示すのにこの補題が必要。 -/
+axiom restrict_lift_casimir (W : LieSubmodule K L V) (h : IsComplemented W)
     (hW : ∀ v ∈ W, lift K (toEnd K L V) (casimir K L V) v ∈ W) :
     LinearMap.restrict (lift K (toEnd K L V) (casimir K L V)) hW =
       lift K (toEnd K L W) (casimir K L W)
@@ -285,13 +299,14 @@ public theorem surjective_inner_of_hasTrivialRadical :
     { __ := lift K (toEnd K L V) (casimir K L V)
       map_lie' := by simp [lift_casimir_comm] }
   obtain ⟨W₀, W₁, hWc, ⟨hWm, hWn⟩, hWb⟩ := πc.fitting
-  simp_rw +zetaDelta [← isNilpotent_toLinearMap, restrict_toLinearMap, restrict_lift_casimir] at hWn
+  simp_rw +zetaDelta [← isNilpotent_toLinearMap, restrict_toLinearMap,
+    restrict_lift_casimir _ hWc.isComplemented] at hWn
   intro D
   obtain ⟨v₀, hv₀⟩ :=
     surjective_inner_of_hasTrivialRadical_of_isNilpotent_casimir K L W₀ hWn
       (compCodomain D (projectionOnto W₀ W₁ hWc))
   have hWb₂ : Bijective (LinearMap.restrict πc.toLinearMap hWb.mapsTo.imp) := hWb.bijective
-  rw [restrict_lift_casimir] at hWb₂
+  rw [restrict_lift_casimir _ hWc.isComplemented_right] at hWb₂
   obtain ⟨v₁, hv₁⟩ :=
     surjective_inner_of_hasTrivialRadical_of_bijective_casimir K L W₁ hWb₂
       (compCodomain D (projectionOnto W₁ W₀ hWc.symm))
