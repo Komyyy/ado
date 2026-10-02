@@ -6,6 +6,7 @@ Authors: Miyahara Kō
 module
 public import Mathlib.Algebra.Lie.Nilpotent
 public import Ado.ForMathlib.LieModuleHom
+public import Ado.ForMathlib.LieHom
 
 @[expose] public section
 
@@ -66,6 +67,51 @@ lemma lift_apply (I : LieIdeal R L) (f : L →ₗ⁅R⁆ L₂) {h : I ≤ ker f}
 lemma lift_mk' (I : LieIdeal R L) (f : L →ₗ⁅R⁆ L₂) (h : I ≤ ker f) :
     LieHom.comp (lift I f h) (mk' I) = f := by
   ext x; simp
+
+def map (I : LieIdeal R L) (J : LieIdeal R L₂) (f : L →ₗ⁅R⁆ L₂)
+    (h : I ≤ comap f J) : (L ⧸ I) →ₗ⁅R⁆ (L₂ ⧸ J) :=
+  lift I (LieHom.comp (mk' J) f) (by simpa [LieHom.ker_comp] using h)
+
+@[simp]
+lemma map_apply (I : LieIdeal R L) (J : LieIdeal R L₂) (f : L →ₗ⁅R⁆ L₂)
+    {h : I ≤ comap f J} (x) : map I J f h (mk x) = mk (f x) := by
+  simp [map]
+
+@[simp]
+lemma map_mk' (I : LieIdeal R L) (J : LieIdeal R L₂) (f : L →ₗ⁅R⁆ L₂)
+    {h : I ≤ comap f J} : (map I J f h).comp (mk' I) = (mk' J).comp f := by
+  ext x; simp
+
+def quotientEquivQuotientAux (I J : LieIdeal R L) (h : I ≤ J) :
+    ((L ⧸ I) ⧸ LieIdeal.map (LieIdeal.Quotient.mk' I) J) →ₗ⁅R⁆ L ⧸ J :=
+  lift _ (map I J LieHom.id (by simpa)) (by
+    simp_rw [LieIdeal.map_le_iff_le_comap, ← LieHom.ker_comp, LieHom.le_ker_iff]
+    simp)
+
+@[simp]
+lemma quotientEquivQuotientAux_mk_mk (I J : LieIdeal R L) (h : I ≤ J) (x) :
+    quotientEquivQuotientAux I J h (LieIdeal.Quotient.mk (LieIdeal.Quotient.mk x)) =
+      LieIdeal.Quotient.mk x :=
+  rfl
+
+def quotientEquivQuotient (I J : LieIdeal R L) (h : I ≤ J) :
+    ((L ⧸ I) ⧸ LieIdeal.map (LieIdeal.Quotient.mk' I) J) ≃ₗ⁅R⁆ L ⧸ J where
+  toLieHom := quotientEquivQuotientAux I J h
+  invFun := map _ _ (mk' I) (by simp [← LieIdeal.map_le_iff_le_comap])
+  left_inv := by intro x; obtain ⟨x, rfl⟩ := surjective_mk' _ |>.comp (surjective_mk' _) x; simp
+  right_inv := by intro x; obtain ⟨x, rfl⟩ := surjective_mk' _ x; simp
+
+@[simp]
+lemma quotientEquivQuotient_apply_mk_mk (I J : LieIdeal R L) (h : I ≤ J) (x) :
+    quotientEquivQuotient I J h (LieIdeal.Quotient.mk (LieIdeal.Quotient.mk x)) =
+      LieIdeal.Quotient.mk x :=
+  rfl
+
+@[simp]
+lemma quotientEquivQuotient_symm_apply_mk (I J : LieIdeal R L) (h : I ≤ J) (x) :
+    (quotientEquivQuotient I J h).symm (LieIdeal.Quotient.mk x) =
+      (LieIdeal.Quotient.mk (LieIdeal.Quotient.mk x)) :=
+  rfl
 
 end LieIdeal.Quotient
 

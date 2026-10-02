@@ -59,6 +59,10 @@ def toSpanSingleton (x : L) : R →ₗ⁅R⁆ L where
   toLinearMap := LinearMap.toSpanSingleton R L x
   map_lie' {x y} := by simp [trivial_lie_zero]
 
+lemma ker_comp (f : L →ₗ⁅R⁆ L₂) (g : L₂ →ₗ⁅R⁆ L₃) :
+    ker (g.comp f) = comap f (ker g) := by
+  ext x; simp
+
 end LieHom
 
 namespace LieEquiv
@@ -108,6 +112,10 @@ lemma surjective_map_of_surjective (f : L →ₗ⁅R⁆ L₂) (hf : Surjective f
 
 lemma comap_comp (f : L →ₗ⁅R⁆ L₂) (g : L₂ →ₗ⁅R⁆ L₃) (I : LieIdeal R L₃) :
     comap (g.comp f) I = comap f (comap g I) := by
+  ext; simp
+
+@[simp]
+lemma comap_id (I : LieIdeal R L) : comap LieHom.id I = I := by
   ext; simp
 
 end LieIdeal

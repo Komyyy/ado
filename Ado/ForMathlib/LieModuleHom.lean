@@ -39,6 +39,10 @@ lemma range_id : range (LieModuleHom.id : M →ₗ⁅R,L⁆ M) = ⊤ := by
 lemma range_comp (f : M₂ →ₗ⁅R,L⁆ M₃) (g : M →ₗ⁅R,L⁆ M₂) : range (comp f g) = map f (range g) := by
   ext; simp
 
+lemma ker_comp (f : M →ₗ⁅R,L⁆ M₂) (g : M₂ →ₗ⁅R,L⁆ M₃) :
+    ker (g.comp f) = comap f (ker g) := by
+  ext x; simp
+
 @[simp, norm_cast]
 lemma toLinearMap_mul (f g : M →ₗ⁅R,L⁆ M) : (f * g).toLinearMap = f.toLinearMap * g.toLinearMap :=
   rfl
@@ -80,10 +84,6 @@ namespace LieSubmodule
 
 lemma comap_comp (f : M →ₗ⁅R,L⁆ M₂) (g : M₂ →ₗ⁅R,L⁆ M₃) (N : LieSubmodule R L M₃) :
     comap (g.comp f) N = comap f (comap g N) := by
-  ext x; simp
-
-lemma _root_.LieModuleHom.ker_comp (f : M →ₗ⁅R,L⁆ M₂) (g : M₂ →ₗ⁅R,L⁆ M₃) :
-    ker (g.comp f) = comap f (ker g) := by
   ext x; simp
 
 @[simp high]

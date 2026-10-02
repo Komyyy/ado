@@ -4,7 +4,6 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Miyahara Kō
 -/
 module
-public import Ado.ForMathlib.LieHom
 public import Ado.ForMathlib.LieModuleNilpotent
 
 @[expose] public section
