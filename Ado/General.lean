@@ -8,6 +8,8 @@ public import Ado.Solvable
 public import Ado.WeylReducibility
 public import Ado.ForMathlib.Radical
 public import Ado.ForMathlib.LieIdealCoe
+public import Ado.ForMathlib.LieCochain
+public import Ado.ForMathlib.LieRing
 
 /-!
 ## 一般の場合の Ado の定理
@@ -16,33 +18,6 @@ public import Ado.ForMathlib.LieIdealCoe
 -- 公理を公開するために使用
 set_option backward.privateInPublic true
 set_option backward.privateInPublic.warn false
-
-section ForMathlib
-
-public section LieCochain
-
-variable {R L M} [CommRing R] [LieRing L] [LieAlgebra R L] [AddCommGroup M] [Module R M]
-
-namespace LieModule.Cohomology
-
-@[simp]
-lemma twoCochain_mk_apply (f hf x) : (⟨f, hf⟩ : twoCochain R L M) x = f x :=
-  rfl
-
-end LieModule.Cohomology
-
-end LieCochain
-
-public section LieRing
-
-variable {L} [LieRing L]
-
-lemma lie_jacobi_swap (x y z : L) : ⁅⁅x, y⁆, z⁆ + ⁅⁅y, z⁆, x⁆ + ⁅⁅z, x⁆, y⁆ = 0 := by
-  grind only [= lie_lie, . lie_jacobi]
-
-end LieRing
-
-end ForMathlib
 
 section WhiteheadSecond
 
