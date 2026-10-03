@@ -7,6 +7,7 @@ module
 public import Mathlib.Algebra.Lie.Nilpotent
 public import Ado.ForMathlib.LieModuleHom
 public import Ado.ForMathlib.LieHom
+public import Ado.ForMathlib.LieIdealLieSubalgebra
 
 @[expose] public section
 
@@ -35,6 +36,10 @@ theorem surjective_mk' (s : LieIdeal R L) : Surjective (mk' s) :=
   Quot.mk_surjective
 
 @[simp]
+theorem surjective_mk (s : LieIdeal R L) : Surjective (mk : L → L ⧸ s) :=
+  surjective_mk' s
+
+@[simp]
 theorem mk'_ker (s : LieIdeal R L) : (mk' s).ker = s := by
   ext; simp
 
@@ -49,6 +54,19 @@ instance {R L : Type*} [CommRing R] [LieRing L] [LieAlgebra R L]
 instance {R L : Type*} [CommRing R] [LieRing L] [LieAlgebra R L]
     [LieAlgebra.IsSolvable L] (s : LieIdeal R L) : LieAlgebra.IsSolvable (L ⧸ s) :=
   (LieIdeal.Quotient.surjective_mk' s).lieAlgebra_isSolvable
+
+@[simp]
+lemma coe_map_mk' (I J : LieIdeal R L) : (map (mk' I) J : Set (L ⧸ I)) = mk' I '' J := by
+  symm
+  simp_rw [image_eq_map_iff_exists_lieIdeal_toLieSubalgebra_eq_map,
+    LieSubalgebra.exists_lieIdeal_coe_eq_iff]
+  convert_to ∀ (x a : L), a ∈ J → ∃ y ∈ J,
+      (LieIdeal.Quotient.mk y : L ⧸ I) =
+        ⁅(LieIdeal.Quotient.mk x : L ⧸ I), (LieIdeal.Quotient.mk a : L ⧸ I)⁆ using 0
+  · simp [LieIdeal.Quotient.surjective_mk' _ |>.forall]
+  intro x a ha
+  existsi ⁅x, a⁆, LieSubmodule.lie_mem _ ha
+  simp
 
 def lift (I : LieIdeal R L) (f : L →ₗ⁅R⁆ L₂) (h : I ≤ ker f) : L ⧸ I →ₗ⁅R⁆ L₂ where
   toLinearMap := I.toSubmodule.liftQ f.toLinearMap (by exact h)
@@ -101,7 +119,7 @@ lemma quotientEquivQuotientAux_mk_mk (I J : LieIdeal R L) (h : I ≤ J) (x) :
 def quotientEquivQuotient (I J : LieIdeal R L) (h : I ≤ J) :
     ((L ⧸ I) ⧸ LieIdeal.map (LieIdeal.Quotient.mk' I) J) ≃ₗ⁅R⁆ L ⧸ J where
   toLieHom := quotientEquivQuotientAux I J h
-  invFun := map _ _ (mk' I) (by simp [← LieIdeal.map_le_iff_le_comap])
+  invFun := map _ _ (mk' I) (by simp)
   left_inv := by intro x; obtain ⟨x, rfl⟩ := surjective_mk' _ |>.comp (surjective_mk' _) x; simp
   right_inv := by intro x; obtain ⟨x, rfl⟩ := surjective_mk' _ x; simp
 

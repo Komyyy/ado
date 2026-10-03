@@ -16,6 +16,11 @@ variable [LieRing L] [LieAlgebra R L] [LieRing L₂] [LieAlgebra R L₂] [LieRin
 
 namespace LieHom
 
+/-- `coe_mk` の一般化 -/
+@[simp]
+lemma coe_mk' (f h) : ⇑(⟨f, h⟩ : L →ₗ⁅R⁆ L₂) = f :=
+  rfl
+
 def lieIdealComap (f : L →ₗ⁅R⁆ L₂) (q : LieIdeal R L₂) : comap f q →ₗ⁅R⁆ q where
   toLinearMap := LinearMap.submoduleComap f.toLinearMap q
   map_lie' {_ _} := Subtype.ext f.map_lie'
@@ -52,6 +57,7 @@ lemma lieIdealMap_injective_of_injective
     (f : L →ₗ⁅R⁆ L₂) (I : LieIdeal R L) (hf : Injective f) : Injective (lieIdealMap f I) :=
   fun _x₁ _x₂ hx ↦ Subtype.ext (hf congr(Subtype.val $hx))
 
+@[simp]
 lemma lieIdealMap_surjective_of_image_eq_map
     (f : L →ₗ⁅R⁆ L₂) (I : LieIdeal R L) (hI : f '' I = map f I) :
     Surjective (lieIdealMap f I) := by
@@ -59,6 +65,11 @@ lemma lieIdealMap_surjective_of_image_eq_map
   simp only [Subtype.ext_iff, lieIdealMap_apply_coe, Subtype.exists, exists_prop]
   simp_rw [← SetLike.mem_coe, ← hI, Set.mem_image, SetLike.mem_coe] at hx
   exact hx
+
+@[simp]
+lemma lieIdealMap_ker (f : L →ₗ⁅R⁆ L₂) (I : LieIdeal R L) :
+    ker (lieIdealMap f I) = lieIdealOf (ker f) I := by
+  ext; simp [Subtype.ext_iff]
 
 attribute [local instance 100] LieRing.ofAssociativeRing in
 variable (R L) in
@@ -116,6 +127,10 @@ lemma mem_map_equiv {e : L ≃ₗ⁅R⁆ L₂} {I : LieIdeal R L} {x} : x ∈ ma
 lemma coe_map_equiv (e : L ≃ₗ⁅R⁆ L₂) (I : LieIdeal R L) :
     (↑(map e.toLieHom I) : Set L₂) = e '' I := by
   simp [Set.ext_iff, e.symm.surjective.exists]
+
+@[simp]
+lemma ker_eq (e : L ≃ₗ⁅R⁆ L₂) : ker e.toLieHom = ⊥ := by
+  ext; simp
 
 def lieIdealMap (e : L ≃ₗ⁅R⁆ L₂) (I : LieIdeal R L) : I ≃ₗ⁅R⁆ map e.toLieHom I where
   __ :=

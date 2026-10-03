@@ -6,7 +6,6 @@ Authors: Miyahara Kō
 module
 public import Mathlib.Algebra.Order.Ring.Star
 public import Mathlib.Order.CompletePartialOrder
-public import Ado.ForMathlib.LieIdealLieSubalgebra
 public import Ado.ForMathlib.LieModuleRestr
 public import Ado.ForMathlib.LieQuotient
 

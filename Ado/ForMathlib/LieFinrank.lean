@@ -15,10 +15,24 @@ open Function Module LieIdeal
 
 universe u
 
+lemma LieEquiv.finrank_eq {R L L₂ : Type*} [CommRing R]
+    [LieRing L] [LieAlgebra R L] [LieRing L₂] [LieAlgebra R L₂] (e : L ≃ₗ⁅R⁆ L₂) :
+    finrank R L = finrank R L₂ :=
+  e.toLinearEquiv.finrank_eq
+
+namespace LieSubalgebra
+
 @[congr]
-lemma LieSubalgebra.finrank_congr {R L : Type*} [CommRing R] [LieRing L] [LieAlgebra R L]
+lemma finrank_congr {R L : Type*} [CommRing R] [LieRing L] [LieAlgebra R L]
     {p q : LieSubalgebra R L} (h : p = q) : finrank R p = finrank R q :=
   (LieEquiv.ofEq p q (by simp [h])).toLinearEquiv.finrank_eq
+
+@[simp]
+lemma finrank_top {R L : Type*} [CommRing R] [LieRing L] [LieAlgebra R L] :
+    finrank R (⊤ : LieSubalgebra R L) = finrank R L :=
+  _root_.finrank_top R L
+
+end LieSubalgebra
 
 namespace LieSubmodule
 

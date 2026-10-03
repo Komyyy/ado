@@ -50,3 +50,8 @@ lemma LieAlgebra.isSolvable_short_exact_iff (I : LieIdeal R L) :
     existsi k + m
     grw [derivedSeries, derivedSeriesOfIdeal_add, eq_bot_iff, hLI, hI]
   mpr _ := ⟨inferInstance, inferInstance⟩
+
+@[simp]
+lemma derivedAbelianOfIdeal_le_self (I : LieIdeal R L) : derivedAbelianOfIdeal I ≤ I := by
+  unfold derivedAbelianOfIdeal
+  split <;> simp [derivedSeriesOfIdeal_le_self]

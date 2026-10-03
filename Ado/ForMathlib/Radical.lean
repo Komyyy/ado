@@ -4,17 +4,18 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Miyahara Kō
 -/
 module
-public import Mathlib.Algebra.Lie.Solvable
-public import Ado.ForMathlib.LieIdealLieSubalgebra
+public import Mathlib.Algebra.Lie.Semisimple.Defs
 public import Ado.ForMathlib.LieSolvable
 
 public import Mathlib.Tactic.Replace
 
 public section
 
-open Function LieAlgebra
+open Function LieAlgebra LieIdeal
 
-variable {R L} [CommRing R] [LieRing L] [LieAlgebra R L]
+variable {R L L₂} [CommRing R] [LieRing L] [LieAlgebra R L] [LieRing L₂] [LieAlgebra R L₂]
+
+attribute [instance] LieAlgebra.abelian_derivedAbelianOfIdeal
 
 lemma LieIdeal.radical_quotient_eq_of_isSolvable (I : LieIdeal R L) [IsSolvable I] :
     radical R (L ⧸ I) = map (LieIdeal.Quotient.mk' I) (radical R L) := by
@@ -40,17 +41,25 @@ lemma LieIdeal.radical_quotient_eq_of_isSolvable (I : LieIdeal R L) [IsSolvable 
         solvable_iff_equiv_solvable LieSubalgebra.topEquiv]
   · simp_rw [radical, LieIdeal.gc_map_comap _ |>.l_sSup, iSup₂_le_iff, Set.mem_ofPred]
     intro J hJ
-    suffices h : ∃ J' : LieIdeal R (L ⧸ I), J'.toLieSubalgebra =
-        LieSubalgebra.map (LieIdeal.Quotient.mk' I) J.toLieSubalgebra
-    · rw [← image_eq_map_iff_exists_lieIdeal_toLieSubalgebra_eq_map] at h
-      have hJ₂ : IsSolvable (map (LieIdeal.Quotient.mk' I) J) :=
-        (LieHom.lieIdealMap_surjective_of_image_eq_map _ _ h).lieAlgebra_isSolvable
-      apply le_sSup
-      simp [hJ₂]
-    convert_to ∀ (x a : L), a ∈ J → ∃ y ∈ J,
-        (LieIdeal.Quotient.mk y : L ⧸ I) =
-          ⁅(LieIdeal.Quotient.mk x : L ⧸ I), (LieIdeal.Quotient.mk a : L ⧸ I)⁆ using 0
-    · simp [LieSubalgebra.exists_lieIdeal_coe_eq_iff, LieIdeal.Quotient.surjective_mk' _ |>.forall]
-    intro x a ha
-    existsi ⁅x, a⁆, LieSubmodule.lie_mem _ ha
-    simp
+    have hJ₂ : IsSolvable (map (LieIdeal.Quotient.mk' I) J) :=
+      (LieHom.lieIdealMap_surjective_of_image_eq_map _ _ (by simp)).lieAlgebra_isSolvable
+    apply le_sSup
+    simp [hJ₂]
+
+@[simp]
+lemma LieAlgebra.map_equiv_radical (e : L ≃ₗ⁅R⁆ L₂) :
+    map e (radical R L) = radical R L₂ := by
+  simp_rw [radical, LieIdeal.gc_map_comap e.toLieHom |>.l_sSup, sSup_eq_iSup]
+  apply eq_of_forall_ge_iff
+  intro I
+  simp_rw [iSup₂_le_iff, Set.mem_ofPred, surjective_map_of_surjective _ e.surjective |>.forall]
+  conv_rhs =>
+    enter [J, 1]
+    rw [← solvable_iff_equiv_solvable <| LieEquiv.lieIdealMap e J]
+
+lemma LieEquiv.hasTrivialRadical_iff_equiv_hasTrivialRadical (e : L ≃ₗ⁅R⁆ L₂) :
+    HasTrivialRadical R L ↔ HasTrivialRadical R L₂ := by
+  simp [hasTrivialRadical_iff, ← map_equiv_radical e, - map_equiv_radical]
+
+instance [IsNoetherian R L] : HasTrivialRadical R (L ⧸ radical R L) where
+  radical_eq_bot := by simp [radical_quotient_eq_of_isSolvable]
