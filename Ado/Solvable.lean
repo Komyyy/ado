@@ -588,7 +588,7 @@ public local instance LieAlgebra.IsAdo.of_isSolvable_of_charZero : IsAdo K 𝔯 
   generalize hn : finrank K (𝔯 ⧸ nilradical K 𝔯) = n
   induction n generalizing 𝔯 with
   | zero =>
-    rw [finrank_quotient, Nat.sub_eq_zero_iff_le, ← not_lt, LieIdeal.finrank_lt_iff,
+    rw [finrank_quotient, Nat.sub_eq_zero_iff_le, ← not_lt, finrank_lt_iff,
       not_lt_top_iff, ← top_le_iff, ← LieIdeal.isNilpotent_iff_le_nilradical,
       LieRing.isNilpotent_lieIdeal_top_iff] at hn
     exact IsAdo.of_isNilpotent

@@ -68,6 +68,11 @@ lemma eq_top_iff_finrank_eq {K L V : Type*} [Field K] [LieRing L] [LieAlgebra K 
     W = ⊤ ↔ Module.finrank K W = Module.finrank K V := by
   simpa using W.toSubmodule.eq_top_iff_finrank_eq
 
+lemma finrank_lt_iff {K L V : Type*} [Field K] [LieRing L] [LieAlgebra K L] [FiniteDimensional K L]
+    [AddCommGroup V] [Module K V] [LieRingModule L V] [Module.Finite K V] {W : LieSubmodule K L V} :
+    finrank K W < finrank K V ↔ W < ⊤ := by
+  simpa [lt_top_iff_ne_top] using W.toSubmodule.finrank_lt_iff
+
 lemma finrank_add_eq_of_isCompl {K L V : Type*} [Field K] [LieRing L] [LieAlgebra K L]
     [AddCommGroup V] [Module K V] [FiniteDimensional K V] [LieRingModule L V]
     {W₁ W₂ : LieSubmodule K L V} (h : IsCompl W₁ W₂) : finrank K W₁ + finrank K W₂ = finrank K V :=
@@ -86,11 +91,6 @@ lemma finrank_congr {R L : Type*} [CommRing R] [LieRing L] [LieAlgebra R L]
 lemma finrank_toLieSubalgebra {R L : Type*} [CommRing R] [LieRing L] [LieAlgebra R L]
     (p : LieIdeal R L) : finrank R p.toLieSubalgebra = finrank R p :=
   rfl
-
-lemma finrank_lt_iff {K L : Type*} [Field K] [LieRing L] [LieAlgebra K L] [FiniteDimensional K L]
-    {p : LieIdeal K L} :
-    finrank K p < finrank K L ↔ p < ⊤ := by
-  simpa [lt_top_iff_ne_top] using p.toSubmodule.finrank_lt_iff
 
 @[simp]
 lemma finrank_top {R L : Type*} [CommRing R] [LieRing L] [LieAlgebra R L] :
