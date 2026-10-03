@@ -8,7 +8,6 @@ public import Ado.Solvable
 public import Ado.WeylReducibility
 public import Ado.ForMathlib.Radical
 public import Ado.ForMathlib.LieIdealCoe
-public import Ado.ForMathlib.LieCochain
 public import Ado.ForMathlib.LieRing
 
 /-!

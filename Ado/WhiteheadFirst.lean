@@ -10,6 +10,7 @@ public import Ado.ForMathlib.LieSemisimple
 public import Ado.ForMathlib.LieFitting
 public import Ado.ForMathlib.BilinFormDualBasis
 public import Ado.ForMathlib.Complemented
+public import Ado.ForMathlib.LieCochain
 
 /-!
 ## Whitehead の第一補題
@@ -22,6 +23,7 @@ set_option backward.privateInPublic.warn false
 public section Casimir
 
 open Module LinearMap.BilinForm LieIdeal LieModule UniversalEnvelopingAlgebra LieDerivation
+open LieModule.Cohomology
 open LieAlgebra hiding Basis
 open LieHom hiding ker
 open LieModule renaming ker → mker
@@ -231,6 +233,85 @@ lemma _root_.LieDerivation.exists_lift_casimir_apply_eq_lie (D : LieDerivation K
           [AddSubmonoidClass.coe_finsetSum, sum_lie, SetLike.val_smul, smul_lie, Finset.sum_comm]
   conv_rhs => equals ∑ i, ⁅(b i : L), ⁅(b' i : L), D x⁆⁆ =>simp
   simp +zetaDelta [casimir, casimirOfFaithful_eq V b]
+
+lemma _root_.LieModule.Cohomology.exists_lift_casimir_twoCocycle_apply_eq_d₁₂
+    (f : twoCochain K L V) (hf : f ∈ twoCocycle K L V) :
+    ∃ g : oneCochain K L V, ∀ x y,
+      lift K (toEnd K L V) (casimir K L V) (f x y) = d₁₂ K L V g x y := by
+  let B := traceForm K ↥(mker K L V)ᶜ V
+  obtain ⟨ι, _, _, ⟨b⟩⟩ : ∃ (ι : Type) (_ : DecidableEq ι) (_ : Fintype ι),
+      Nonempty (Basis ι K ↥(mker K L V)ᶜ) :=
+    ⟨_, inferInstance, inferInstance, ⟨finBasis K ↥(mker K L V)ᶜ⟩⟩
+  let b' := dualBasis B (by simp [B]) b
+  let g : oneCochain K L V :=
+    { toFun y := ∑ i, ⁅(b i : L), f (b' i) y⁆
+      map_add' := by simp [Finset.sum_add_distrib]
+      map_smul' := by simp [Finset.smul_sum] }
+  existsi g
+  intro x y
+  convert_to _ = (∑ i, ⁅x, ⁅(b i : L), f (b' i) y⁆⁆) - (∑ i, ⁅y, ⁅(b i : L), f (b' i) x⁆⁆)
+      - (∑ i, ⁅(b i : L), f (b' i) ⁅x, y⁆⁆) using 1
+  · simp [g, lie_sum]
+  simp_rw +singlePass [leibniz_lie, Finset.sum_add_distrib, sub_add_eq_sub_sub]
+  have h (x y : L) : ∑ i, ⁅⁅x, (b i : L)⁆, f (b' i) y⁆ = -∑ i, ⁅(b i : L), f ⁅x, (b' i : L)⁆ y⁆
+  · conv_lhs =>
+    enter [2, i, 1]
+    -- 前の定理とのコピペ。要改善。
+    equals ∑ j, B ⁅x, b i⁆ (b' j) • (b j : L) =>
+      norm_cast
+      symm
+      convert Basis.sum_repr (dualBasis B (by simp [B]) b') ⁅x, b i⁆ <;>
+        [simp +zetaDelta;
+          simp +zetaDelta [LinearMap.BilinForm.isSymm_iff.mpr <| traceForm_isSymm _ _ _]]
+    conv_lhs =>
+      enter [2, i, 1]
+      equals -∑ j, B ⁅x, b' j⁆ (b i) • (b j : L) =>
+      obtain ⟨⟨x₁, x₂⟩, rfl⟩ :=
+        LieSubmodule.existsUnique_add_of_isCompl_prod
+          (isCompl_compl (x := LieModule.ker K L V)).symm x |>.exists
+      suffices h : ∀ (y z : ↥(mker K L V)ᶜ), B ⁅(x₂ : L), y⁆ z = 0
+      · simp_rw [add_lie, LinearMap.map_add₂, h, add_zero, ← LieIdeal.coe_bracket_of_module,
+          B, traceForm_apply_lie_apply, ← lie_skew (b _)]
+        simp
+      simp_rw [B, traceForm_apply_apply]
+      conv =>
+        enter [y, z, 1, 2, 1]
+        equals 0 => ext; simp [LieModule.mem_ker _ _ _ _ |>.mp x₂.2]
+      simp
+    simp_rw [neg_lie, Finset.sum_neg_distrib]
+    have h j : ⁅x, b' j⁆ = ∑ k, B ⁅x, b' j⁆ (b k) • b' k
+    · symm
+      convert Basis.sum_repr b' ⁅x, b' j⁆
+      simp +zetaDelta
+    simp_rw +singlePass [h, LinearMap.BilinForm.sum_left, LinearMap.BilinForm.smul_left]
+    conv_lhs =>
+      enter [1, 2, i, 1, 2, j, 1]
+      equals B ⁅x, b' j⁆ (b i) =>
+      simp_rw +zetaDelta [apply_dualBasis_left, mul_ite, mul_zero, mul_one,
+        Finset.sum_ite_eq_of_mem _ _ _ (Finset.mem_univ _)]
+    conv_lhs =>
+      enter [1]
+      equals ∑ i, ⁅(b i : L), f ⁅x, (b' i : L)⁆ y⁆ =>
+        norm_cast
+        conv_rhs => tactic =>
+          simp_rw +singlePass [h, AddSubmonoidClass.coe_finsetSum, map_sum, LinearMap.sum_apply,
+            lie_sum, SetLike.val_smul, map_smul, LinearMap.smul_apply, lie_smul]
+        conv_lhs => tactic =>
+          simp_rw +singlePass
+            [AddSubmonoidClass.coe_finsetSum, sum_lie, SetLike.val_smul, smul_lie, Finset.sum_comm]
+  simp_rw [h]
+  conv_rhs => enter [1, 1, 1, 1, 1, 2, i, 2]; rw [← lie_skew, map_neg, LinearMap.neg_apply]
+  conv_rhs => enter [2, 2, i, 2]; rw [← Cohomology.twoCochain_skew]
+  simp_rw [lie_neg, Finset.sum_neg_distrib]
+  convert_to _ = (∑ i, ⁅(b i : L), ⁅x, f (b' i) y⁆⁆) - (∑ i, ⁅(b i : L), ⁅y, f (b' i) x⁆⁆)
+      + (∑ i, ⁅(b i : L), (f ⁅x, y⁆ (b' i) + f ⁅y, (b' i : L)⁆ x + f ⁅(b' i : L), x⁆ y)⁆)
+  · simp_rw [lie_add, Finset.sum_add_distrib]; abel
+  simp_rw [Cohomology.twoCocycle_lie_jacobi_eq_lie_apply f hf, lie_add, Finset.sum_add_distrib]
+  conv_rhs => enter [1, 1, 2, i, 2, 2]; rw [← Cohomology.twoCochain_skew]
+  simp_rw [lie_neg, Finset.sum_neg_distrib]
+  convert_to _ = ∑ i, ⁅(b i : L), ⁅(b' i : L), f x y⁆⁆
+  · abel
+  simp +zetaDelta [casimir, casimirOfFaithful_eq _ b]
 
 end UniversalEnvelopingAlgebra
 
