@@ -4,7 +4,6 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Miyahara Kō
 -/
 module
-public import Ado.Solvable
 public import Ado.WhiteheadFirst
 
 public section
@@ -18,7 +17,7 @@ namespace LieSubmodule
 
 set_option maxHeartbeats 300000 in
 -- `LinearMap.IsProj (W : Submodule K V) pt.toLinearMap` での `simp` で失敗する
-/-- 現時点で Casimir 元の公理に依存 Currently depends on the Casimir element axiom. -/
+/-- 現時点で Casimir 元の制限公理に依存 Currently depends on the Casimir element restriction axiom. -/
 instance complementedLattice_of_hasTrivialRadical {K L V}
     [Field K] [CharZero K] [LieRing L] [LieAlgebra K L]
     [AddCommGroup V] [Module K V] [LieRingModule L V] [LieModule K L V]
