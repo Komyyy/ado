@@ -5,6 +5,7 @@ Authors: Miyahara Kō
 -/
 module
 public import Mathlib.Algebra.Lie.Solvable
+public import Ado.ForMathlib.LieQuotient
 
 public section
 
@@ -32,3 +33,20 @@ variable (R) in
 lemma LieAlgebra.isSolvable_derivedSeries_iff (n : ℕ) :
     IsSolvable (derivedSeries R L n) ↔ IsSolvable L := by
   simp
+
+lemma LieAlgebra.isSolvable_quotient_iff {I : LieIdeal R L} :
+    IsSolvable (L ⧸ I) ↔ ∃ k, derivedSeries R L k ≤ I := by
+  simp [isSolvable_iff R, ← LieIdeal.derivedSeries_map_eq _ (LieIdeal.Quotient.surjective_mk' _)]
+
+lemma LieAlgebra.isSolvable_short_exact_iff (I : LieIdeal R L) :
+    IsSolvable I ∧ IsSolvable (L ⧸ I) ↔ IsSolvable L where
+  mp := by
+    rintro ⟨hI, hLI⟩
+    replace ⟨k, hI⟩ := isSolvable_iff R _ |>.mp hI
+    rw [LieIdeal.derivedSeries_eq_bot_iff] at hI
+    replace ⟨m, hLI⟩ := isSolvable_quotient_iff.mp hLI
+    rw [derivedSeries] at hLI
+    rw [isSolvable_iff R]
+    existsi k + m
+    grw [derivedSeries, derivedSeriesOfIdeal_add, eq_bot_iff, hLI, hI]
+  mpr _ := ⟨inferInstance, inferInstance⟩

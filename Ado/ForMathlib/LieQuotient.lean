@@ -38,6 +38,10 @@ theorem surjective_mk' (s : LieIdeal R L) : Surjective (mk' s) :=
 theorem mk'_ker (s : LieIdeal R L) : (mk' s).ker = s := by
   ext; simp
 
+@[simp]
+lemma map_mk'_eq_bot_le (I J : LieIdeal R L) : map (mk' I) J = ⊥ ↔ J ≤ I := by
+  rw [eq_bot_iff, map_le_iff_le_comap, comap_bot, mk'_ker]
+
 instance {R L : Type*} [CommRing R] [LieRing L] [LieAlgebra R L]
     [LieRing.IsNilpotent L] (s : LieIdeal R L) : LieRing.IsNilpotent (L ⧸ s) :=
   (LieIdeal.Quotient.surjective_mk' s).lieAlgebra_isNilpotent
@@ -112,6 +116,29 @@ lemma quotientEquivQuotient_symm_apply_mk (I J : LieIdeal R L) (h : I ≤ J) (x)
     (quotientEquivQuotient I J h).symm (LieIdeal.Quotient.mk x) =
       (LieIdeal.Quotient.mk (LieIdeal.Quotient.mk x)) :=
   rfl
+
+def equiv (I : LieIdeal R L) (J : LieIdeal R L₂)
+    (f : L ≃ₗ⁅R⁆ L₂) (h : I.map f = J) : (L ⧸ I) ≃ₗ⁅R⁆ (L₂ ⧸ J) where
+  toLieHom := map I J f (by simp_rw [← map_le_iff_le_comap, h, le_rfl])
+  invFun := map J I f.symm (by simp_rw [← LieEquiv.map_equiv_eq_comap_symm, h, le_rfl])
+  left_inv q := by
+    obtain ⟨x, rfl⟩ := LieIdeal.Quotient.surjective_mk' I q; simp
+  right_inv q := by
+    obtain ⟨x, rfl⟩ := LieIdeal.Quotient.surjective_mk' J q; simp
+
+@[simp]
+lemma equiv_apply (I : LieIdeal R L) (J : LieIdeal R L₂)
+    (f : L ≃ₗ⁅R⁆ L₂) (h : I.map f = J) (x) :
+    equiv I J f h x = map I J f (by simp_rw [← map_le_iff_le_comap, h, le_rfl]) x :=
+  rfl
+
+@[simp]
+lemma equiv_symm (I : LieIdeal R L) (J : LieIdeal R L₂)
+    (f : L ≃ₗ⁅R⁆ L₂) (h : I.map f = J) :
+    (equiv I J f h).symm = equiv J I f.symm (by simp [← h, ← map_comp]) := by
+  ext x
+  obtain ⟨x, rfl⟩ := LieIdeal.Quotient.surjective_mk' J x
+  simp [equiv]
 
 end LieIdeal.Quotient
 

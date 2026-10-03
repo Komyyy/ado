@@ -9,7 +9,7 @@ public import Ado.ForMathlib.LieAssociative
 
 @[expose] public section
 
-open Function LieIdeal
+open Function LieIdeal LieHom
 
 variable {R L L₂ L₃ : Type*} [CommRing R]
 variable [LieRing L] [LieAlgebra R L] [LieRing L₂] [LieAlgebra R L₂] [LieRing L₃] [LieAlgebra R L₃]
@@ -52,6 +52,14 @@ lemma lieIdealMap_injective_of_injective
     (f : L →ₗ⁅R⁆ L₂) (I : LieIdeal R L) (hf : Injective f) : Injective (lieIdealMap f I) :=
   fun _x₁ _x₂ hx ↦ Subtype.ext (hf congr(Subtype.val $hx))
 
+lemma lieIdealMap_surjective_of_image_eq_map
+    (f : L →ₗ⁅R⁆ L₂) (I : LieIdeal R L) (hI : f '' I = map f I) :
+    Surjective (lieIdealMap f I) := by
+  rintro ⟨x, hx⟩
+  simp only [Subtype.ext_iff, lieIdealMap_apply_coe, Subtype.exists, exists_prop]
+  simp_rw [← SetLike.mem_coe, ← hI, Set.mem_image, SetLike.mem_coe] at hx
+  exact hx
+
 attribute [local instance 100] LieRing.ofAssociativeRing in
 variable (R L) in
 @[simps ! toLinearMap apply]
@@ -66,6 +74,26 @@ lemma ker_comp (f : L →ₗ⁅R⁆ L₂) (g : L₂ →ₗ⁅R⁆ L₃) :
 end LieHom
 
 namespace LieEquiv
+
+@[simp]
+lemma toLieHom_refl : (LieEquiv.refl : L ≃ₗ⁅R⁆ L).toLieHom = LieHom.id :=
+  rfl
+
+@[simp]
+lemma coe_mk (f g h h₂) : ⇑(⟨f, g, h, h₂⟩ : L ≃ₗ⁅R⁆ L₂) = f :=
+  rfl
+
+@[simp]
+lemma coe_symm_mk (f g h h₂) : ⇑(⟨f, g, h, h₂⟩ : L ≃ₗ⁅R⁆ L₂).symm = g :=
+  rfl
+
+@[simp]
+lemma comp_symm (e : L ≃ₗ⁅R⁆ L₂) : e.toLieHom.comp e.symm = LieHom.id := by
+  ext; simp
+
+@[simp]
+lemma symm_comp (e : L ≃ₗ⁅R⁆ L₂) : e.symm.toLieHom.comp e = LieHom.id := by
+  ext; simp
 
 lemma map_equiv_eq_comap_symm (e : L ≃ₗ⁅R⁆ L₂) (I : LieIdeal R L) :
     map e.toLieHom I = comap e.symm.toLieHom I := by
@@ -114,8 +142,23 @@ lemma comap_comp (f : L →ₗ⁅R⁆ L₂) (g : L₂ →ₗ⁅R⁆ L₃) (I : L
     comap (g.comp f) I = comap f (comap g I) := by
   ext; simp
 
+lemma map_comp (f : L →ₗ⁅R⁆ L₂) (g : L₂ →ₗ⁅R⁆ L₃) (I : LieIdeal R L) :
+    map (g.comp f) I = map g (map f I) := by
+  apply le_antisymm
+  · grw [map_le_iff_le_comap, comap_comp, ← comap_map_le, ← comap_map_le]
+  · grw [map_le_iff_le_comap, map_le_iff_le_comap, ← comap_comp, ← comap_map_le]
+
 @[simp]
 lemma comap_id (I : LieIdeal R L) : comap LieHom.id I = I := by
   ext; simp
+
+@[simp]
+lemma map_id (I : LieIdeal R L) : map LieHom.id I = I := by
+  simp_rw [← LieEquiv.toLieHom_refl, LieEquiv.map_equiv_eq_comap_symm]
+  simp
+
+@[simp]
+lemma comap_bot (f : L →ₗ⁅R⁆ L₂) : comap f ⊥ = ker f :=
+  rfl
 
 end LieIdeal

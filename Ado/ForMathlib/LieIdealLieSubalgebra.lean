@@ -70,4 +70,24 @@ theorem toEnd_mk (I : LieIdeal R L) {x : L} (hx : x ∈ I) :
     toEnd R I M ⟨x, hx⟩ = toEnd R L M x :=
   rfl
 
+lemma image_eq_map_iff_exists_lieIdeal_toLieSubalgebra_eq_map (f : L →ₗ⁅R⁆ L₂) (I : LieIdeal R L) :
+    f '' I = map f I ↔
+      ∃ J : LieIdeal R L₂, J.toLieSubalgebra = LieSubalgebra.map f I.toLieSubalgebra where
+  mp := by
+    intro h
+    existsi map f I
+    ext
+    simp [← h, ← SetLike.mem_coe (p := map f I)]
+  mpr := by
+    rintro ⟨J, hJ⟩
+    apply subset_antisymm
+    next => simp +contextual [Set.subset_def, mem_map]
+    convert_to ((map f I).toLieSubalgebra : Set L₂) ⊆
+        (LieSubalgebra.map f I.toLieSubalgebra : Set L₂)
+    · ext; simp
+    · ext; simp
+    simp_rw [← hJ, coe_toLieSubalgebra, SetLike.coe_subset_coe, map_le_iff_le_comap,
+      ← toLieSubalgebra_le_toLieSubalgebra, toLieSubalgebra_comap,
+      ← LieSubalgebra.map_le_iff_le_comap, ← hJ, le_refl]
+
 end LieIdeal
