@@ -38,7 +38,7 @@ open LieHom renaming range → rangeₗ
 
 attribute [local instance 100] LieRing.ofAssociativeRing
 
-public lemma LieHom.exists_levi_splitting (K L : Type*)
+public theorem LieHom.exists_levi_splitting (K L : Type*)
     [Field K] [CharZero K] [LieRing L] [LieAlgebra K L] [FiniteDimensional K L] :
     ∃ (s : L ⧸ radical K L →ₗ⁅K⁆ L), LeftInverse LieIdeal.Quotient.mk s := by
   induction hn : finrank K (radical K L) using Nat.strongRec generalizing L with | ind n hin
