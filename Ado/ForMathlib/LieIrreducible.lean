@@ -42,9 +42,13 @@ lemma mem_equivSubmoduleOfTrivial_symm (x N) :
 
 end LieSubmodule
 
-namespace LieModule
+namespace TrivialLieModule
 
-end LieModule
+instance {R L M} [CommRing R] [AddCommGroup M] [Module R M] [Module.Finite R M] :
+    Module.Finite R (TrivialLieModule R L M) :=
+  inferInstanceAs (Module.Finite R M)
+
+end TrivialLieModule
 
 end LieModuleTrivial
 

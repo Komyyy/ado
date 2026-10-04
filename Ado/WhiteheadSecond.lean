@@ -11,10 +11,6 @@ public import Ado.ForMathlib.LieIrreducible
 ## Whitehead の第二補題
 -/
 
--- 公理を公開するために使用
-set_option backward.privateInPublic true
-set_option backward.privateInPublic.warn false
-
 open Set Function LieAlgebra Module LieModule LieSubmodule UniversalEnvelopingAlgebra
 
 variable (K L V) [Field K] [CharZero K] [LieRing L] [LieAlgebra K L]
@@ -23,11 +19,27 @@ variable (K L V) [Field K] [CharZero K] [LieRing L] [LieAlgebra K L]
 
 namespace LieModule.Cohomology
 
-public axiom surjOn_d₁₂_trivial_scalar_twoCocycle_of_hasTrivialRadical
-    (K L) [Field K] [CharZero K] [LieRing L] [LieAlgebra K L]
-    [FiniteDimensional K L] [HasTrivialRadical K L] :
+lemma surjOn_d₁₂_trivial_scalar_twoCocycle_of_hasTrivialRadical :
     SurjOn (d₁₂ K L (TrivialLieModule K L K)) univ
-      (Cohomology.twoCocycle K L (TrivialLieModule K L K))
+      (Cohomology.twoCocycle K L (TrivialLieModule K L K)) := by
+  intro f hf
+  simp only [SetLike.mem_coe, image_univ, mem_range] at hf ⊢
+  let A : oneCochain K L (L →ₗ[K] TrivialLieModule K L K) := -LinearMap.flip f.val
+  have A_apply (x y) : A x y = -f y x := rfl
+  suffices hA : ∀ (x y : L), A ⁅x, y⁆ = ⁅x, A y⁆ - ⁅y, A x⁆
+  · let A' : LieDerivation K L (L →ₗ[K] TrivialLieModule K L K) := { A with leibniz' := hA }
+    obtain ⟨g, hg⟩ := A'.surjective_inner_of_hasTrivialRadical
+    existsi g
+    simpa [DFunLike.ext_iff, A', A_apply, trivial_lie_zero, neg_eq_iff_eq_neg,
+      twoCochain_skew] using hg
+  -- `LieHom.lie_apply` って名前おかしくない？
+  simp_rw [DFunLike.ext_iff, LinearMap.sub_apply, LieHom.lie_apply, A_apply, trivial_lie_zero]
+  simp_rw [mem_twoCocycle_iff_of_trivial] at hf
+  intro y z x
+  specialize hf x y z
+  conv_rhs => enter [1, 2, 1]; rw [← lie_skew, map_neg, LinearMap.neg_apply]
+  conv_rhs => enter [2, 2]; rw [twoCochain_skew, ← lie_skew, map_neg]
+  linear_combination (norm := abel) -hf
 
 omit [FiniteDimensional K V] in
 lemma surjOn_d₁₂_twoCocycle_of_hasTrivialRadical_of_isIrreducible_of_isTrivial
