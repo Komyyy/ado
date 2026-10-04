@@ -16,13 +16,15 @@ set_option backward.privateInPublic.warn false
 
 open Set LieAlgebra Module LieModule LieSubmodule
 
-public axiom LieModule.Cohomology.surjOn_twoCocycle_d₁₂_of_hasTrivialRadical_of_isIrreducible
+namespace LieModule.Cohomology
+
+public axiom surjOn_twoCocycle_d₁₂_of_hasTrivialRadical_of_isIrreducible
     (K L V) [Field K] [CharZero K] [LieRing L] [LieAlgebra K L]
     [AddCommGroup V] [Module K V] [LieRingModule L V] [LieModule K L V]
     [FiniteDimensional K L] [FiniteDimensional K V] [HasTrivialRadical K L] [IsIrreducible K L V] :
     SurjOn (d₁₂ K L V) univ (Cohomology.twoCocycle K L V)
 
-public lemma LieModule.Cohomology.surjOn_twoCocycle_d₁₂_of_hasTrivialRadical
+public lemma surjOn_twoCocycle_d₁₂_of_hasTrivialRadical
     (K L V) [Field K] [CharZero K] [LieRing L] [LieAlgebra K L]
     [AddCommGroup V] [Module K V] [LieRingModule L V] [LieModule K L V]
     [FiniteDimensional K L] [FiniteDimensional K V] [HasTrivialRadical K L] :
@@ -65,3 +67,5 @@ public lemma LieModule.Cohomology.surjOn_twoCocycle_d₁₂_of_hasTrivialRadical
   convert_to projection W₀ W₁ hW (f x y) + projection W₁ W₀ hW.symm (f x y) = _
   · linear_combination (norm := abel) (hg₀ x y) + (hg₁ x y)
   rw [projection_add_projection_eq_self]
+
+end LieModule.Cohomology
