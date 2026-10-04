@@ -39,9 +39,17 @@ lemma range_id : range (LieModuleHom.id : M →ₗ⁅R,L⁆ M) = ⊤ := by
 lemma range_comp (f : M₂ →ₗ⁅R,L⁆ M₃) (g : M →ₗ⁅R,L⁆ M₂) : range (comp f g) = map f (range g) := by
   ext; simp
 
+@[simp]
+lemma range_eq_bot (f : M →ₗ⁅R,L⁆ M₂) : range f = ⊥ ↔ f = 0 := by
+  simp [← le_bot_iff, IsConcreteLE.le_iff, DFunLike.ext_iff]
+
 lemma ker_comp (f : M →ₗ⁅R,L⁆ M₂) (g : M₂ →ₗ⁅R,L⁆ M₃) :
     ker (g.comp f) = comap f (ker g) := by
   ext x; simp
+
+@[simp]
+lemma ker_eq_top (f : M →ₗ⁅R,L⁆ M₂) : ker f = ⊤ ↔ f = 0 := by
+  simp [SetLike.ext_iff, DFunLike.ext_iff]
 
 @[simp, norm_cast]
 lemma toLinearMap_mul (f g : M →ₗ⁅R,L⁆ M) : (f * g).toLinearMap = f.toLinearMap * g.toLinearMap :=
@@ -52,7 +60,10 @@ instance : Monoid (M →ₗ⁅R,L⁆ M) where
   mul_one _ := DFunLike.ext _ _ fun _ ↦ rfl
   one_mul _ := DFunLike.ext _ _ fun _ ↦ rfl
 
-instance : IsZeroApply (M →ₗ⁅R,L⁆ M₂) M M₂ where
+variable (R L M) in
+@[simp, norm_cast]
+lemma toLinearMap_zero : (0 : M →ₗ⁅R,L⁆ M).toLinearMap = 0 :=
+  rfl
 
 instance : IsMulApplyEqComp (M →ₗ⁅R,L⁆ M) M where
 

@@ -5,6 +5,7 @@ Authors: Miyahara Kō
 -/
 module
 public import Ado.WeylReducibility
+public import Ado.ForMathlib.LieIrreducible
 
 /-!
 ## Whitehead の第二補題
@@ -14,15 +15,50 @@ public import Ado.WeylReducibility
 set_option backward.privateInPublic true
 set_option backward.privateInPublic.warn false
 
-open Set LieAlgebra Module LieModule LieSubmodule
+open Set Function LieAlgebra Module LieModule LieSubmodule UniversalEnvelopingAlgebra
 
 namespace LieModule.Cohomology
 
-public axiom surjOn_twoCocycle_d₁₂_of_hasTrivialRadical_of_isIrreducible
+public axiom surjOn_twoCocycle_d₁₂_of_hasTrivialRadical_of_isIrreducible_of_isTrivial
+    (K L V) [Field K] [CharZero K] [LieRing L] [LieAlgebra K L]
+    [AddCommGroup V] [Module K V] [LieRingModule L V] [LieModule K L V]
+    [FiniteDimensional K L] [FiniteDimensional K V] [HasTrivialRadical K L] [IsIrreducible K L V]
+    [IsTrivial L V] : SurjOn (d₁₂ K L V) univ (Cohomology.twoCocycle K L V)
+
+lemma surjOn_twoCocycle_d₁₂_of_hasTrivialRadical_of_isIrreducible_of_bijective_casimir
+    {K L V} [Field K] [CharZero K] [LieRing L] [LieAlgebra K L]
+    [AddCommGroup V] [Module K V] [LieRingModule L V] [LieModule K L V]
+    [FiniteDimensional K L] [FiniteDimensional K V] [HasTrivialRadical K L] [IsIrreducible K L V]
+    (h : Bijective (lift K (toEnd K L V) (casimir K L V))) :
+    SurjOn (d₁₂ K L V) univ (Cohomology.twoCocycle K L V) := by
+  intro f hf
+  simp only [image_univ, mem_range]
+  obtain ⟨g, hg⟩ := exists_lift_casimir_twoCocycle_apply_eq_d₁₂ f hf
+  let e := LinearEquiv.ofBijective _ h
+  have he : ∀ (x : L) (v : V), e.symm ⁅x, v⁆ = ⁅x, e.symm v⁆
+  · simp_rw +zetaDelta +singlePass [e.surjective.forall, LinearEquiv.ofBijective_apply,
+      ← lift_casimir_comm, LinearEquiv.ofBijective_symm_apply_apply, implies_true]
+  existsi e.symm ∘ₗ g
+  simp_rw [d₁₂_apply_apply] at hg
+  simp +zetaDelta [← he, LinearEquiv.symm_apply_eq, ← map_sub, DFunLike.ext_iff, hg]
+
+lemma surjOn_twoCocycle_d₁₂_of_hasTrivialRadical_of_isIrreducible
     (K L V) [Field K] [CharZero K] [LieRing L] [LieAlgebra K L]
     [AddCommGroup V] [Module K V] [LieRingModule L V] [LieModule K L V]
     [FiniteDimensional K L] [FiniteDimensional K V] [HasTrivialRadical K L] [IsIrreducible K L V] :
-    SurjOn (d₁₂ K L V) univ (Cohomology.twoCocycle K L V)
+    SurjOn (d₁₂ K L V) univ (Cohomology.twoCocycle K L V) := by
+  let πc : V →ₗ⁅K,L⁆ V :=
+    { __ := lift K (toEnd K L V) (casimir K L V)
+      map_lie' := by simp [lift_casimir_comm] }
+  obtain (hc | hc) := eq_or_ne πc 0
+  case inl =>
+    apply_fun LinearMap.trace K V at hc
+    simp_rw [πc, LieModuleHom.toLinearMap_zero, map_zero, trace_lift_casimir, sub_eq_zero,
+      Nat.cast_inj, eq_comm (a := finrank K L), ← eq_top_iff_finrank_eq, ← isTrivial_iff_ker] at hc
+    apply surjOn_twoCocycle_d₁₂_of_hasTrivialRadical_of_isIrreducible_of_isTrivial
+  case inr =>
+    apply LieModuleHom.bijective_of_ne_zero at hc
+    apply surjOn_twoCocycle_d₁₂_of_hasTrivialRadical_of_isIrreducible_of_bijective_casimir hc
 
 public lemma surjOn_twoCocycle_d₁₂_of_hasTrivialRadical
     (K L V) [Field K] [CharZero K] [LieRing L] [LieAlgebra K L]
