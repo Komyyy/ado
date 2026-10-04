@@ -82,7 +82,7 @@ lemma bijective_of_ne_zero [IsIrreducible R L M] [IsIrreducible R L M₂] {f : M
     (h : f ≠ 0) : Bijective f :=
   ⟨injective_of_ne_zero h, surjective_of_ne_zero h⟩
 
-lemma bijective_or_eq_zero [IsIrreducible R L M] [IsIrreducible R L M₂] {f : M →ₗ⁅R,L⁆ M₂} :
+lemma bijective_or_eq_zero [IsIrreducible R L M] [IsIrreducible R L M₂] (f : M →ₗ⁅R,L⁆ M₂) :
     Bijective f ∨ f = 0 :=
   or_iff_not_imp_right.mpr bijective_of_ne_zero
 

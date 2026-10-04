@@ -14,10 +14,6 @@ public import Ado.ForMathlib.UniversalEnvelopingAlgebra
 ## Casimir 元
 -/
 
--- 公理を公開するために使用
-set_option backward.privateInPublic true
-set_option backward.privateInPublic.warn false
-
 public section Casimir
 
 open Module LinearMap.BilinForm LieIdeal LieModule UniversalEnvelopingAlgebra LieDerivation
@@ -166,12 +162,6 @@ lemma lift_casimir_comm (x : L) (v : V) :
       ⁅x, lift K (toEnd K L V) (casimir K L V) v⁆ := by
   simp_rw [← projectionOnto_lieModule_ker_compl_lie K x, lift_casimir_eq_lift_casimirOfFaithful,
     lift_casimirOfFaithful_comm]
-
-/-- `IsComplemented W` は Wely の完全可約性から外せるが、そもそもそれを示すのにこの補題が必要。 -/
-axiom restrict_lift_casimir (W : LieSubmodule K L V) (h : IsComplemented W)
-    (hW : ∀ v ∈ W, lift K (toEnd K L V) (casimir K L V) v ∈ W) :
-    LinearMap.restrict (lift K (toEnd K L V) (casimir K L V)) hW =
-      lift K (toEnd K L W) (casimir K L W)
 
 lemma _root_.LieDerivation.exists_lift_casimir_apply_eq_lie (D : LieDerivation K L V) :
     ∃ v : V, ∀ x, lift K (toEnd K L V) (casimir K L V) (D x) = ⁅x, v⁆ := by

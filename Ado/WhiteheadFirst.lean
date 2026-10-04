@@ -7,13 +7,13 @@ module
 public import Ado.Casimir
 public import Ado.ForMathlib.Complemented
 public import Ado.ForMathlib.LieDerivation
-public import Ado.ForMathlib.LieFitting
+public import Ado.ForMathlib.LieIrreducible
 
 /-!
 ## Whitehead の第一補題
 -/
 
-open Function Filter LieAlgebra LieModule LieSubmodule LieModuleHom
+open Function Filter Module LieAlgebra LieModule LieSubmodule LieModuleHom
 open UniversalEnvelopingAlgebra
 open LinearMap hiding restrict
 
@@ -23,11 +23,12 @@ variable [FiniteDimensional K L] [FiniteDimensional K V] [HasTrivialRadical K L]
 
 namespace LieDerivation
 
-lemma surjective_inner_of_hasTrivialRadical_of_isNilpotent_casimir
-    (h : _root_.IsNilpotent (lift K (toEnd K L V) (casimir K L V))) :
+variable {K L V} in
+lemma surjective_inner_of_hasTrivialRadical_of_casimir_eq_zero
+    (h : lift K (toEnd K L V) (casimir K L V) = 0) :
     Surjective (inner K L V) := by
-  apply isNilpotent_trace_of_isNilpotent at h
-  simp_rw [isNilpotent_iff_eq_zero, trace_lift_casimir, sub_eq_zero, Nat.cast_inj,
+  apply_fun trace K V at h
+  simp_rw [map_zero, trace_lift_casimir, sub_eq_zero, Nat.cast_inj,
     eq_comm (a := Module.finrank K L), ← eq_top_iff_finrank_eq, ← isTrivial_iff_ker] at h
   intro D
   existsi 0
@@ -38,6 +39,7 @@ lemma surjective_inner_of_hasTrivialRadical_of_isNilpotent_casimir
   rintro _ ⟨x, y, rfl⟩
   simp [trivial_lie_zero]
 
+variable {K L V} in
 lemma surjective_inner_of_hasTrivialRadical_of_bijective_casimir
     (h : Bijective (lift K (toEnd K L V) (casimir K L V))) :
     Surjective (inner K L V) := by
@@ -51,28 +53,55 @@ lemma surjective_inner_of_hasTrivialRadical_of_bijective_casimir
   ext x
   simp +zetaDelta [← he, LinearEquiv.symm_apply_eq, hv]
 
-public theorem surjective_inner_of_hasTrivialRadical : Surjective (inner K L V) := by
+lemma surjective_inner_of_hasTrivialRadical_of_isIrreducible
+    [IsIrreducible K L V] : Surjective (inner K L V) := by
   let πc : V →ₗ⁅K,L⁆ V :=
     { __ := lift K (toEnd K L V) (casimir K L V)
       map_lie' := by simp [lift_casimir_comm] }
-  obtain ⟨W₀, W₁, hWc, ⟨hWm, hWn⟩, hWb⟩ := πc.fitting
-  simp_rw +zetaDelta [← isNilpotent_toLinearMap, restrict_toLinearMap,
-    restrict_lift_casimir _ hWc.isComplemented] at hWn
+  obtain (hc | hc) := LieModuleHom.bijective_or_eq_zero πc
+  case inl => apply surjective_inner_of_hasTrivialRadical_of_bijective_casimir hc
+  case inr =>
+    apply_fun LieModuleHom.toLinearMap at hc
+    simp_rw [πc, toLinearMap_zero] at hc
+    apply surjective_inner_of_hasTrivialRadical_of_casimir_eq_zero hc
+
+variable {K L V} in
+omit [CharZero K] [FiniteDimensional K L] [FiniteDimensional K V] [HasTrivialRadical K L] in
+lemma surjective_inner_of_hasTrivialRadical_of_quotient (W : LieSubmodule K L V)
+    (hW : Surjective (inner K L W)) (hWq : Surjective (inner K L (V ⧸ W))) :
+    Surjective (inner K L V) := by
   intro D
-  obtain ⟨v₀, hv₀⟩ :=
-    surjective_inner_of_hasTrivialRadical_of_isNilpotent_casimir K L W₀ hWn
-      (compCodomain D (projectionOnto W₀ W₁ hWc))
-  have hWb₂ : Bijective (LinearMap.restrict πc.toLinearMap hWb.mapsTo.imp) := hWb.bijective
-  rw [restrict_lift_casimir _ hWc.isComplemented_right] at hWb₂
-  obtain ⟨v₁, hv₁⟩ :=
-    surjective_inner_of_hasTrivialRadical_of_bijective_casimir K L W₁ hWb₂
-      (compCodomain D (projectionOnto W₁ W₀ hWc.symm))
-  existsi v₀ + v₁
-  convert_to ∀ x : L, ⁅x, (v₀ : V)⁆ = projection W₀ W₁ hWc (D x) at hv₀
+  obtain ⟨v, hv⟩ := hWq (compCodomain D (LieSubmodule.Quotient.mk' W))
+  obtain ⟨v, rfl⟩ := LieSubmodule.Quotient.surjective_mk' W v
+  simp_rw +singlePass [DFunLike.ext_iff, inner_apply_apply, ← LieModuleHom.map_lie,
+    compCodomain_apply, ← sub_eq_zero, ← map_sub, LieSubmodule.Quotient.mk_eq_zero] at hv
+  obtain ⟨w, hw⟩ := hW (codRestrict W (inner K L V v - D) (by simp [hv]))
+  convert_to ∀ x : L, ⁅x, (w : V)⁆ = ⁅x, v⁆ - D x using 0 at hw
   · simp [DFunLike.ext_iff, Subtype.ext_iff]
-  convert_to ∀ x : L, ⁅x, (v₁ : V)⁆ = projection W₁ W₀ hWc.symm (D x) at hv₁
-  · simp [DFunLike.ext_iff, Subtype.ext_iff]
-  ext x
-  simp [hv₀, hv₁, projection_add_projection_eq_self]
+  existsi v - w
+  simp [DFunLike.ext_iff, hw]
+
+public theorem surjective_inner_of_hasTrivialRadical : Surjective (inner K L V) := by
+  induction hn : finrank K V using Nat.strongRec generalizing V with | ind n hin
+  subst hn
+  replace hin V inst inst_1 inst_2 inst_3 inst_4 hV :=
+    @hin _ hV V inst inst_1 inst_2 inst_3 inst_4 rfl
+  by_cases hL : IsIrreducible K L V
+  case pos => apply surjective_inner_of_hasTrivialRadical_of_isIrreducible
+  obtain hLs | hLn := subsingleton_or_nontrivial V
+  · apply surjective_to_subsingleton
+  simp_rw [isSimpleOrder_iff] at hL
+  push Not at hL
+  specialize hL (by simp [hLn])
+  obtain ⟨W, hWb, hWt⟩ := hL
+  rw [← nontrivial_iff_ne_bot] at hWb
+  have hW :=
+    hin W inferInstance inferInstance inferInstance inferInstance inferInstance
+      (by rwa [finrank_lt_iff, lt_top_iff_ne_top])
+  have hWq :=
+    hin (V ⧸ W) inferInstance inferInstance inferInstance inferInstance inferInstance
+      (by simp_rw [finrank_quotient, tsub_lt_self_iff, finrank_pos_iff, hWb, and_true,
+        (injective_incl W).nontrivial])
+  exact surjective_inner_of_hasTrivialRadical_of_quotient W hW hWq
 
 end LieDerivation

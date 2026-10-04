@@ -9,6 +9,8 @@ public import Mathlib.Algebra.Lie.Ideal
 
 @[expose] public section
 
+open Function
+
 variable {R : Type*} [CommRing R]
 variable {L : Type*} [LieRing L] [LieAlgebra R L]
 variable {L₂ : Type*} [LieRing L₂] [LieAlgebra R L₂]
@@ -34,16 +36,21 @@ def compCodomain (D : LieDerivation R L M) (f : M →ₗ⁅R,L⁆ M₂) : LieDer
   toLinearMap := f.toLinearMap ∘ₗ D.toLinearMap
   leibniz' x y := by simp
 
-def restrictDomainIdeal (D : LieDerivation R L M) (I : LieIdeal R L) : LieDerivation R I M where
-  toLinearMap := D.toLinearMap ∘ₗ (LieIdeal.incl I).toLinearMap
-  leibniz' x y := by
-    -- `SetLike` の判別木問題で少し面倒
-    simp [- LieIdeal.incl_coe]
+def codRestrict (N : LieSubmodule R L M) (D : LieDerivation R L M) (h : ∀ x, D x ∈ N) :
+    LieDerivation R L N where
+  toLinearMap := LinearMap.codRestrict N.toSubmodule D.toLinearMap (by exact h)
+  leibniz' {x y} := Subtype.ext <| LieDerivation.leibniz' _ x y
 
--- `SetLike` の判別木問題で正しい `simp` 補題が作られない
 @[simp]
-lemma restrictDomainIdeal_apply (D : LieDerivation R L M) (I : LieIdeal R L) (x) :
-    restrictDomainIdeal D I x = D x :=
+lemma codRestrict_apply_coe (N : LieSubmodule R L M) (D : LieDerivation R L M) (h : ∀ x, D x ∈ N)
+    (x) : (codRestrict N D h x : M) = D x :=
   rfl
+
+variable (R L M) in
+lemma injective_toLinearMap : Injective ((↑) : LieDerivation R L M → L →ₗ[R] M) :=
+  fun _x _y hxy ↦ DFunLike.ext _ _ fun m ↦ DFunLike.congr_fun hxy m
+
+instance [Subsingleton M] : Subsingleton (LieDerivation R L M) :=
+  (injective_toLinearMap R L M).subsingleton
 
 end LieDerivation

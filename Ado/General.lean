@@ -17,7 +17,6 @@ variable {K 𝔤 : Type*}
 variable [Field K] [CharZero K] [LieRing 𝔤] [LieAlgebra K 𝔤] [FiniteDimensional K 𝔤]
 
 attribute [local instance] LieAlgebra.IsAdo.of_isSolvable_of_charZero in
-/-- 現時点で Casimir 元の制限公理に依存 Currently depends on the Casimir element restriction axiom. -/
 public instance LieAlgebra.IsAdo.of_charZero : IsAdo K 𝔤 := by
   obtain ⟨s, hs⟩ := LieHom.exists_levi_splitting K 𝔤
   let ψ : 𝔤 ⧸ radical K 𝔤 →ₗ⁅K⁆ LieDerivation K (radical K 𝔤) (radical K 𝔤) :=

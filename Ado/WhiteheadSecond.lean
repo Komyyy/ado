@@ -5,7 +5,6 @@ Authors: Miyahara Kō
 -/
 module
 public import Ado.WeylReducibility
-public import Ado.ForMathlib.LieIrreducible
 
 /-!
 ## Whitehead の第二補題

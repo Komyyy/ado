@@ -19,7 +19,6 @@ open LieHom renaming range → rangeₗ
 
 attribute [local instance 100] LieRing.ofAssociativeRing
 
-/-- 現時点で Casimir 元の制限公理に依存 Currently depends on the Casimir element restriction axiom. -/
 public theorem LieHom.exists_levi_splitting (K L : Type*)
     [Field K] [CharZero K] [LieRing L] [LieAlgebra K L] [FiniteDimensional K L] :
     ∃ (s : L ⧸ radical K L →ₗ⁅K⁆ L), LeftInverse LieIdeal.Quotient.mk s := by
