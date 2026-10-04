@@ -17,19 +17,36 @@ set_option backward.privateInPublic.warn false
 
 open Set Function LieAlgebra Module LieModule LieSubmodule UniversalEnvelopingAlgebra
 
+variable (K L V) [Field K] [CharZero K] [LieRing L] [LieAlgebra K L]
+    [AddCommGroup V] [Module K V] [LieRingModule L V] [LieModule K L V]
+    [FiniteDimensional K L] [FiniteDimensional K V] [HasTrivialRadical K L]
+
 namespace LieModule.Cohomology
 
-public axiom surjOn_twoCocycle_d₁₂_of_hasTrivialRadical_of_isIrreducible_of_isTrivial
-    (K L V) [Field K] [CharZero K] [LieRing L] [LieAlgebra K L]
-    [AddCommGroup V] [Module K V] [LieRingModule L V] [LieModule K L V]
-    [FiniteDimensional K L] [FiniteDimensional K V] [HasTrivialRadical K L] [IsIrreducible K L V]
-    [IsTrivial L V] : SurjOn (d₁₂ K L V) univ (Cohomology.twoCocycle K L V)
+public axiom surjOn_d₁₂_trivial_scalar_twoCocycle_of_hasTrivialRadical
+    (K L) [Field K] [CharZero K] [LieRing L] [LieAlgebra K L]
+    [FiniteDimensional K L] [HasTrivialRadical K L] :
+    SurjOn (d₁₂ K L (TrivialLieModule K L K)) univ
+      (Cohomology.twoCocycle K L (TrivialLieModule K L K))
 
-lemma surjOn_twoCocycle_d₁₂_of_hasTrivialRadical_of_isIrreducible_of_bijective_casimir
-    {K L V} [Field K] [CharZero K] [LieRing L] [LieAlgebra K L]
-    [AddCommGroup V] [Module K V] [LieRingModule L V] [LieModule K L V]
-    [FiniteDimensional K L] [FiniteDimensional K V] [HasTrivialRadical K L] [IsIrreducible K L V]
-    (h : Bijective (lift K (toEnd K L V) (casimir K L V))) :
+omit [FiniteDimensional K V] in
+lemma surjOn_d₁₂_twoCocycle_of_hasTrivialRadical_of_isIrreducible_of_isTrivial
+    [IsIrreducible K L V] [IsTrivial L V] :
+    SurjOn (d₁₂ K L V) univ (Cohomology.twoCocycle K L V) := by
+  obtain ⟨e⟩ := Field.nonempty_lieModuleEquiv_of_isIrreducible_of_isTrivial K L V
+  intro f hf
+  simp only [image_univ, mem_range]
+  obtain ⟨g, -, hg⟩ := surjOn_d₁₂_trivial_scalar_twoCocycle_of_hasTrivialRadical K L
+    (twoCochain.compCodomain_mem_twoCocycle f e.toLieModuleHom hf)
+  existsi e.symm.toLinearMap ∘ₗ g
+  simp_rw [DFunLike.ext_iff, d₁₂_apply_apply_ofTrivial, LinearMap.comp_apply,
+    LieModuleHom.coe_toLinearMap, LieModuleEquiv.coe_coe, neg_eq_iff_eq_neg,
+    twoCochain.compCodomain_apply_apply] at hg ⊢
+  simp [hg]
+
+variable {K L V} in
+lemma surjOn_d₁₂_twoCocycle_of_hasTrivialRadical_of_isIrreducible_of_bijective_casimir
+    [IsIrreducible K L V] (h : Bijective (lift K (toEnd K L V) (casimir K L V))) :
     SurjOn (d₁₂ K L V) univ (Cohomology.twoCocycle K L V) := by
   intro f hf
   simp only [image_univ, mem_range]
@@ -42,11 +59,8 @@ lemma surjOn_twoCocycle_d₁₂_of_hasTrivialRadical_of_isIrreducible_of_bijecti
   simp_rw [d₁₂_apply_apply] at hg
   simp +zetaDelta [← he, LinearEquiv.symm_apply_eq, ← map_sub, DFunLike.ext_iff, hg]
 
-lemma surjOn_twoCocycle_d₁₂_of_hasTrivialRadical_of_isIrreducible
-    (K L V) [Field K] [CharZero K] [LieRing L] [LieAlgebra K L]
-    [AddCommGroup V] [Module K V] [LieRingModule L V] [LieModule K L V]
-    [FiniteDimensional K L] [FiniteDimensional K V] [HasTrivialRadical K L] [IsIrreducible K L V] :
-    SurjOn (d₁₂ K L V) univ (Cohomology.twoCocycle K L V) := by
+lemma surjOn_d₁₂_twoCocycle_of_hasTrivialRadical_of_isIrreducible
+    [IsIrreducible K L V] : SurjOn (d₁₂ K L V) univ (Cohomology.twoCocycle K L V) := by
   let πc : V →ₗ⁅K,L⁆ V :=
     { __ := lift K (toEnd K L V) (casimir K L V)
       map_lie' := by simp [lift_casimir_comm] }
@@ -55,22 +69,19 @@ lemma surjOn_twoCocycle_d₁₂_of_hasTrivialRadical_of_isIrreducible
     apply_fun LinearMap.trace K V at hc
     simp_rw [πc, LieModuleHom.toLinearMap_zero, map_zero, trace_lift_casimir, sub_eq_zero,
       Nat.cast_inj, eq_comm (a := finrank K L), ← eq_top_iff_finrank_eq, ← isTrivial_iff_ker] at hc
-    apply surjOn_twoCocycle_d₁₂_of_hasTrivialRadical_of_isIrreducible_of_isTrivial
+    apply surjOn_d₁₂_twoCocycle_of_hasTrivialRadical_of_isIrreducible_of_isTrivial
   case inr =>
     apply LieModuleHom.bijective_of_ne_zero at hc
-    apply surjOn_twoCocycle_d₁₂_of_hasTrivialRadical_of_isIrreducible_of_bijective_casimir hc
+    apply surjOn_d₁₂_twoCocycle_of_hasTrivialRadical_of_isIrreducible_of_bijective_casimir hc
 
-public lemma surjOn_twoCocycle_d₁₂_of_hasTrivialRadical
-    (K L V) [Field K] [CharZero K] [LieRing L] [LieAlgebra K L]
-    [AddCommGroup V] [Module K V] [LieRingModule L V] [LieModule K L V]
-    [FiniteDimensional K L] [FiniteDimensional K V] [HasTrivialRadical K L] :
+public lemma surjOn_d₁₂_twoCocycle_of_hasTrivialRadical :
     SurjOn (d₁₂ K L V) univ (Cohomology.twoCocycle K L V) := by
   induction hn : finrank K V using Nat.strongRec generalizing V with | ind n hin
   subst hn
   replace hin V inst inst_1 inst_2 inst_3 inst_4 hV :=
     @hin _ hV V inst inst_1 inst_2 inst_3 inst_4 rfl
   by_cases hL : IsIrreducible K L V
-  case pos => apply surjOn_twoCocycle_d₁₂_of_hasTrivialRadical_of_isIrreducible
+  case pos => apply surjOn_d₁₂_twoCocycle_of_hasTrivialRadical_of_isIrreducible
   obtain hLs | hLn := subsingleton_or_nontrivial V
   · apply surjOn_of_subsingleton'; simp
   replace hL : ∃ (W₀ W₁ : LieSubmodule K L V), IsCompl W₀ W₁ ∧ W₀ < ⊤ ∧ W₁ < ⊤

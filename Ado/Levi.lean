@@ -112,7 +112,7 @@ public theorem LieHom.exists_levi_splitting (K L : Type*)
   have ω_apply_coe x y : (ω x y : L) = s' ⁅x, y⁆ - ⁅s' x, s' y⁆
   · simp [ω]
   suffices hω : ω ∈ Cohomology.twoCocycle K (rangeₗ s) (derivedAbelianOfIdeal (radical K L))
-  · obtain ⟨f, -, hf⟩ := Cohomology.surjOn_twoCocycle_d₁₂_of_hasTrivialRadical K (rangeₗ s)
+  · obtain ⟨f, -, hf⟩ := Cohomology.surjOn_d₁₂_twoCocycle_of_hasTrivialRadical K (rangeₗ s)
         (derivedAbelianOfIdeal (radical K L)) hω
     have hf₂ : ∀ x y, s' ⁅x, y⁆ + f ⁅x, y⁆ = ⁅s' x + f x, s' y + f y⁆
     · simp_rw [DFunLike.ext_iff, Subtype.ext_iff, ω_apply_coe, Cohomology.d₁₂_apply_apply,

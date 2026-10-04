@@ -6,6 +6,49 @@ Authors: Miyahara Kō
 module
 public import Ado.ForMathlib.LieModuleHom
 public import Mathlib.Algebra.Lie.Semisimple.Defs
+public import Mathlib.RingTheory.SimpleRing.DivisionRing
+
+section ForMathlib
+
+public section LieModuleTrivial
+
+open LieModule
+
+variable {R L M : Type*} [CommRing R] [LieRing L]
+variable [AddCommGroup M] [Module R M] [LieRingModule L M] [IsTrivial L M]
+
+namespace LieSubmodule
+
+variable (R L M) in
+@[expose]
+def equivSubmoduleOfTrivial : LieSubmodule R L M ≃o Submodule R M where
+  toFun N := N
+  invFun N := { N with lie_mem := by simp [trivial_lie_zero] }
+  map_rel_iff' {N₀ N₁} := by simp
+
+@[simp]
+lemma equivSubmoduleOfTrivial_apply (N) : equivSubmoduleOfTrivial R L M N = N.toSubmodule :=
+  rfl
+
+@[simp]
+lemma toSubmodule_equivSubmoduleOfTrivial_symm (N) :
+   ((equivSubmoduleOfTrivial R L M).symm N).toSubmodule = N :=
+  rfl
+
+@[simp]
+lemma mem_equivSubmoduleOfTrivial_symm (x N) :
+    x ∈ (equivSubmoduleOfTrivial R L M).symm N ↔ x ∈ N :=
+  Iff.rfl
+
+end LieSubmodule
+
+namespace LieModule
+
+end LieModule
+
+end LieModuleTrivial
+
+end ForMathlib
 
 public section
 
@@ -40,3 +83,15 @@ lemma bijective_or_eq_zero [IsIrreducible R L M] [IsIrreducible R L M₂] {f : M
   or_iff_not_imp_right.mpr bijective_of_ne_zero
 
 end LieModuleHom
+
+lemma Field.nonempty_lieModuleEquiv_of_isIrreducible_of_isTrivial (K L V)
+    [Field K] [LieRing L] [LieAlgebra K L] [AddCommGroup V] [Module K V]
+    [LieRingModule L V] [LieModule K L V] [IsIrreducible K L V] [IsTrivial L V] :
+    Nonempty (V ≃ₗ⁅K,L⁆ TrivialLieModule K L K) := by
+  rename IsIrreducible K L V => hV
+  simp_rw [(LieSubmodule.equivSubmoduleOfTrivial K L V).isSimpleOrder_iff,
+    ← isSimpleModule_iff] at hV
+  obtain ⟨e⟩ := DivisionRing.nonempty_linearEquiv_of_isSimpleModule K V
+  replace e := e.trans (TrivialLieModule.equiv K L K).symm
+  replace e : V ≃ₗ⁅K,L⁆ TrivialLieModule K L K := { e with map_lie' := by simp [trivial_lie_zero] }
+  exact ⟨e⟩
