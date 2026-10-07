@@ -22,7 +22,7 @@ jobs:
           build-args: "--wfail"
       - uses: leanprover-community/docgen-action@main
         with:
-          homepage: ./_site/docs
+          homepage: ./_site # ドキュメントは `./_site/docs` に生成されて欲しいが、 `docgen-action` は自動で `/docs` を付ける
           deploy: false
       - name: Build pages
         id: build-pages
