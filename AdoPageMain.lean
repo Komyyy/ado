@@ -6,5 +6,6 @@ open Verso Genre Blog Site Syntax
 def blog : Site := site AdoPage.FrontPage /
   "posts" AdoPage.Posts with
     AdoPage.Posts.FirstPage
+    AdoPage.Posts.SubobjectHell
 
 def main := blogMain .default blog
