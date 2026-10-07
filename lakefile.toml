@@ -8,7 +8,7 @@ pp.unicode.fun = true
 autoImplicit = false
 maxSynthPendingDepth = 3
 weak.linter.mathlibStandardSet = true
-linter.style.header = false
+weak.linter.style.header = false
 doc.verso = true
 
 [[require]]
