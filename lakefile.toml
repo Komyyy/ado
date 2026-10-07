@@ -23,3 +23,10 @@ rev = "master"
 
 [[lean_lib]]
 name = "Ado"
+
+[[lean_lib]]
+name = "AdoPage"
+
+[[lean_exe]]
+name = "ado-pages"
+root = "AdoPageMain"
