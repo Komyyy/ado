@@ -4,6 +4,10 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Miyahara Kō
 -/
 module
+public import Mathlib.Algebra.Lie.Derivation.Basic
+public import Mathlib.Algebra.Module.StablyFree.Basic
+public import Mathlib.RingTheory.Henselian
+public import Mathlib.RingTheory.RegularLocalRing.Defs
 public import Ado.ForMathlib.BilinFormDualBasis
 public import Ado.ForMathlib.HasNondegenerateTraceForm
 public import Ado.ForMathlib.LieCochain
@@ -18,7 +22,7 @@ public section Casimir
 
 open Module LinearMap.BilinForm LieIdeal LieModule UniversalEnvelopingAlgebra LieDerivation
 open LieModule.Cohomology
-open LieAlgebra hiding Basis
+open LieAlgebra
 open LieHom hiding ker
 open LieModule renaming ker → mker
 open UniversalEnvelopingAlgebra renaming map → mapᵤ

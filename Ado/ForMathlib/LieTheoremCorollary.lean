@@ -4,9 +4,15 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Miyahara Kō
 -/
 module
+public import Mathlib.Algebra.Algebra.IsSimpleRing
+public import Mathlib.Algebra.Lie.LieTheorem
+public import Mathlib.Algebra.Module.StablyFree.Basic
+public import Mathlib.FieldTheory.IsAlgClosed.AlgebraicClosure
+public import Mathlib.RingTheory.Coalgebra.IsFrobenius
+public import Mathlib.RingTheory.HopfAlgebra.Basic
+public import Ado.ForMathlib.LieSolvable
 public import Ado.ForMathlib.LieBaseChange
 public import Ado.ForMathlib.MatrixTriangular
-public import Ado.ForMathlib.LieSolvable
 
 /-!
 # Lie の定理の重要な系
