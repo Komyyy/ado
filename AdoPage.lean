@@ -1,5 +1,4 @@
-module
-public import AdoPage.FrontPage
-public import AdoPage.Posts
-public import AdoPage.Posts.FirstPage
-public import AdoPage.Posts.SubobjectHell
+import AdoPage.FrontPage
+import AdoPage.Posts
+import AdoPage.Posts.FirstPage
+import AdoPage.Posts.SubobjectHell

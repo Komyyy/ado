@@ -1,5 +1,4 @@
-module
-meta import VersoBlog
+import VersoBlog
 import AdoPage
 
 open Verso Genre Blog Site Syntax

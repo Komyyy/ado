@@ -3,17 +3,16 @@ Copyright (c) 2026 Miyahara Kō. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Miyahara Kō
 -/
-module
-public import VersoBlog
-public import Mathlib.Algebra.Algebra.IsSimpleRing
-public import Mathlib.Algebra.Lie.LieTheorem
-public import Mathlib.Algebra.Module.StablyFree.Basic
-public import Mathlib.FieldTheory.IsAlgClosed.AlgebraicClosure
-public import Mathlib.RingTheory.Coalgebra.IsFrobenius
-public import Mathlib.RingTheory.HopfAlgebra.Basic
-public import Ado.ForMathlib.LieSolvable
-public import Ado.ForMathlib.LieBaseChange
-public import Ado.ForMathlib.MatrixTriangular
+import VersoBlog
+import Mathlib.Algebra.Algebra.IsSimpleRing
+import Mathlib.Algebra.Lie.LieTheorem
+import Mathlib.Algebra.Module.StablyFree.Basic
+import Mathlib.FieldTheory.IsAlgClosed.AlgebraicClosure
+import Mathlib.RingTheory.Coalgebra.IsFrobenius
+import Mathlib.RingTheory.HopfAlgebra.Basic
+import Ado.ForMathlib.LieSolvable
+import Ado.ForMathlib.LieBaseChange
+import Ado.ForMathlib.MatrixTriangular
 
 open Verso Genre Blog
 
