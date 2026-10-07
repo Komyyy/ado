@@ -12,6 +12,11 @@ linter.style.header = false
 doc.verso = true
 
 [[require]]
+name = "verso"
+scope = "leanprover"
+rev = "main"
+
+[[require]]
 name = "mathlib"
 scope = "leanprover-community"
 rev = "master"
