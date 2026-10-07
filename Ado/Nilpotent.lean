@@ -4,6 +4,11 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Miyahara Kō
 -/
 module
+public import Mathlib.Algebra.Order.Sub.Prod
+public import Mathlib.LinearAlgebra.FreeModule.PID
+public import Mathlib.LinearAlgebra.PiTensorProduct.Finite
+public import Mathlib.RingTheory.Henselian
+public import Mathlib.RingTheory.RegularLocalRing.Defs
 public import Ado.ForMathlib.LieCenter
 public import Ado.ForMathlib.LieFinrank
 public import Ado.ForMathlib.LieModuleKer

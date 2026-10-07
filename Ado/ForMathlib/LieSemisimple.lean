@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Miyahara Kō
 -/
 module
+public import Mathlib.Algebra.Lie.Semisimple.Basic
 public import Ado.ForMathlib.LieModuleKer
 public import Ado.ForMathlib.LieFinrank
 public import Ado.ForMathlib.LieModuleCompl
