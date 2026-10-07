@@ -7,9 +7,6 @@ defaultTargets = ["Ado"]
 pp.unicode.fun = true
 autoImplicit = false
 maxSynthPendingDepth = 3
-weak.linter.mathlibStandardSet = true
-weak.linter.style.header = false
-doc.verso = true
 
 [[require]]
 name = "verso"
@@ -23,6 +20,9 @@ rev = "master"
 
 [[lean_lib]]
 name = "Ado"
+  [lean_lib.leanOptions]
+  linter.mathlibStandardSet = true
+  linter.style.header = false
 
 [[lean_lib]]
 name = "AdoPage"
