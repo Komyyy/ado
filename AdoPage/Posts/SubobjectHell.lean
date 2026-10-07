@@ -24,7 +24,6 @@ set_option linter.unusedVariables false
 %%%
 authors := ["Miyahara Kō"]
 date := {year := 2026, month := 10, day := 8}
-draft := true
 %%%
 
 ```leanInit hellExample
