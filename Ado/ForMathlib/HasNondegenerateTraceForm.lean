@@ -19,7 +19,7 @@ variable {I : LieIdeal R L}
 namespace LieModule
 
 variable (R L M) in
-/-- `IsKilling` の Lie 加群バージョン -/
+/-- {name}`IsKilling` の Lie 加群バージョン -/
 @[mk_iff hasNondegenerateTraceForm_def]
 class HasNondegenerateTraceForm where
   nondegenerate_traceForm : Nondegenerate (traceForm R L M)
@@ -31,7 +31,7 @@ end LieModule
 namespace LieIdeal
 
 variable (R L M I) in
-/-- `killingCompl` の Lie 加群バージョン -/
+/-- {name}`killingCompl` の Lie 加群バージョン -/
 noncomputable def traceCompl : LieIdeal R L :=
   InvariantForm.orthogonal (traceForm R L M) (traceForm_lieInvariant R L M) I
 

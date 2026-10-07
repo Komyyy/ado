@@ -10,7 +10,7 @@ public import Ado.ForMathlib.LieIdealCoe
 public import Ado.ForMathlib.LieRing
 
 /-!
-## Levi の定理
+# Levi の定理
 -/
 
 open Function Module LieAlgebra LieSubmodule LieIdeal LieSubalgebra LieHom LieModule

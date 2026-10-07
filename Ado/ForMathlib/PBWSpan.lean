@@ -12,7 +12,7 @@ public import Mathlib.Tactic.Have
 public import Mathlib.Tactic.Replace
 
 /-!
-## 弱いPBW定理: 整列単項式は普遍被覆代数を生成する
+# 弱いPBW定理: 整列単項式は普遍被覆代数を生成する
 -/
 
 section PBWSpan

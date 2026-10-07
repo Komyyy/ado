@@ -11,7 +11,7 @@ public import Ado.ForMathlib.LieSemisimple
 public import Ado.ForMathlib.UniversalEnvelopingAlgebra
 
 /-!
-## Casimir 元
+# Casimir 元
 -/
 
 public section Casimir
@@ -73,7 +73,7 @@ private lemma casimirOfBasis_eq
 variable [FiniteDimensional K L]
 
 variable (K L V) in
-/-- TODO: `casimir` が忠実ならこれと等しい事に示して統一 -/
+/-- TODO: {name (scope := "Ado.Casimir")}`casimir` が忠実ならこれと等しい事に示して統一 -/
 noncomputable def casimirOfFaithful : UniversalEnvelopingAlgebra K L :=
   casimirOfBasis V (finBasis K L)
 

@@ -9,6 +9,7 @@ autoImplicit = false
 maxSynthPendingDepth = 3
 weak.linter.mathlibStandardSet = true
 linter.style.header = false
+doc.verso = true
 
 [[require]]
 name = "mathlib"

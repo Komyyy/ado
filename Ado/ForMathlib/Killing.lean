@@ -34,7 +34,8 @@ end LieAlgebra
 
 namespace LieIdeal
 
-/-- `BilinForm.orthogonal` と `Submodule.orthogonalBilin` で重複があってややこしい。統合したい。 -/
+/-- {name}`BilinForm.orthogonal` と {name}`Submodule.orthogonalBilin` で重複があってややこしい。
+統合したい。 -/
 lemma toSubmodule_killingCompl_eq_orthogonalBilin (I : LieIdeal R L) :
     (killingCompl R L I).toSubmodule = orthogonalBilin (killingForm R L) I.toSubmodule := by
   ext; simp

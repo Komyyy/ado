@@ -6,6 +6,10 @@ Authors: Miyahara Kō
 module
 public import Ado.WhiteheadFirst
 
+/-!
+# Weyl の完全既約性定理
+-/
+
 public section
 
 open Module LieAlgebra LieModule

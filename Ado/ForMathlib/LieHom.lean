@@ -16,7 +16,7 @@ variable [LieRing L] [LieAlgebra R L] [LieRing L₂] [LieAlgebra R L₂] [LieRin
 
 namespace LieHom
 
-/-- `coe_mk` の一般化 -/
+/-- {name}`coe_mk` の一般化 -/
 @[simp]
 lemma coe_mk' (f h) : ⇑(⟨f, h⟩ : L →ₗ⁅R⁆ L₂) = f :=
   rfl

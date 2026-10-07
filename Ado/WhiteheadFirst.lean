@@ -10,7 +10,7 @@ public import Ado.ForMathlib.LieDerivation
 public import Ado.ForMathlib.LieIrreducible
 
 /-!
-## Whitehead の第一補題
+# Whitehead の第一補題
 -/
 
 open Function Filter Module LieAlgebra LieModule LieSubmodule LieModuleHom

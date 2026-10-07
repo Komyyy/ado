@@ -9,7 +9,7 @@ public import Ado.ForMathlib.MatrixTriangular
 public import Ado.ForMathlib.LieSolvable
 
 /-!
-## Lie の定理の重要な系
+# Lie の定理の重要な系
 -/
 
 section LieTheoremCorollary

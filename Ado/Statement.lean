@@ -9,7 +9,7 @@ public import Ado.ForMathlib.LieModuleNilpotent
 public import Ado.ForMathlib.Nilradical
 
 /-!
-## Ado の定理の主張
+# Ado の定理の主張
 -/
 
 public section

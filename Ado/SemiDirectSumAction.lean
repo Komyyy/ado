@@ -11,7 +11,7 @@ public import Ado.ForMathlib.TensorAlgebra
 public import Ado.ForMathlib.UniversalEnvelopingAlgebra
 
 /-!
-## 半直和から普遍被覆代数への作用
+# 半直和から普遍被覆代数への作用
 -/
 
 public section

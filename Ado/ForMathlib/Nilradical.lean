@@ -12,8 +12,9 @@ open Function LieAlgebra LieIdeal
 
 variable (R L L₂ : Type*) [CommRing R] [LieRing L] [LieAlgebra R L] [LieRing L₂] [LieAlgebra R L₂]
 
-/-- **注意:** これは `maxNilpotentIdeal` とは異なります。`maxNilpotentIdeal` は最大の `L`-冪零イデアル
-ですが、`nilradical R L = 𝔫` は最大の `𝔫`-冪零イデアルです。 -/
+/-- **注意:** これは {name}`maxNilpotentIdeal` とは異なります。{name}`maxNilpotentIdeal` は最大の
+{name}`L`-冪零イデアル ですが、 {given -show}`𝔫`{lean}`nilradical R L = 𝔫` は最大の
+{name}`𝔫`-冪零イデアルです。 -/
 def LieAlgebra.nilradical : LieIdeal R L :=
   sSup {N | LieRing.IsNilpotent N}
 

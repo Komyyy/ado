@@ -246,7 +246,7 @@ variable {R L V : Type*} [CommRing R] [LieRing L]
     {W : LieSubmodule R L V} {m n : Type*}
     (bW : Basis m R W) (bQ : Basis n R (V ⧸ W))
 
-/-- defeq問題回避の為の`sumQuot`のコピー -/
+/-- defeq問題回避の為の {name}`sumQuot`のコピー -/
 noncomputable def sumLieQuot : Basis (m ⊕ n) R V :=
   sumQuot bW bQ
 

@@ -14,7 +14,7 @@ public import Ado.LieAbelian
 public import Ado.SemiDirectSumAction
 
 /-!
-## 冪零 Lie 代数に対する Ado の定理
+# 冪零 Lie 代数に対する Ado の定理
 -/
 
 open Function Set Finset LieAlgebra LieModule LieSubmodule LieIdeal LieHom SemiDirectSum

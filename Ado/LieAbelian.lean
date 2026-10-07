@@ -11,7 +11,7 @@ public import Mathlib.RingTheory.SimpleRing.Principal
 public import Ado.Statement
 
 /-!
-## 可換 Lie 代数に対する Ado の定理
+# 可換 Lie 代数に対する Ado の定理
 -/
 
 open LieModule LieSubmodule

@@ -7,7 +7,7 @@ module
 public import Ado.WeylReducibility
 
 /-!
-## Whitehead の第二補題
+# Whitehead の第二補題
 -/
 
 open Set Function LieAlgebra Module LieModule LieSubmodule UniversalEnvelopingAlgebra

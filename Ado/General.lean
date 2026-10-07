@@ -8,7 +8,7 @@ public import Ado.Solvable
 public import Ado.Levi
 
 /-!
-## 一般の場合の Ado の定理
+# 一般の場合の Ado の定理
 -/
 
 open Function LieAlgebra LieIdeal SemiDirectSum

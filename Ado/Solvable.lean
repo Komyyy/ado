@@ -14,7 +14,7 @@ public import Ado.ForMathlib.MultisetReplicate
 public import Ado.ForMathlib.LinearMapCharpoly
 
 /-!
-## 可解 Lie 代数に対する Ado の定理
+# 可解 Lie 代数に対する Ado の定理
 -/
 
 open Set Module LieAlgebra LieModule LieHom LieSubmodule SemiDirectSum UniversalEnvelopingAlgebra
