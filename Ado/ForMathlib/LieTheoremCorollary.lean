@@ -18,7 +18,7 @@ open Module LinearMap Matrix TensorProduct LieAlgebra LieSubmodule LieModule Sem
 
 attribute [local instance 100] LieRing.ofAssociativeRing
 
-lemma LieModule.exists_basis_isUpperTriangular_of_isAlgClosed (K L V)
+public lemma LieModule.exists_basis_isUpperTriangular_of_isAlgClosed (K L V)
     [Field K] [CharZero K] [IsAlgClosed K] [LieRing L] [LieAlgebra K L] [IsSolvable L]
     [AddCommGroup V] [Module K V] [LieRingModule L V] [LieModule K L V]
     [FiniteDimensional K V] :
