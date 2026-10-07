@@ -17,7 +17,28 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
-      - uses: leanprover/lean-action@v1
+      - uses: leanprover/lean-action@main
         with:
           build-args: "--wfail"
-      - uses: leanprover-community/docgen-action@v1
+      - uses: leanprover-community/docgen-action@main
+        with:
+          homepage: ./_site/docs
+          deploy: false
+      - name: Build pages
+        id: build-pages
+        run: |
+          lake exe ado-pages --output ./_site/pages
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+            path: ./_site
+  deploy:
+      needs: build
+      runs-on: ubuntu-latest
+      environment:
+          name: github-pages
+          url: ${{ steps.deployment.outputs.page_url }}
+      steps:
+          - name: Deploy to GitHub Pages
+            id: deployment
+            uses: actions/deploy-pages@v4
