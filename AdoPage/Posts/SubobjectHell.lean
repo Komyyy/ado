@@ -122,7 +122,7 @@ variable (K L V) [Field K] [CharZero K] [IsAlgClosed K] [LieRing L] [LieAlgebra 
 都合がいい事に、 Mathlib には、上記の例の様に、商上の基底を組み合わせて新しい基底を作る定義があります。しかも、多数の simp 補題もあります。
 
 ```lean hellExample -keep
-variable {R L V} [CommRing R] [AddCommGroup V] [Module R V] [LieRing L] [LieRingModule L V]
+variable {R L V} [CommRing R] [AddCommGroup V] [Module R V]
 variable {W : Submodule R V} {m n}
 
 namespace Module.Basis
@@ -265,6 +265,56 @@ hb₀ : ∀ (x : L) ⦃i j : Fin n⦄, j < i → (b₀.repr ⁅x, b₀ j⁆) i =
 この問題は Ado の定理を証明する上で最大の悩みでした。というのも、Lie 代数を扱う時は、`LieSubmodule K L V ⊆ Submodule K V`, `LieIdeal K L ⊆ LieSubalgebra K L ⊆ Submodule K V` の型強制が頻発し、型に現れる事が珍しくないからです。
 
 形式化の途中で、Lean のメタ知識を使って、この Subobject hell の解決をしようと少しだけ試みたのですが、今まで未解決のままです。形式化も終わりましたし、この問題に本腰を入れるのも良いかもしれません。
+
+# 対処法
+
+最終的に、以下の様に、定義をコピペする事で対処しました。
+
+```lean hellExample -keep
+variable {R L V} [CommRing R] [LieRing L] [AddCommGroup V] [Module R V] [LieRingModule L V]
+variable {W : LieSubmodule R L V} {m n}
+
+namespace Module.Basis
+
+recall sumLieQuot (bW : Basis m R W) (bQ : Basis n R (V ⧸ W)) : Basis (m ⊕ n) R V :=
+  sumQuot bW bQ
+
+variable (bW : Basis m R W) (bQ : Basis n R (V ⧸ W))
+
+recall sumLieQuot_inl (bW : Basis m R W) (bQ : Basis n R (V ⧸ W)) (i) :
+    sumLieQuot bW bQ (Sum.inl i) = bW i
+
+recall sumLieQuot_inr (j : n) :
+    LieSubmodule.Quotient.mk (sumQuot bW bQ (Sum.inr j)) = bQ j
+
+recall sumLieQuot_repr_inr [LieAlgebra R L] [LieModule R L V] (v : V) (j : n) :
+    (sumLieQuot bW bQ).repr v (Sum.inr j) = bQ.repr (W.mkQ v) j
+
+end Module.Basis
+```
+
+```lean hellExample
+public lemma LieModule.exists_basis_isUpperTriangular_of_isAlgClosed (K L V)
+    [Field K] [CharZero K] [IsAlgClosed K] [LieRing L] [LieAlgebra K L] [IsSolvable L]
+    [AddCommGroup V] [Module K V] [LieRingModule L V] [LieModule K L V]
+    [FiniteDimensional K V] :
+    ∃ b : Basis (Fin (finrank K V)) K V,
+      ∀ x : L, IsUpperTriangular (toMatrix b b (toEnd K L V x)) := by
+  YOU_KNOW_THE_THING
+  -- 先述の定義を使う為に、`Fin (n + 1)` を `Unit ⊕ Fin n` と見なす同型が必要。
+  let e : Unit ⊕ Fin n ≃ Fin (n + 1) :=
+      (Equiv.sumComm _ _).trans <| (Equiv.optionEquivSumPUnit _).symm.trans <| (finSuccEquiv _).symm
+  -- `Basis.sumQuot` ではなく `Basis.sumLieQuot` を使用。
+  let b := Basis.reindex (Basis.sumLieQuot bᵥ b₀) e
+  existsi b
+  intro x
+  simp_rw [Matrix.IsUpperTriangular, Matrix.BlockTriangular, id_eq, e.surjective.forall]
+  simp only [IsUpperTriangular, BlockTriangular, id_eq, toMatrix_apply, toEnd_apply_apply] at hb₀
+  simp +contextual [e, b, toMatrix_apply, hbv, hvw, hvq, hb₀]
+  -- Q.E.D.
+```
+
+この辺り、コマンドで自動化出来ないかなと考えています。
 
 # 最後に
 
