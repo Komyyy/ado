@@ -23,6 +23,6 @@ def proposal : Category where
 
 def aiTranslated : Category where
   name := "Translated by AI"
-  slug := "ai-transtlated"
+  slug := "ai-translated"
 
 end AdoPage
