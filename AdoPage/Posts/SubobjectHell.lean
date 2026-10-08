@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Miyahara Kō
 -/
 import VersoBlog
+import AdoPage.Categories
 import Mathlib.Algebra.Algebra.IsSimpleRing
 import Mathlib.Algebra.Lie.LieTheorem
 import Mathlib.Algebra.Module.StablyFree.Basic
@@ -15,7 +16,7 @@ import Ado.ForMathlib.LieSolvable
 import Ado.ForMathlib.LieBaseChange
 import Ado.ForMathlib.MatrixTriangular
 
-open Verso Genre Blog
+open Verso Genre Blog AdoPage
 
 set_option linter.unusedVariables false
 
@@ -24,6 +25,7 @@ set_option linter.unusedVariables false
 %%%
 authors := ["Miyahara Kō"]
 date := {year := 2026, month := 10, day := 8}
+categories := [japanese, proposal]
 %%%
 
 ```leanInit hellExample
