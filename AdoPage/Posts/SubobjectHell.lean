@@ -35,7 +35,7 @@ categories := [japanese, proposal]
 
 今回紹介する現象は、形式化に辺り、最も私を悩ませたものです。
 
-具体例で示した方が分かりやすいので、実践として、以下の定理を考えます。これは実際にこのリポジトリで形式化されたものです。([リンク](../../docs/Ado/ForMathlib/LieTheoremCorollary.html) 切れてたらごめん)
+具体例で示した方が分かりやすいので、実践として、以下の定理を考えます。これは実際にこのリポジトリで形式化されたものです。([リンク](../docs/Ado/ForMathlib/LieTheoremCorollary.html) 切れてたらごめん)
 
 # 具体例
 
