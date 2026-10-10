@@ -152,7 +152,7 @@ open Module LinearMap Matrix TensorProduct LieAlgebra LieSubmodule LieModule Sem
 
 attribute [local instance 100] LieRing.ofAssociativeRing
 
-macro "YOU_KNOW_THE_THING" : tactic =>
+macro "THE_PROOF_ABOVE" : tactic =>
   set_option hygiene false in `(tactic| (
     generalize hn : finrank K V = n
     induction' n with n hin generalizing V
@@ -196,7 +196,7 @@ public lemma LieModule.exists_basis_isUpperTriangular_of_isAlgClosed (K L V)
     [FiniteDimensional K V] :
     ∃ b : Basis (Fin (finrank K V)) K V,
       ∀ x : L, IsUpperTriangular (toMatrix b b (toEnd K L V x)) := by
-  YOU_KNOW_THE_THING
+  THE_PROOF_ABOVE
   -- To use the definition above, we need an equivalence identifying `Fin (n + 1)` with `Unit ⊕ Fin n`.
   let e : Unit ⊕ Fin n ≃ Fin (n + 1) :=
       (Equiv.sumComm _ _).trans <| (Equiv.optionEquivSumPUnit _).symm.trans <| (finSuccEquiv _).symm
@@ -299,7 +299,7 @@ public lemma LieModule.exists_basis_isUpperTriangular_of_isAlgClosed (K L V)
     [FiniteDimensional K V] :
     ∃ b : Basis (Fin (finrank K V)) K V,
       ∀ x : L, IsUpperTriangular (toMatrix b b (toEnd K L V x)) := by
-  YOU_KNOW_THE_THING
+  THE_PROOF_ABOVE
   -- To use the definition above, we need an equivalence identifying `Fin (n + 1)` with `Unit ⊕ Fin n`.
   let e : Unit ⊕ Fin n ≃ Fin (n + 1) :=
       (Equiv.sumComm _ _).trans <| (Equiv.optionEquivSumPUnit _).symm.trans <| (finSuccEquiv _).symm
