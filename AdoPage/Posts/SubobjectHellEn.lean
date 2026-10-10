@@ -116,6 +116,16 @@ variable (K L V) [Field K] [CharZero K] [IsAlgClosed K] [LieRing L] [LieAlgebra 
 
 Now we want to lift the basis {lean hellExample2}`b₀` of {lean hellExample2}`V ⧸ V₀` to {lean hellExample2}`V` and combine it with the basis {lean hellExample2}`bᵥ` of {lean hellExample2}`V₀` to construct a basis of {lean hellExample2}`V`, but constructing it directly is tedious.
 
+Just to confirm: {lean hellExample2}`V₀` is a submodule of the module `V` over the Lie algebra `L`, that is, a {lean hellExample2}`LieSubmodule K L V`, which is a special case of a submodule in the ordinary sense, {lean hellExample2}`Submodule K V`.
+
+```lean hellExample2
+recall LieSubmodule (R L M) [CommRing R] [LieRing L]
+  [AddCommGroup M] [Module R M] [LieRingModule L M] /- extends Submodule R M -/ : Type*
+
+-- There is also a coercion.
+example (W : LieSubmodule K L V) : Submodule K V := ↑W
+```
+
 Conveniently, Mathlib has a definition that builds a new basis by combining a basis of a submodule with a basis of the quotient, exactly as in the example above. It even comes with many simp lemmas.
 
 ```lean hellExample -keep
