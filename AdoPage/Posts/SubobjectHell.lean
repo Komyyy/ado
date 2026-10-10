@@ -121,6 +121,16 @@ variable (K L V) [Field K] [CharZero K] [IsAlgClosed K] [LieRing L] [LieAlgebra 
 
 さて、今から、{lean hellExample2}`V ⧸ V₀` 上の基底 {lean hellExample2}`b₀` を {lean hellExample2}`V` 上に持ち上げて、{lean hellExample2}`V₀` 上の基底 {lean hellExample2}`bᵥ` と組み合わせた基底を構成したいのですが、直接構成するのは面倒です。
 
+ちなみに確認ですが、 {lean hellExample2}`V₀` は Lie 代数 `L` 上の加群 `V` の部分加群、すなわち {lean hellExample2}`LieSubmodule K L V` であり、これは通常の意味での部分加群 {lean hellExample2}`Submodule K V` の、特別の場合です。
+
+```lean hellExample2
+recall LieSubmodule (R L M) [CommRing R] [LieRing L]
+  [AddCommGroup M] [Module R M] [LieRingModule L M] /- extends Submodule R M -/ : Type*
+
+-- 型強制もあります。
+example (W : LieSubmodule K L V) : Submodule K V := ↑W
+```
+
 都合がいい事に、 Mathlib には、上記の例の様に、商上の基底を組み合わせて新しい基底を作る定義があります。しかも、多数の simp 補題もあります。
 
 ```lean hellExample -keep
