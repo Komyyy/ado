@@ -253,7 +253,7 @@ hb₀ : ∀ (x : L) ⦃i j : Fin n⦄, j < i → (b₀.repr ⁅x, b₀ j⁆) i =
 ⊢ ∀ (b b_1 : Fin n), b_1 < b → (b₀.repr (Submodule.Quotient.mk ⁅x, (bᵥ.sumQuot b₀) (Sum.inr b_1)⁆)) b = 0
 ```
 
-The `sumQuot_repr_inr` lemma from earlier should apply to this goal. What on earth is going on?
+The `sumQuot_inr` lemma from earlier should apply to this goal. What on earth is going on?
 
 In fact, the problem is that {lean hellExample2}`↥V₀` and {lean hellExample2}`↥(↑V₀ : Submodule K V)` cannot be unified. In other words, it is caused by the coercion from modules over a Lie algebra (`LieSubmodule`) to ordinary modules (`Submodule`) appearing inside a type.
 

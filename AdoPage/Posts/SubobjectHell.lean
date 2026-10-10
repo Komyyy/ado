@@ -256,7 +256,7 @@ hb₀ : ∀ (x : L) ⦃i j : Fin n⦄, j < i → (b₀.repr ⁅x, b₀ j⁆) i =
 ⊢ ∀ (b b_1 : Fin n), b_1 < b → (b₀.repr (Submodule.Quotient.mk ⁅x, (bᵥ.sumQuot b₀) (Sum.inr b_1)⁆)) b = 0
 ```
 
-このゴールなら先程の `sumQuot_repr_inr` 補題が使える筈です。一体何が起こっているのでしょうか。
+このゴールなら先程の `sumQuot_inr` 補題が使える筈です。一体何が起こっているのでしょうか。
 
 実はこれは、{lean hellExample2}`↥V₀` と {lean hellExample2}`↥(↑V₀ : Submodule K V)` を統合できない事による、つまり、Lie 代数上の加群(`LieSubmodule`)から通常の加群(`Submodule`)への型強制が、型に現れる事によって起こった問題なのです。
 
