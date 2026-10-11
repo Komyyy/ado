@@ -103,7 +103,7 @@ lemma LieIdeal.exists_for_nilStepAdoData_of_not_isLieAbelian (n : ℕ)
       refine { trivial x y := ?_ }
       obtain ⟨x, rfl⟩ := LieIdeal.Quotient.surjective_mk' _ x
       obtain ⟨y, rfl⟩ := LieIdeal.Quotient.surjective_mk' _ y
-      simp [← Quotient.mk_bracket, lie_mem_lie]
+      simp [← Quotient.mk_bracket, - Quotient.mk_module_bracket, lie_mem_lie]
     existsi { toSubmodule := 𝔞', lie_mem _ := by simp [trivial_lie_zero] }
     simp_rw [← finrank_toSubmodule, h𝔞']
   suffices h𝔫' : 0 < finrank K 𝔫' by
@@ -482,7 +482,7 @@ lemma isFaithful_center_nilStepAdoSpace [LieRing.IsNilpotent 𝔞]
     EmbeddingLike.map_eq_zero_iff]
   intro x hx
   specialize hx (LieSubmodule.Quotient.mk 1)
-  simp_rw [coe_bracket_of_module, Quotient.lie_bracket_mk, equivIdealRangeInl_apply_coe,
+  simp_rw [coe_bracket_of_module, ← Quotient.mk_module_bracket, equivIdealRangeInl_apply_coe,
     inl_lieUE, bracket_eq, mul_one] at hx
   conv_rhs at hx => equals LieSubmodule.Quotient.mk (ι K 0) => simp
   exact injective_quotient_mk_nilSubmodule K 𝔞 hx

@@ -61,7 +61,7 @@ public lemma LieModule.exists_basis_isUpperTriangular_of_isAlgClosed (K L V)
     have hbv : (bᵥ () : V) = v := by simp [bᵥ, LinearEquiv.toSpanNonzeroSingleton]
     let e : Unit ⊕ Fin n ≃ Fin (n + 1) :=
       (Equiv.sumComm _ _).trans <| (Equiv.optionEquivSumPUnit _).symm.trans <| (finSuccEquiv _).symm
-    let b := Basis.reindex (Basis.sumLieQuot bᵥ b₀) e
+    let b := Basis.reindex (Basis.sumQuot bᵥ b₀) e
     existsi b
     intro x
     simp_rw [Matrix.IsUpperTriangular, Matrix.BlockTriangular, id_eq, e.surjective.forall]

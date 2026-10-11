@@ -97,7 +97,7 @@ lemma LieIdeal.exists_for_solStepAdoData_of_not_isLieAbelian (n : ℕ)
       refine { trivial x y := ?_ }
       obtain ⟨x, rfl⟩ := LieIdeal.Quotient.surjective_mk' _ x
       obtain ⟨y, rfl⟩ := LieIdeal.Quotient.surjective_mk' _ y
-      simp [← Quotient.mk_bracket, lie_mem_lie]
+      simp [← Quotient.mk_bracket, - Quotient.mk_module_bracket, lie_mem_lie]
     existsi { toSubmodule := 𝔞', lie_mem _ := by simp [trivial_lie_zero] }
     simp_rw [← finrank_toSubmodule, h𝔞']
   suffices h𝔯' : 0 < finrank K 𝔯' by

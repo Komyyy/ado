@@ -109,24 +109,27 @@ alias ⟨IsInnerSemiDirectSum.isCompl, _root_.IsCompl.isInnerSemidirectSum⟩ :=
 
 namespace SemiDirectSum
 
+set_option warning.simp.varHead false in
+@[local simp]
+private lemma Submodule.coe_prodEquivOfIsCompl'' {R} [Ring R] {E} [AddCommGroup E]
+    [Module R E] (p q : Submodule R E) (h : IsCompl p q) (x : ↥p × ↥q) :
+    no_index ((p.prodEquivOfIsCompl q h) x) = ↑x.1 + ↑x.2 :=
+  rfl
+
 noncomputable def lieEquivLieSubalgebra (h : IsInnerSemiDirectSum I L') :
     (I ⋊⁅comp (adIdeal I) (incl L')⁆ L') ≃ₗ⁅R⁆ L where
-  __ := LinearEquiv.trans (toProdl _) (Submodule.prodEquivOfIsCompl _ _ h.isCompl)
+  __ := LinearEquiv.trans (toProdl _) (Submodule.prodEquivOfIsCompl _ _ (by simp [h.isCompl]))
   map_lie' {x y} := by
     -- `SetLike` の defeq に対処
     have haux (x : I × L') :
-        Submodule.prodEquivOfIsCompl _ _ h.isCompl x = (x.1 : L) + (x.2 : L) :=
+        Submodule.prodEquivOfIsCompl _ _ (by simp [h.isCompl]) x = (x.1 : L) + (x.2 : L) :=
       Submodule.coe_prodEquivOfIsCompl' ..
     conv => equals
         ⁅x.left.1, y.left.1⁆ + ⁅x.right.1, y.left.1⁆ -
           ⁅y.right.1, x.left.1⁆ + ⁅x.right.1, y.right.1⁆ =
             ⁅x.left.1, y.left.1⁆ + ⁅x.right.1, y.left.1⁆ +
               (⁅x.left.1, y.right.1⁆ + ⁅x.right.1, y.right.1⁆) =>
-      -- `SetLike` の defeq に対処
-      have haux (x : I × L') :
-          Submodule.prodEquivOfIsCompl _ _ h.isCompl x = (x.1 : L) + (x.2 : L) :=
-        Submodule.coe_prodEquivOfIsCompl' ..
-      simp [haux]
+      simp
     grind only [=_ lie_skew]
 
 @[simp]

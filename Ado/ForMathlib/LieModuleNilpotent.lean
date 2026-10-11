@@ -198,7 +198,7 @@ instance isNilpotent_sup_left (L' : LieSubalgebra R L) (I : LieIdeal R L)
   · constructor
     intro x a
     obtain ⟨a, rfl⟩ := LieSubmodule.Quotient.surjective_mk' _ a
-    simp [lie_mem_lie]
+    simp [lie_mem_lie, ← LieSubmodule.Quotient.mk_module_bracket]
   suffices h : ∀ k,
       (lowerCentralSeries R ↥(L' ⊔ I.toLieSubalgebra)
         (I.lcs M n ⧸ comap (I.lcs M n).incl (I.lcs M (n + 1))) k).toSubmodule =
