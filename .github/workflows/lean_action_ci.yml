@@ -13,17 +13,13 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - uses: actions/checkout@v5
       - uses: leanprover/lean-action@main
         with:
           build-args: "--wfail"
-      - name: Add swap space
-        run: |
-          sudo fallocate -l 24G /swap && sudo chmod 600 /swap
-          sudo mkswap /swap && sudo swapon /swap
       - uses: leanprover-community/docgen-action@main
         with:
           homepage: ./_site # ドキュメントは `./_site/docs` に生成されて欲しいが、 `docgen-action` は自動で `/docs` を付ける
