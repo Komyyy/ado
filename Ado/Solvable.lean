@@ -58,36 +58,36 @@ lemma LieIdeal.exists_for_solStepAdoData_of_not_isLieAbelian (n : ℕ)
     ∃ 𝔞 : LieIdeal K 𝔯, finrank K (𝔞 ⧸ nilradical K 𝔞) = n ∧ nilradical K 𝔯 ≤ 𝔞 := by
   rsuffices ⟨𝔞', h𝔞'⟩ : ∃ 𝔞' : LieIdeal K (𝔯 ⧸ nilradical K 𝔯),
       finrank K 𝔞' + 1 = finrank K (𝔯 ⧸ nilradical K 𝔯)
-  · existsi comap (LieIdeal.Quotient.mk' (nilradical K 𝔯)) 𝔞'
-    have h𝔞'n : nilradical K 𝔯 ≤ comap (Quotient.mk' (nilradical K 𝔯)) 𝔞'
-    · grw [← ker_le_comap, LieIdeal.Quotient.mk'_ker]
+  · existsi comap (mkQ (nilradical K 𝔯)) 𝔞'
+    have h𝔞'n : nilradical K 𝔯 ≤ comap (mkQ (nilradical K 𝔯)) 𝔞'
+    · grw [← ker_le_comap, mkQ_ker]
     constructor
     case right => assumption
     simp_rw [finrank_quotient,
-      ← (LieIdeal.Quotient.mk' (nilradical K 𝔯)).lieIdealComap 𝔞'
+      ← (mkQ (nilradical K 𝔯)).lieIdealComap 𝔞'
         |>.finrank_idealRange_add_finrank_ker
           (isIdealMorphism_of_surjective _ (lieIdealComap_surjective_of_surjective _ _
-          (LieIdeal.Quotient.surjective_mk' _))),
+          (surjective_mkQ _))),
       idealRange_eq_top_of_surjective _
-        (lieIdealComap_surjective_of_surjective _ _ (LieIdeal.Quotient.surjective_mk' _)),
-      LieIdeal.finrank_top, lieIdealComap_ker, LieIdeal.Quotient.mk'_ker,
+        (lieIdealComap_surjective_of_surjective _ _ (surjective_mkQ _)),
+      LieIdeal.finrank_top, lieIdealComap_ker, mkQ_ker,
       lieIdealOf_nilradical_eq_of_le _ h𝔞'n, finrank_lieIdealOf _ _ h𝔞'n]
     lia
   let 𝔯' := (𝔯 ⧸ nilradical K 𝔯) ⧸ derivedSeries K (𝔯 ⧸ nilradical K 𝔯) 1
   rsuffices ⟨𝔞', h𝔞'⟩ : ∃ 𝔞' : LieIdeal K 𝔯', finrank K 𝔞' + 1 = finrank K 𝔯'
-  · existsi comap (LieIdeal.Quotient.mk' (derivedSeries K (𝔯 ⧸ nilradical K 𝔯) 1)) 𝔞'
+  · existsi comap (mkQ (derivedSeries K (𝔯 ⧸ nilradical K 𝔯) 1)) 𝔞'
     simp_rw [
-      ← (LieIdeal.Quotient.mk' (derivedSeries K (𝔯 ⧸ nilradical K 𝔯) 1)).lieIdealComap 𝔞'
+      ← (mkQ (derivedSeries K (𝔯 ⧸ nilradical K 𝔯) 1)).lieIdealComap 𝔞'
         |>.finrank_idealRange_add_finrank_ker
           (isIdealMorphism_of_surjective _ (lieIdealComap_surjective_of_surjective _ _
-          (LieIdeal.Quotient.surjective_mk' _))),
+          (surjective_mkQ _))),
       idealRange_eq_top_of_surjective _
-        (lieIdealComap_surjective_of_surjective _ _ (LieIdeal.Quotient.surjective_mk' _)),
-      LieIdeal.finrank_top, lieIdealComap_ker, LieIdeal.Quotient.mk'_ker]
+        (lieIdealComap_surjective_of_surjective _ _ (surjective_mkQ _)),
+      LieIdeal.finrank_top, lieIdealComap_ker, mkQ_ker]
     conv =>
       enter [1, 1, 2]
       apply finrank_lieIdealOf
-      tactic => grw [← ker_le_comap, LieIdeal.Quotient.mk'_ker]
+      tactic => grw [← ker_le_comap, mkQ_ker]
     rw [finrank_quotient, eq_tsub_iff_add_eq_of_le (by simp [- finrank_quotient])] at h𝔞'
     subst 𝔯'
     lia
@@ -95,8 +95,8 @@ lemma LieIdeal.exists_for_solStepAdoData_of_not_isLieAbelian (n : ℕ)
   · have : IsLieAbelian 𝔯' := by
       subst 𝔯'
       refine { trivial x y := ?_ }
-      obtain ⟨x, rfl⟩ := LieIdeal.Quotient.surjective_mk' _ x
-      obtain ⟨y, rfl⟩ := LieIdeal.Quotient.surjective_mk' _ y
+      obtain ⟨x, rfl⟩ := surjective_mkQ _ x
+      obtain ⟨y, rfl⟩ := surjective_mkQ _ y
       simp [← Quotient.mk_bracket, - Quotient.mk_module_bracket, lie_mem_lie]
     existsi { toSubmodule := 𝔞', lie_mem _ := by simp [trivial_lie_zero] }
     simp_rw [← finrank_toSubmodule, h𝔞']

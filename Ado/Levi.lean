@@ -14,14 +14,15 @@ public import Ado.ForMathlib.LieRing
 -/
 
 open Function Module LieAlgebra LieSubmodule LieIdeal LieSubalgebra LieHom LieModule
-open _root_.LieIdeal renaming map → mapᵢ, Quotient.mk' → mkQ', Quotient.mk → mkQ
+open _root_.LieIdeal renaming map → mapᵢ
+open LieSubmodule renaming Quotient.mk → qmk
 open LieHom renaming range → rangeₗ
 
 attribute [local instance 100] LieRing.ofAssociativeRing
 
 public theorem LieHom.exists_levi_splitting (K L : Type*)
     [Field K] [CharZero K] [LieRing L] [LieAlgebra K L] [FiniteDimensional K L] :
-    ∃ (s : L ⧸ radical K L →ₗ⁅K⁆ L), LeftInverse LieIdeal.Quotient.mk s := by
+    ∃ (s : L ⧸ radical K L →ₗ⁅K⁆ L), LeftInverse LieSubmodule.Quotient.mk s := by
   induction hn : finrank K (radical K L) using Nat.strongRec generalizing L with | ind n hin
   subst hn
   replace hin L inst inst_1 inst_2 hL := @hin _ hL L inst inst_1 inst_2 rfl
@@ -29,55 +30,55 @@ public theorem LieHom.exists_levi_splitting (K L : Type*)
   next =>
     rw [finrank_eq_zero_iff_of_free, ← not_nontrivial_iff_subsingleton, nontrivial_iff_ne_bot,
       not_ne_iff] at hn
-    existsi LieIdeal.Quotient.lift _ .id (by simp [hn])
+    existsi liftQ _ .id (by simp [hn])
     intro x
-    obtain ⟨x, rfl⟩ := LieIdeal.Quotient.surjective_mk' _ x
+    obtain ⟨x, rfl⟩ := surjective_mkQ _ x
     simp
   replace hn : 0 < finrank K (derivedAbelianOfIdeal (radical K L))
   · simp_rw [finrank_pos_iff, nontrivial_iff_ne_bot, ne_eq, abelian_of_solvable_ideal_eq_bot_iff,
       ← ne_eq, ← nontrivial_iff_ne_bot, ← finrank_pos_iff (R := K), hn]
-  have hr : radical K (L ⧸ derivedAbelianOfIdeal (radical K L)) = mapᵢ (mkQ' _) (radical K L)
+  have hr : radical K (L ⧸ derivedAbelianOfIdeal (radical K L)) = mapᵢ (mkQ _) (radical K L)
   · simp [radical_quotient_eq_of_isSolvable]
   specialize hin (L ⧸ derivedAbelianOfIdeal (radical K L)) inferInstance inferInstance inferInstance
     ?_
   · convert_to finrank K
-        (LieHom.range (lieIdealMap (mkQ' (derivedAbelianOfIdeal (radical K L))) (radical K L))) < _
+        (LieHom.range (lieIdealMap (mkQ (derivedAbelianOfIdeal (radical K L))) (radical K L))) < _
     · simp [hr, range_eq_top _ |>.mpr]
     simp_rw [(LieHom.quotKerEquivRange _).symm.finrank_eq, finrank_quotient, lieIdealMap_ker,
-      LieIdeal.Quotient.mk'_ker, (lieIdealOfEquivOfLe (derivedAbelianOfIdeal_le_self _)).finrank_eq]
+      mkQ_ker, (lieIdealOfEquivOfLe (derivedAbelianOfIdeal_le_self _)).finrank_eq]
     simp [hn, hn.trans_le <| finrank_mono (derivedAbelianOfIdeal_le_self _)]
   replace hin : ∃ (s : L ⧸ radical K L →ₗ⁅K⁆  L ⧸ derivedAbelianOfIdeal (radical K L)),
-      LeftInverse (LieIdeal.Quotient.map _ _ .id (by simp)) s
+      LeftInverse (mapQ _ _ .id (by simp)) s
   · obtain ⟨s, hs⟩ := hin
     let e : (L ⧸ radical K L) ≃ₗ⁅K⁆
         _ ⧸ radical K (L ⧸ derivedAbelianOfIdeal (radical K L)) :=
-      LieEquiv.trans (LieIdeal.Quotient.quotientEquivQuotient
+      LieEquiv.trans (quotientQuotientEquivQuotient
           (derivedAbelianOfIdeal (radical K L)) _ (by simp)).symm
         (LieIdeal.Quotient.equiv _ _ .refl (by simp [hr]))
     existsi LieHom.comp s e
     intro q
-    obtain ⟨x, rfl⟩ := LieIdeal.Quotient.surjective_mk _ q
-    convert_to LieIdeal.Quotient.map _ (radical K L) .id (by simp) (s (mkQ (mkQ x)))
-        = mkQ x using 0
+    obtain ⟨x, rfl⟩ := Submodule.Quotient.mk_surjective _ q
+    convert_to mapQ _ (radical K L) .id (by simp) (s (qmk (qmk x)))
+        = qmk x using 0
     · simp [e]
-    generalize hq : s (mkQ (mkQ x)) = q
-    obtain ⟨y, rfl⟩ := LieIdeal.Quotient.surjective_mk _ q
-    specialize hs (mkQ (mkQ x))
+    generalize hq : s (qmk (qmk x)) = q
+    obtain ⟨y, rfl⟩ := Submodule.Quotient.mk_surjective _ q
+    specialize hs (qmk (qmk x))
     apply_fun e.symm at hs
     simpa [e, hq] using hs
   obtain ⟨s, hs⟩ := hin
   clear hn hr
   rsuffices ⟨s', hs'⟩ : ∃ (s' : rangeₗ s →ₗ⁅K⁆ L), ∀ x,
-      (mkQ (s' x) : L ⧸ derivedAbelianOfIdeal (radical K L)) = x
+      (qmk (s' x) : L ⧸ derivedAbelianOfIdeal (radical K L)) = x
   · existsi LieHom.comp s' (LieEquiv.ofInjective _ hs.injective).toLieHom
     intro q
-    obtain ⟨x, rfl⟩ := LieIdeal.Quotient.surjective_mk _ q
-    replace hs' := hs' (LieEquiv.ofInjective _ hs.injective (mkQ x))
-    apply_fun LieIdeal.Quotient.map _ (radical K L) .id (by simp) at hs'
+    obtain ⟨x, rfl⟩ := Submodule.Quotient.mk_surjective _ q
+    replace hs' := hs' (LieEquiv.ofInjective _ hs.injective (qmk x))
+    apply_fun mapQ _ (radical K L) .id (by simp) at hs'
     simpa [hs.eq] using hs'
   let : LieRingModule
       (L ⧸ derivedAbelianOfIdeal (radical K L)) (derivedAbelianOfIdeal (radical K L)) :=
-    LieRingModule.compLieHom _ (LieIdeal.Quotient.lift _
+    LieRingModule.compLieHom _ (liftQ _
       (toEnd K L (derivedAbelianOfIdeal (radical K L))) ?wd)
   case wd =>
     simp [IsConcreteLE.le_iff, DFunLike.ext_iff,
@@ -90,13 +91,13 @@ public theorem LieHom.exists_levi_splitting (K L : Type*)
     (LieEquiv.ofInjective _ hs.injective).hasTrivialRadical_iff_equiv_hasTrivialRadical.mp
       inferInstance
   obtain ⟨s', hs'⟩ : ∃ (s' : rangeₗ s →ₗ[K] L), ∀ x,
-      (mkQ (s' x) : L ⧸ derivedAbelianOfIdeal (radical K L)) = x := by
-    convert projective_lifting_property (mkQ' (derivedAbelianOfIdeal (radical K L))).toLinearMap
-        (LieSubalgebra.incl (rangeₗ s)).toLinearMap (LieIdeal.Quotient.surjective_mk' _)
+      (qmk (s' x) : L ⧸ derivedAbelianOfIdeal (radical K L)) = x := by
+    convert projective_lifting_property (mkQ (derivedAbelianOfIdeal (radical K L))).toLinearMap
+        (LieSubalgebra.incl (rangeₗ s)).toLinearMap (surjective_mkQ _)
     simp [DFunLike.ext_iff]
   have coe_range_s'_lie (x : rangeₗ s) (y : derivedAbelianOfIdeal (radical K L)) :
       ((⁅x, y⁆ : derivedAbelianOfIdeal (radical K L)) : L) = ⁅s' x, (y : L)⁆
-  · obtain ⟨x', hx'⟩ := LieIdeal.Quotient.surjective_mk _ x.1
+  · obtain ⟨x', hx'⟩ := Submodule.Quotient.mk_surjective _ x.1
     specialize hs' x
     apply_fun fun x ↦ ((⁅x, y⁆ : derivedAbelianOfIdeal (radical K L)) : L) at hs'
     simpa [LieRingModule.compLieHom_apply, ← hx'] using hs'.symm

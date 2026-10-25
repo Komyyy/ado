@@ -111,7 +111,7 @@ namespace SemiDirectSum
 
 set_option warning.simp.varHead false in
 @[local simp]
-private lemma Submodule.coe_prodEquivOfIsCompl'' {R} [Ring R] {E} [AddCommGroup E]
+private lemma _root_.Submodule.coe_prodEquivOfIsCompl'' {R} [Ring R] {E} [AddCommGroup E]
     [Module R E] (p q : Submodule R E) (h : IsCompl p q) (x : ↥p × ↥q) :
     no_index ((p.prodEquivOfIsCompl q h) x) = ↑x.1 + ↑x.2 :=
   rfl

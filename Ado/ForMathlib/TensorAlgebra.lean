@@ -68,14 +68,14 @@ lemma ι_range_pow_eq (n : ℕ) :
     simp [Submodule.list_prod_mem_pow]
 
 variable (R M) in
-lemma span_tprod_eq_top : span R {x | ∃ᵉ (n) (f : Fin n → M), x = tprod R M n f} = ⊤ := by
+lemma span_tprod_eq_top : span R {x | ∃ n, ∃ f : Fin n → M, x = tprod R M n f} = ⊤ := by
   have hι := DirectSum.Decomposition.isInternal
       (fun n : ℕ ↦ LinearMap.range (TensorAlgebra.ι R : M →ₗ[R] TensorAlgebra R M) ^ n)
   simp_rw [TensorAlgebra.ι_range_pow_eq] at hι
   apply DirectSum.IsInternal.submodule_iSup_eq_top at hι
   simp_rw [← Submodule.map_top, ← PiTensorProduct.span_tprod_eq_top, Submodule.map_span,
     iSup_span] at hι
-  convert hι
+  convert hι using 2
   simp only [Set.ext_iff, Set.mem_ofPred_eq, Set.mem_iUnion, Set.mem_image, Set.mem_range]
   grind only [_=_ toTensorAlgebra_tprod]
 

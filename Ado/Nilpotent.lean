@@ -62,38 +62,38 @@ lemma LieIdeal.exists_for_nilStepAdoData_of_not_isLieAbelian (n : ℕ)
     ∃ 𝔞 : LieIdeal K 𝔫, finrank K 𝔞 = n ∧ center K 𝔫 ≤ 𝔞 := by
   rsuffices ⟨𝔞', h𝔞'⟩ : ∃ 𝔞' : LieIdeal K (𝔫 ⧸ center K 𝔫),
       finrank K 𝔞' + 1 = finrank K (𝔫 ⧸ center K 𝔫)
-  · existsi comap (LieIdeal.Quotient.mk' (center K 𝔫)) 𝔞'
+  · existsi comap (mkQ (center K 𝔫)) 𝔞'
     constructor
-    case right => grw [← ker_le_comap, LieIdeal.Quotient.mk'_ker]
+    case right => grw [← ker_le_comap, mkQ_ker]
     simp_rw [
-      ← (LieIdeal.Quotient.mk' (center K 𝔫)).lieIdealComap 𝔞'
+      ← (mkQ (center K 𝔫)).lieIdealComap 𝔞'
         |>.finrank_idealRange_add_finrank_ker
           (isIdealMorphism_of_surjective _ (lieIdealComap_surjective_of_surjective _ _
-          (LieIdeal.Quotient.surjective_mk' _))),
+          (surjective_mkQ _))),
       idealRange_eq_top_of_surjective _
-        (lieIdealComap_surjective_of_surjective _ _ (LieIdeal.Quotient.surjective_mk' _)),
-      LieIdeal.finrank_top, lieIdealComap_ker, LieIdeal.Quotient.mk'_ker]
+        (lieIdealComap_surjective_of_surjective _ _ (surjective_mkQ _)),
+      LieIdeal.finrank_top, lieIdealComap_ker, mkQ_ker]
     conv_lhs =>
       enter [2]
       apply finrank_lieIdealOf
-      tactic => grw [← ker_le_comap, LieIdeal.Quotient.mk'_ker]
+      tactic => grw [← ker_le_comap, mkQ_ker]
     rw [finrank_quotient, eq_tsub_iff_add_eq_of_le (by simp)] at h𝔞'
     lia
   let 𝔫' := (𝔫 ⧸ center K 𝔫) ⧸ derivedSeries K (𝔫 ⧸ center K 𝔫) 1
   rsuffices ⟨𝔞', h𝔞'⟩ : ∃ 𝔞' : LieIdeal K 𝔫', finrank K 𝔞' + 1 = finrank K 𝔫'
-  · existsi comap (LieIdeal.Quotient.mk' (derivedSeries K (𝔫 ⧸ center K 𝔫) 1)) 𝔞'
+  · existsi comap (mkQ (derivedSeries K (𝔫 ⧸ center K 𝔫) 1)) 𝔞'
     simp_rw [
-      ← (LieIdeal.Quotient.mk' (derivedSeries K (𝔫 ⧸ center K 𝔫) 1)).lieIdealComap 𝔞'
+      ← (mkQ (derivedSeries K (𝔫 ⧸ center K 𝔫) 1)).lieIdealComap 𝔞'
         |>.finrank_idealRange_add_finrank_ker
           (isIdealMorphism_of_surjective _ (lieIdealComap_surjective_of_surjective _ _
-          (LieIdeal.Quotient.surjective_mk' _))),
+          (surjective_mkQ _))),
       idealRange_eq_top_of_surjective _
-        (lieIdealComap_surjective_of_surjective _ _ (LieIdeal.Quotient.surjective_mk' _)),
-      LieIdeal.finrank_top, lieIdealComap_ker, LieIdeal.Quotient.mk'_ker]
+        (lieIdealComap_surjective_of_surjective _ _ (surjective_mkQ _)),
+      LieIdeal.finrank_top, lieIdealComap_ker, mkQ_ker]
     conv =>
       enter [1, 1, 2]
       apply finrank_lieIdealOf
-      tactic => grw [← ker_le_comap, LieIdeal.Quotient.mk'_ker]
+      tactic => grw [← ker_le_comap, mkQ_ker]
     rw [finrank_quotient, eq_tsub_iff_add_eq_of_le (by simp [- finrank_quotient])] at h𝔞'
     subst 𝔫'
     lia
@@ -101,8 +101,8 @@ lemma LieIdeal.exists_for_nilStepAdoData_of_not_isLieAbelian (n : ℕ)
   · have : IsLieAbelian 𝔫' := by
       subst 𝔫'
       refine { trivial x y := ?_ }
-      obtain ⟨x, rfl⟩ := LieIdeal.Quotient.surjective_mk' _ x
-      obtain ⟨y, rfl⟩ := LieIdeal.Quotient.surjective_mk' _ y
+      obtain ⟨x, rfl⟩ := surjective_mkQ _ x
+      obtain ⟨y, rfl⟩ := surjective_mkQ _ y
       simp [← Quotient.mk_bracket, - Quotient.mk_module_bracket, lie_mem_lie]
     existsi { toSubmodule := 𝔞', lie_mem _ := by simp [trivial_lie_zero] }
     simp_rw [← finrank_toSubmodule, h𝔞']
@@ -151,7 +151,7 @@ lemma mkAlgHom_tprod_mem_lengthSubmodule (m) {n} (f : Fin n → 𝔞) (hn : m �
 
 lemma lengthSubmodule_eq_span_exists_eq_mkAlgHom_tprod (m) :
     lengthSubmodule K 𝔞 m =
-      .span K {a | ∃ᵉ (n) (f : Fin n → 𝔞), m ≤ n ∧
+      .span K {a | ∃ n, ∃ f : Fin n → 𝔞, m ≤ n ∧
         a = mkAlgHom K 𝔞 (TensorAlgebra.tprod K 𝔞 n f)} := by
   apply le_antisymm
   · simp_rw [lengthSubmodule, Submodule.map_le_iff_le_comap, iSup₂_le_iff,
@@ -221,7 +221,7 @@ noncomputable def nilSubmodule : Submodule K (UniversalEnvelopingAlgebra K 𝔞)
 
 lemma nilSubmodule_eq_span_exists_eq_mkAlgHom_tprod :
     nilSubmodule K 𝔞 =
-      .span K {a | ∃ᵉ (n) (f : Fin n → 𝔞), nilpotencyLength 𝔞 (AdoSpace K 𝔞) ≤ n ∧
+      .span K {a | ∃ n, ∃ f : Fin n → 𝔞, nilpotencyLength 𝔞 (AdoSpace K 𝔞) ≤ n ∧
         a = mkAlgHom K 𝔞 (TensorAlgebra.tprod K 𝔞 n f)} :=
   lengthSubmodule_eq_span_exists_eq_mkAlgHom_tprod (nilpotencyLength 𝔞 (AdoSpace K 𝔞))
 
@@ -271,7 +271,7 @@ end NilSubmodule
 section DepthSubmodule
 
 def depthSubmodule (m : ℕ) : Submodule K (UniversalEnvelopingAlgebra K 𝔞) :=
-  .span K {a | ∃ᵉ (n) (f : Fin n → 𝔞) (x : Fin n → ℕ),
+  .span K {a | ∃ n, ∃ f : Fin n → 𝔞, ∃ x : Fin n → ℕ,
       ∑ k, x k = m ∧
       (∀ k, (f k) ∈ (lowerCentralSeries K (inr ψ).range (inl ψ).idealRange (x k)).toSubmodule.comap
           (equivIdealRangeInl ψ).toLinearMap) ∧

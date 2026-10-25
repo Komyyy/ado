@@ -16,7 +16,6 @@ open Polynomial Module
 namespace LinearMap
 
 lemma charpoly_degree [StrongRankCondition R] : degree (charpoly f) = finrank R M := by
-  have := nontrivial_of_invariantBasisNumber
   rw [charpoly, Matrix.charpoly_degree_eq_dim, finrank_eq_card_chooseBasisIndex]
 
 end LinearMap
