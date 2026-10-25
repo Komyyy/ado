@@ -18,30 +18,30 @@ variable {R L L₂} [CommRing R] [LieRing L] [LieAlgebra R L] [LieRing L₂] [Li
 attribute [instance] LieAlgebra.abelian_derivedAbelianOfIdeal
 
 lemma LieIdeal.radical_quotient_eq_of_isSolvable (I : LieIdeal R L) [IsSolvable I] :
-    radical R (L ⧸ I) = map (LieIdeal.Quotient.mk' I) (radical R L) := by
+    radical R (L ⧸ I) = map (mkQ I) (radical R L) := by
   apply le_antisymm
   · simp_rw [radical, LieIdeal.gc_map_comap _ |>.l_sSup, sSup_le_iff, Set.mem_ofPred]
     intro J hJ
-    apply le_iSup₂_of_le (comap (LieIdeal.Quotient.mk' I) J)
+    apply le_iSup₂_of_le (comap (mkQ I) J)
     · simp [LieIdeal.map_comap_eq
-        (LieHom.isIdealMorphism_of_surjective _ <| LieIdeal.Quotient.surjective_mk' I)]
-    have hI : I ≤ comap (LieIdeal.Quotient.mk' I) J
-    · grw [← LieHom.ker_le_comap, LieIdeal.Quotient.mk'_ker]
-    rw [← isSolvable_short_exact_iff (lieIdealOf I (comap (LieIdeal.Quotient.mk' I) J))]
+        (LieHom.isIdealMorphism_of_surjective _ I.surjective_mkQ)]
+    have hI : I ≤ comap (mkQ I) J
+    · grw [← LieHom.ker_le_comap, mkQ_ker]
+    rw [← isSolvable_short_exact_iff (lieIdealOf I (comap (mkQ I) J))]
     constructor
     · rwa [solvable_iff_equiv_solvable (lieIdealOfEquivOfLe hI)]
-    · replace hI : Nonempty ((_ ⧸ lieIdealOf I (comap (LieIdeal.Quotient.mk' I) J)) ≃ₗ⁅R⁆
-          (_ ⧸ LieHom.ker (LieHom.lieIdealComap (LieIdeal.Quotient.mk' I) J))) :=
+    · replace hI : Nonempty ((_ ⧸ lieIdealOf I (comap (mkQ I) J)) ≃ₗ⁅R⁆
+          (_ ⧸ LieHom.ker (LieHom.lieIdealComap (mkQ I) J))) :=
         ⟨LieIdeal.Quotient.equiv _ _ LieEquiv.refl (by simp)⟩
       rwa [hI.elim fun e ↦ solvable_iff_equiv_solvable e,
         solvable_iff_equiv_solvable (LieHom.quotKerEquivRange _),
         solvable_iff_equiv_solvable (LieEquiv.ofEq (LieHom.range
-          (LieHom.lieIdealComap (LieIdeal.Quotient.mk' I) J)) ⊤
+          (LieHom.lieIdealComap (mkQ I) J)) ⊤
           (by norm_cast; simp [LieHom.range_eq_top])),
         solvable_iff_equiv_solvable LieSubalgebra.topEquiv]
   · simp_rw [radical, LieIdeal.gc_map_comap _ |>.l_sSup, iSup₂_le_iff, Set.mem_ofPred]
     intro J hJ
-    have hJ₂ : IsSolvable (map (LieIdeal.Quotient.mk' I) J) :=
+    have hJ₂ : IsSolvable (map (mkQ I) J) :=
       (LieHom.lieIdealMap_surjective_of_image_eq_map _ _ (by simp)).lieAlgebra_isSolvable
     apply le_sSup
     simp [hJ₂]

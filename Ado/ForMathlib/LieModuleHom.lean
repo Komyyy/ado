@@ -65,7 +65,7 @@ variable (R L M) in
 lemma toLinearMap_zero : (0 : M →ₗ⁅R,L⁆ M).toLinearMap = 0 :=
   rfl
 
-instance : IsMulApplyEqComp (M →ₗ⁅R,L⁆ M) M where
+instance : IsMulApplyEqComp (M →ₗ⁅R,L⁆ M) where
 
 @[simp, norm_cast]
 lemma toLinearMap_pow (f : M →ₗ⁅R,L⁆ M) (n : ℕ) : (f ^ n).toLinearMap = f.toLinearMap ^ n := by

@@ -13,152 +13,127 @@ public import Ado.ForMathlib.LieIdealLieSubalgebra
 
 open Function LieModule
 
-namespace LieIdeal.Quotient
+namespace LieIdeal
 
 open LieHom
 
 variable {R L L₂ : Type*} [CommRing R] [LieRing L] [LieAlgebra R L] [LieRing L₂] [LieAlgebra R L₂]
 
-abbrev mk {s : LieIdeal R L} : L → L ⧸ s :=
-  LieSubmodule.Quotient.mk
-
-def mk' (s : LieIdeal R L) : L →ₗ⁅R⁆ L ⧸ s :=
-  { s.toSubmodule.mkQ with
-    toFun := LieSubmodule.Quotient.mk
-    map_lie' {_ _} := rfl }
-
 @[simp]
-lemma mk'_apply (s : LieIdeal R L) (x) : mk' s x = mk x :=
-  rfl
-
-@[simp]
-theorem surjective_mk' (s : LieIdeal R L) : Surjective (mk' s) :=
-  Quot.mk_surjective
-
-@[simp]
-theorem surjective_mk (s : LieIdeal R L) : Surjective (mk : L → L ⧸ s) :=
-  surjective_mk' s
-
-@[simp]
-theorem mk'_ker (s : LieIdeal R L) : (mk' s).ker = s := by
-  ext; simp
-
-@[simp]
-lemma map_mk'_eq_bot_le (I J : LieIdeal R L) : map (mk' I) J = ⊥ ↔ J ≤ I := by
-  rw [eq_bot_iff, map_le_iff_le_comap, comap_bot, mk'_ker]
+lemma map_mkQ_eq_bot_le (I J : LieIdeal R L) : map (mkQ I) J = ⊥ ↔ J ≤ I := by
+  rw [eq_bot_iff, map_le_iff_le_comap, comap_bot, mkQ_ker]
 
 instance {R L : Type*} [CommRing R] [LieRing L] [LieAlgebra R L]
     [LieRing.IsNilpotent L] (s : LieIdeal R L) : LieRing.IsNilpotent (L ⧸ s) :=
-  (LieIdeal.Quotient.surjective_mk' s).lieAlgebra_isNilpotent
+  s.surjective_mkQ.lieAlgebra_isNilpotent
 
 instance {R L : Type*} [CommRing R] [LieRing L] [LieAlgebra R L]
     [LieAlgebra.IsSolvable L] (s : LieIdeal R L) : LieAlgebra.IsSolvable (L ⧸ s) :=
-  (LieIdeal.Quotient.surjective_mk' s).lieAlgebra_isSolvable
+  s.surjective_mkQ.lieAlgebra_isSolvable
 
 @[simp]
-lemma coe_map_mk' (I J : LieIdeal R L) : (map (mk' I) J : Set (L ⧸ I)) = mk' I '' J := by
+lemma coe_map_mkQ (I J : LieIdeal R L) : (map (mkQ I) J : Set (L ⧸ I)) = mkQ I '' J := by
   symm
   simp_rw [image_eq_map_iff_exists_lieIdeal_toLieSubalgebra_eq_map,
     LieSubalgebra.exists_lieIdeal_coe_eq_iff]
   convert_to ∀ (x a : L), a ∈ J → ∃ y ∈ J,
-      (LieIdeal.Quotient.mk y : L ⧸ I) =
-        ⁅(LieIdeal.Quotient.mk x : L ⧸ I), (LieIdeal.Quotient.mk a : L ⧸ I)⁆ using 0
-  · simp [LieIdeal.Quotient.surjective_mk' _ |>.forall]
+      (LieSubmodule.Quotient.mk y : L ⧸ I) =
+        ⁅(LieSubmodule.Quotient.mk x : L ⧸ I), (LieSubmodule.Quotient.mk a : L ⧸ I)⁆ using 0
+  · simp [I.surjective_mkQ.forall]
   intro x a ha
   existsi ⁅x, a⁆, LieSubmodule.lie_mem _ ha
   simp
 
-def lift (I : LieIdeal R L) (f : L →ₗ⁅R⁆ L₂) (h : I ≤ ker f) : L ⧸ I →ₗ⁅R⁆ L₂ where
+def liftQ (I : LieIdeal R L) (f : L →ₗ⁅R⁆ L₂) (h : I ≤ ker f) : L ⧸ I →ₗ⁅R⁆ L₂ where
   toLinearMap := I.toSubmodule.liftQ f.toLinearMap (by exact h)
   map_lie' {x y} := by
-    obtain ⟨x, rfl⟩ := LieIdeal.Quotient.surjective_mk' I x
-    obtain ⟨y, rfl⟩ := LieIdeal.Quotient.surjective_mk' I y
-    simp_rw [← map_lie, LieIdeal.Quotient.mk'_apply, LieIdeal.Quotient.mk, LieSubmodule.Quotient.mk,
-      AddHom.toFun_eq_coe, LinearMap.coe_toAddHom]
+    obtain ⟨x, rfl⟩ := I.surjective_mkQ x
+    obtain ⟨y, rfl⟩ := I.surjective_mkQ y
+    simp_rw [← map_lie, mkQ_apply, AddHom.toFun_eq_coe, LinearMap.coe_toAddHom]
     conv_lhs => apply Submodule.liftQ_apply
     conv_rhs => arg 1; apply Submodule.liftQ_apply
     conv_rhs => arg 2; apply Submodule.liftQ_apply
     simp
 
 @[simp]
-lemma lift_apply (I : LieIdeal R L) (f : L →ₗ⁅R⁆ L₂) {h : I ≤ ker f} (x) :
-    lift I f h (mk x) = f x :=
+lemma liftQ_apply (I : LieIdeal R L) (f : L →ₗ⁅R⁆ L₂) {h : I ≤ ker f} (x) :
+    liftQ I f h (LieSubmodule.Quotient.mk x) = f x :=
   I.toSubmodule.liftQ_apply ..
 
 @[simp]
-lemma lift_mk' (I : LieIdeal R L) (f : L →ₗ⁅R⁆ L₂) (h : I ≤ ker f) :
-    LieHom.comp (lift I f h) (mk' I) = f := by
+lemma liftQ_mkQ (I : LieIdeal R L) (f : L →ₗ⁅R⁆ L₂) (h : I ≤ ker f) :
+    LieHom.comp (liftQ I f h) (mkQ I) = f := by
   ext x; simp
 
-def map (I : LieIdeal R L) (J : LieIdeal R L₂) (f : L →ₗ⁅R⁆ L₂)
+def mapQ (I : LieIdeal R L) (J : LieIdeal R L₂) (f : L →ₗ⁅R⁆ L₂)
     (h : I ≤ comap f J) : (L ⧸ I) →ₗ⁅R⁆ (L₂ ⧸ J) :=
-  lift I (LieHom.comp (mk' J) f) (by simpa [LieHom.ker_comp] using h)
+  liftQ I (LieHom.comp (mkQ J) f) (by simpa [LieHom.ker_comp] using h)
 
 @[simp]
-lemma map_apply (I : LieIdeal R L) (J : LieIdeal R L₂) (f : L →ₗ⁅R⁆ L₂)
-    {h : I ≤ comap f J} (x) : map I J f h (mk x) = mk (f x) := by
-  simp [map]
+lemma mapQ_apply (I : LieIdeal R L) (J : LieIdeal R L₂) (f : L →ₗ⁅R⁆ L₂) {h : I ≤ comap f J} (x) :
+    mapQ I J f h (LieSubmodule.Quotient.mk x) = LieSubmodule.Quotient.mk (f x) := by
+  simp [mapQ]
 
 @[simp]
-lemma map_mk' (I : LieIdeal R L) (J : LieIdeal R L₂) (f : L →ₗ⁅R⁆ L₂)
-    {h : I ≤ comap f J} : (map I J f h).comp (mk' I) = (mk' J).comp f := by
+lemma map_mkQ (I : LieIdeal R L) (J : LieIdeal R L₂) (f : L →ₗ⁅R⁆ L₂)
+    {h : I ≤ comap f J} : (mapQ I J f h).comp (mkQ I) = (mkQ J).comp f := by
   ext x; simp
 
-def quotientEquivQuotientAux (I J : LieIdeal R L) (h : I ≤ J) :
-    ((L ⧸ I) ⧸ LieIdeal.map (LieIdeal.Quotient.mk' I) J) →ₗ⁅R⁆ L ⧸ J :=
-  lift _ (map I J LieHom.id (by simpa)) (by
+def quotientQuotientEquivQuotientAux (I J : LieIdeal R L) (h : I ≤ J) :
+    ((L ⧸ I) ⧸ LieIdeal.map (mkQ I) J) →ₗ⁅R⁆ L ⧸ J :=
+  liftQ _ (mapQ I J LieHom.id (by simpa)) (by
     simp_rw [LieIdeal.map_le_iff_le_comap, ← LieHom.ker_comp, LieHom.le_ker_iff]
     simp)
 
 @[simp]
-lemma quotientEquivQuotientAux_mk_mk (I J : LieIdeal R L) (h : I ≤ J) (x) :
-    quotientEquivQuotientAux I J h (LieIdeal.Quotient.mk (LieIdeal.Quotient.mk x)) =
-      LieIdeal.Quotient.mk x :=
+lemma quotientQuotientEquivQuotientAux_mk_mk (I J : LieIdeal R L) (h : I ≤ J) (x) :
+    quotientQuotientEquivQuotientAux I J h (LieSubmodule.Quotient.mk (LieSubmodule.Quotient.mk x)) =
+      LieSubmodule.Quotient.mk x :=
   rfl
 
-def quotientEquivQuotient (I J : LieIdeal R L) (h : I ≤ J) :
-    ((L ⧸ I) ⧸ LieIdeal.map (LieIdeal.Quotient.mk' I) J) ≃ₗ⁅R⁆ L ⧸ J where
-  toLieHom := quotientEquivQuotientAux I J h
-  invFun := map _ _ (mk' I) (by simp)
-  left_inv := by intro x; obtain ⟨x, rfl⟩ := surjective_mk' _ |>.comp (surjective_mk' _) x; simp
-  right_inv := by intro x; obtain ⟨x, rfl⟩ := surjective_mk' _ x; simp
+def quotientQuotientEquivQuotient (I J : LieIdeal R L) (h : I ≤ J) :
+    ((L ⧸ I) ⧸ LieIdeal.map (mkQ I) J) ≃ₗ⁅R⁆ L ⧸ J where
+  toLieHom := quotientQuotientEquivQuotientAux I J h
+  invFun := mapQ _ _ (mkQ I) (by simp)
+  left_inv := by intro x; obtain ⟨x, rfl⟩ := surjective_mkQ _ |>.comp (surjective_mkQ _) x; simp
+  right_inv := by intro x; obtain ⟨x, rfl⟩ := surjective_mkQ _ x; simp
 
 @[simp]
-lemma quotientEquivQuotient_apply_mk_mk (I J : LieIdeal R L) (h : I ≤ J) (x) :
-    quotientEquivQuotient I J h (LieIdeal.Quotient.mk (LieIdeal.Quotient.mk x)) =
-      LieIdeal.Quotient.mk x :=
+lemma quotientQuotientEquivQuotient_apply_mk_mk (I J : LieIdeal R L) (h : I ≤ J) (x) :
+    quotientQuotientEquivQuotient I J h (LieSubmodule.Quotient.mk (LieSubmodule.Quotient.mk x)) =
+      LieSubmodule.Quotient.mk x :=
   rfl
 
 @[simp]
-lemma quotientEquivQuotient_symm_apply_mk (I J : LieIdeal R L) (h : I ≤ J) (x) :
-    (quotientEquivQuotient I J h).symm (LieIdeal.Quotient.mk x) =
-      (LieIdeal.Quotient.mk (LieIdeal.Quotient.mk x)) :=
+lemma quotientQuotientEquivQuotient_symm_apply_mk (I J : LieIdeal R L) (h : I ≤ J) (x) :
+    (quotientQuotientEquivQuotient I J h).symm (LieSubmodule.Quotient.mk x) =
+      (LieSubmodule.Quotient.mk (LieSubmodule.Quotient.mk x)) :=
   rfl
 
-def equiv (I : LieIdeal R L) (J : LieIdeal R L₂)
+def Quotient.equiv (I : LieIdeal R L) (J : LieIdeal R L₂)
     (f : L ≃ₗ⁅R⁆ L₂) (h : I.map f = J) : (L ⧸ I) ≃ₗ⁅R⁆ (L₂ ⧸ J) where
-  toLieHom := map I J f (by simp_rw [← map_le_iff_le_comap, h, le_rfl])
-  invFun := map J I f.symm (by simp_rw [← LieEquiv.map_equiv_eq_comap_symm, h, le_rfl])
+  toLieHom := mapQ I J f (by simp_rw [← map_le_iff_le_comap, h, le_rfl])
+  invFun := mapQ J I f.symm (by simp_rw [← LieEquiv.map_equiv_eq_comap_symm, h, le_rfl])
   left_inv q := by
-    obtain ⟨x, rfl⟩ := LieIdeal.Quotient.surjective_mk' I q; simp
+    obtain ⟨x, rfl⟩ := surjective_mkQ I q; simp
   right_inv q := by
-    obtain ⟨x, rfl⟩ := LieIdeal.Quotient.surjective_mk' J q; simp
+    obtain ⟨x, rfl⟩ := surjective_mkQ J q; simp
 
 @[simp]
-lemma equiv_apply (I : LieIdeal R L) (J : LieIdeal R L₂)
+lemma Quotient.equiv_apply (I : LieIdeal R L) (J : LieIdeal R L₂)
     (f : L ≃ₗ⁅R⁆ L₂) (h : I.map f = J) (x) :
-    equiv I J f h x = map I J f (by simp_rw [← map_le_iff_le_comap, h, le_rfl]) x :=
+    equiv I J f h x = mapQ I J f (by simp_rw [← map_le_iff_le_comap, h, le_rfl]) x :=
   rfl
 
 @[simp]
-lemma equiv_symm (I : LieIdeal R L) (J : LieIdeal R L₂)
+lemma Quotient.equiv_symm (I : LieIdeal R L) (J : LieIdeal R L₂)
     (f : L ≃ₗ⁅R⁆ L₂) (h : I.map f = J) :
     (equiv I J f h).symm = equiv J I f.symm (by simp [← h, ← map_comp]) := by
   ext x
-  obtain ⟨x, rfl⟩ := LieIdeal.Quotient.surjective_mk' J x
+  obtain ⟨x, rfl⟩ := surjective_mkQ J x
   simp [equiv]
 
-end LieIdeal.Quotient
+end LieIdeal
 
 namespace LieSubmodule.Quotient
 

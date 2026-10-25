@@ -36,19 +36,11 @@ lemma LieAlgebra.isSolvable_derivedSeries_iff (n : ℕ) :
 
 lemma LieAlgebra.isSolvable_quotient_iff {I : LieIdeal R L} :
     IsSolvable (L ⧸ I) ↔ ∃ k, derivedSeries R L k ≤ I := by
-  simp [isSolvable_iff R, ← LieIdeal.derivedSeries_map_eq _ (LieIdeal.Quotient.surjective_mk' _)]
+  simp [isSolvable_iff R, ← LieIdeal.derivedSeries_map_eq _ (LieIdeal.surjective_mkQ _)]
 
 lemma LieAlgebra.isSolvable_short_exact_iff (I : LieIdeal R L) :
     IsSolvable I ∧ IsSolvable (L ⧸ I) ↔ IsSolvable L where
-  mp := by
-    rintro ⟨hI, hLI⟩
-    replace ⟨k, hI⟩ := isSolvable_iff R _ |>.mp hI
-    rw [LieIdeal.derivedSeries_eq_bot_iff] at hI
-    replace ⟨m, hLI⟩ := isSolvable_quotient_iff.mp hLI
-    rw [derivedSeries] at hLI
-    rw [isSolvable_iff R]
-    existsi k + m
-    grw [derivedSeries, derivedSeriesOfIdeal_add, eq_bot_iff, hLI, hI]
+  mp h := isSolvable_of_isSolvable_ideal_quotient I h.1 h.2
   mpr _ := ⟨inferInstance, inferInstance⟩
 
 @[simp]

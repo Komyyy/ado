@@ -40,7 +40,7 @@ instance (I : LieIdeal R L) : (span (ι R '' (I : Set L))).IsTwoSided where
       simp_rw [← Submodule.map_top, ← span_tprod_eq_top, Submodule.map_span,
         Submodule.map₂_span_span, Submodule.span_le, Set.image2_subset_iff]
       conv =>
-        equals ∀ᵉ (x ∈ I) (n) (f : Fin n → L),
+        equals ∀ x ∈ I, ∀ n, ∀ f : Fin n → L,
             ι R x * mkAlgHom R L (tprod R L n f) ∈ span ((ι R) '' I) =>
           simp [- TensorAlgebra.tprod_apply, - ι_apply]; grind only
       intro x hx n f

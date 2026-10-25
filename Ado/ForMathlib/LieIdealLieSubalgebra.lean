@@ -25,7 +25,7 @@ lemma toSubmodule_sup_lieIdeal (L' : LieSubalgebra R L) (I : LieIdeal R L) :
   apply le_antisymm
   on_goal 2 => simp [← LieIdeal.toLieSubalgebra_toSubmodule]
   suffices h :
-      ∀ᵉ (x ∈ L'.toSubmodule ⊔ I.toSubmodule) (y ∈ L'.toSubmodule ⊔ I.toSubmodule),
+      ∀ x ∈ L'.toSubmodule ⊔ I.toSubmodule, ∀ y ∈ L'.toSubmodule ⊔ I.toSubmodule,
         ⁅x, y⁆ ∈ L'.toSubmodule ⊔ I.toSubmodule
   · conv_rhs => change
       { toSubmodule := L'.toSubmodule ⊔ I.toSubmodule

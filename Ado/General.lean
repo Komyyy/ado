@@ -23,16 +23,16 @@ public instance LieAlgebra.IsAdo.of_charZero : IsAdo K 𝔤 := by
     LieHom.comp (LieDerivation.adIdeal (radical K 𝔤)) s
   let f : 𝔤 →ₗ[K] radical K 𝔤 :=
     show 𝔤 →ₗ[K] (radical K 𝔤).toSubmodule from
-    LinearMap.codRestrict _ (LinearMap.id - (LieHom.comp s (LieIdeal.Quotient.mk' _)).toLinearMap)
+    LinearMap.codRestrict _ (LinearMap.id - (LieHom.comp s (mkQ _)).toLinearMap)
       (by simp [← LieSubmodule.Quotient.mk_eq_zero, hs.eq])
-  have hf x : (f x : 𝔤) = x - s (LieIdeal.Quotient.mk x) :=
+  have hf x : (f x : 𝔤) = x - s (LieSubmodule.Quotient.mk x) :=
     rfl
   let e : (radical K 𝔤 ⋊⁅ψ⁆ 𝔤 ⧸ radical K 𝔤) ≃ₗ⁅K⁆ 𝔤 :=
     { toLieHom := lift ψ (incl (radical K 𝔤)) s (by intro x; ext y; simp [ψ, - incl_coe])
-      invFun x := ⟨f x, LieIdeal.Quotient.mk x⟩
+      invFun x := ⟨f x, LieSubmodule.Quotient.mk x⟩
       left_inv x := by ext <;> simp [hf, hs.eq, LieSubmodule.Quotient.mk_eq_zero'.mpr]
       right_inv x := by simp [hf] }
-  have he x : e.symm x = ⟨f x, LieIdeal.Quotient.mk x⟩ := rfl
+  have he x : e.symm x = ⟨f x, LieSubmodule.Quotient.mk x⟩ := rfl
   rw [← e.isAdo_iff]
   apply IsAdo.semiDirectSum_of_isSolvable
   grw [← map_equiv_nilradical e.symm, map_le_iff_le_comap, nilradical_le_radical,
