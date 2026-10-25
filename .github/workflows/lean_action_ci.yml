@@ -22,7 +22,7 @@ jobs:
           build-args: "--wfail"
       - name: Add swap space
         run: |
-          sudo fallocate -l 16G /swap && sudo chmod 600 /swap
+          sudo fallocate -l 24G /swap && sudo chmod 600 /swap
           sudo mkswap /swap && sudo swapon /swap
       - uses: leanprover-community/docgen-action@main
         with:
