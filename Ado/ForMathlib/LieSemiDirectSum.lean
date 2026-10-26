@@ -120,10 +120,6 @@ noncomputable def lieEquivLieSubalgebra (h : IsInnerSemiDirectSum I L') :
     (I ⋊⁅comp (adIdeal I) (incl L')⁆ L') ≃ₗ⁅R⁆ L where
   __ := LinearEquiv.trans (toProdl _) (Submodule.prodEquivOfIsCompl _ _ (by simp [h.isCompl]))
   map_lie' {x y} := by
-    -- `SetLike` の defeq に対処
-    have haux (x : I × L') :
-        Submodule.prodEquivOfIsCompl _ _ (by simp [h.isCompl]) x = (x.1 : L) + (x.2 : L) :=
-      Submodule.coe_prodEquivOfIsCompl' ..
     conv => equals
         ⁅x.left.1, y.left.1⁆ + ⁅x.right.1, y.left.1⁆ -
           ⁅y.right.1, x.left.1⁆ + ⁅x.right.1, y.right.1⁆ =
