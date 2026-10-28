@@ -1,7 +1,7 @@
 name = "ado"
 version = "0.2.0"
 keywords = ["math"]
-defaultTargets = ["Ado"]
+defaultTargets = ["Ado", "AdoArchive"]
 
 [leanOptions]
 pp.unicode.fun = true
@@ -20,6 +20,12 @@ rev = "master"
 
 [[lean_lib]]
 name = "Ado"
+  [lean_lib.leanOptions]
+  linter.mathlibStandardSet = true
+  linter.style.header = false
+
+[[lean_lib]]
+name = "AdoArchive"
   [lean_lib.leanOptions]
   linter.mathlibStandardSet = true
   linter.style.header = false
