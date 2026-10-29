@@ -90,7 +90,7 @@ lemma leftLieUEAux_lie_left (x y : 𝔥) (a) : leftLieUEAux ψ ⁅x, y⁆ a =
     simp_rw [leftLieUEAux_tprod, map_lie, LieDerivation.lie_apply, MultilinearMap.map_update_sub,
       sum_sub_distrib]
   conv_rhs =>
-    simp only [LinearMap.sub_apply, End.mul_apply, leftLieUEAux_leftLieUEAux_tprod]
+    simp only [LinearMap.sub_apply, mul_apply_eq_comp, leftLieUEAux_leftLieUEAux_tprod]
     enter [2, 2]
     conv =>
       apply_congr
