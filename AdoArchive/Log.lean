@@ -12,6 +12,13 @@ public import Mathlib.Analysis.Analytic.ConvergenceRadius
 public import Mathlib.Analysis.Analytic.Composition
 public import Mathlib.RingTheory.PowerSeries.Log
 
+/-!
+# Banach 空間上の連続自己線形同型の対数
+
+大学の Lie 群の講義で、行列の対数を使う場面があり、まだ行列の指数は知らなかったので、ついでに無限次元に拡張して
+対数の存在を示した。
+-/
+
 public section
 
 section ListProd
@@ -50,11 +57,34 @@ noncomputable def toFMS (P : 𝕜⟦X⟧) : FormalMultilinearSeries 𝕜 E E :=
 variable (P : 𝕜⟦X⟧)
 
 variable {E} in
-@[simp] lemma toFMS_apply (n : ℕ) (v : Fin n → E) :
+@[simp]
+lemma toFMS_apply (n : ℕ) (v : Fin n → E) :
     toFMS E P n v = coeff n P • List.prod (List.ofFn v) := by
   simp [toFMS, ofScalars]
 
-@[simp] lemma toFMS_subst (P Q : 𝕜⟦X⟧) (hP : HasSubst P) :
+@[simp]
+lemma toFMS_add (P Q : 𝕜⟦X⟧) : toFMS E (P + Q) = toFMS E P + toFMS E Q := by
+  ext; simp [add_smul]
+
+@[simp]
+lemma toFMS_sub (P Q : 𝕜⟦X⟧) : toFMS E (P - Q) = toFMS E P - toFMS E Q := by
+  ext; simp [sub_smul]
+
+@[simp]
+lemma toFMS_X (𝕜 : Type*) [NontriviallyNormedField 𝕜]
+    (E : Type*) [NormedRing E] [NormedAlgebra 𝕜 E] : toFMS E (X : 𝕜⟦X⟧) = .id 𝕜 E 0 := by
+  ext n v; match n with | 0 | 1 | n + 2 => simp [coeff_X]
+
+@[simp]
+lemma toFMS_one (𝕜 : Type*) [NontriviallyNormedField 𝕜]
+    (E : Type*) [NormedRing E] [NormedAlgebra 𝕜 E] :
+    toFMS E (1 : 𝕜⟦X⟧) = constFormalMultilinearSeries 𝕜 E 1 := by
+  ext n v; cases n <;> simp
+
+lemma removeZero_toFMS (P : 𝕜⟦X⟧) : removeZero (toFMS E P) = toFMS E (P - C (constantCoeff P)) := by
+  ext n v; cases n <;> simp
+
+lemma toFMS_subst (P Q : 𝕜⟦X⟧) (hP : HasSubst P) :
     toFMS E (subst P Q) = FormalMultilinearSeries.comp (toFMS E Q) (toFMS E P) := by
   ext n v
   conv_lhs =>
@@ -207,16 +237,15 @@ end PowerSeries
 
 section Log
 
-open FormalMultilinearSeries Filter
+open FormalMultilinearSeries PowerSeries Filter
 open scoped NNReal Topology
-
-variable {𝕜 : Type*} (𝔸 : Type*)
-variable [NontriviallyNormedField 𝕜] [NormedRing 𝔸] [NormedAlgebra 𝕜 𝔸]
 
 namespace NormedSpace
 
 section Radius
 
+variable (𝕜 𝔸 : Type*)
+variable [NontriviallyNormedField 𝕜] [NormedRing 𝔸] [NormedAlgebra 𝕜 𝔸]
 variable [CharZero 𝕜] [ContinuousSMul ℚ≥0 𝕜]
 
 lemma radius_logSeries_ge_one : 1 ≤ radius (logSeries 𝕜 𝔸) := by
@@ -241,6 +270,138 @@ lemma radius_logSeries_eq_one [NormOneClass 𝔸] : radius (logSeries 𝕜 𝔸)
   exact_mod_cast tendsto_natCast_div_add_atTop (1 : 𝕜)
 
 end Radius
+
+section PowerSeries
+
+variable (𝕜 𝔸 : Type*)
+variable [NontriviallyNormedField 𝕜] [NormedRing 𝔸] [NormedAlgebra 𝕜 𝔸]
+variable [CharZero 𝕜]
+
+@[simp]
+lemma _root_.PowerSeries.toFMS_exp : toFMS 𝔸 (.exp 𝕜) = expSeries 𝕜 𝔸 := by
+  simp [expSeries_eq_ofScalars, toFMS]
+
+@[simp]
+lemma _root_.PowerSeries.toFMS_log : toFMS 𝔸 (.log 𝕜) = logSeries 𝕜 𝔸 := by
+  convert_to ofScalars 𝔸 (fun n ↦ if n = 0 then (0 : 𝕜) else (-1) ^ (n + 1) / (n : 𝕜)) =
+      ofScalars 𝔸 (fun n ↦ (-1) ^ (n + 1) / (n : 𝕜))
+  · simp [toFMS]
+  · simp [logSeries_eq_ofScalars]
+  congr! 2 with n
+  split_ifs <;> simp [*]
+
+end PowerSeries
+
+section Comp
+
+variable (𝕜 𝔸 : Type*)
+variable [NontriviallyNormedField 𝕜] [NormedRing 𝔸] [NormedAlgebra 𝕜 𝔸]
+variable [CharZero 𝕜]
+
+@[simp]
+lemma comp_expSeries_logSeries :
+    FormalMultilinearSeries.comp (expSeries 𝕜 𝔸) (logSeries 𝕜 𝔸) = .id 𝕜 𝔸 1 := by
+  convert_to toFMS 𝔸 (subst (PowerSeries.log 𝕜) (PowerSeries.exp 𝕜)) = _
+  · simp [toFMS_subst _ _ _ HasSubst.log]
+  convert_to constFormalMultilinearSeries 𝕜 𝔸 1 + FormalMultilinearSeries.id 𝕜 𝔸 0 = _
+  · simp [subst_exp_log]
+  ext n v
+  match n with | 0 | 1 | n + 2 => simp
+
+@[simp]
+lemma comp_logSeries_expSeries :
+    FormalMultilinearSeries.comp (logSeries 𝕜 𝔸) (expSeries 𝕜 𝔸) = .id 𝕜 𝔸 0 := by
+  convert_to FormalMultilinearSeries.comp (logSeries 𝕜 𝔸) (removeZero (expSeries 𝕜 𝔸)) = _
+  · simp
+  convert_to FormalMultilinearSeries.comp
+      (logSeries 𝕜 𝔸) (expSeries 𝕜 𝔸 - constFormalMultilinearSeries 𝕜 𝔸 1) = _
+  · congr! 1; ext n v; cases n <;> simp [expSeries_eq_ofScalars, ofScalars]
+  convert_to toFMS 𝔸 (subst (PowerSeries.exp 𝕜 - 1) (PowerSeries.log 𝕜)) = _
+  · simp [toFMS_subst _ _ _ HasSubst.exp_sub_one, - comp_removeZero]
+  simp [subst_log_exp_sub_one]
+
+end Comp
+
+section FPowerSeries
+
+variable (𝕜 𝔸 : Type*)
+variable [NontriviallyNormedField 𝕜] [NormedRing 𝔸] [NormedAlgebra 𝕜 𝔸]
+variable [CharZero 𝕜] [ContinuousSMul ℚ≥0 𝕜] [CompleteSpace 𝔸]
+
+lemma hasFPowerSeriesOnBall_log : HasFPowerSeriesOnBall (log (𝔸 := 𝔸)) (logSeries 𝕜 𝔸) 1 1 := by
+  rw [log_eq_logSeries_sum 𝕜]
+  rw (config := { occs := [2] }) [← zero_add (1 : 𝔸)]
+  apply HasFPowerSeriesOnBall.comp_sub
+  refine HasFPowerSeriesOnBall.mono ?_ (by positivity) (radius_logSeries_ge_one 𝕜 𝔸)
+  apply FormalMultilinearSeries.hasFPowerSeriesOnBall
+  grw [← radius_logSeries_ge_one]
+  positivity
+
+@[simp]
+lemma hasFPowerSeriesAt_log_one : HasFPowerSeriesAt (log (𝔸 := 𝔸)) (logSeries 𝕜 𝔸) 1 :=
+  hasFPowerSeriesOnBall_log 𝕜 𝔸 |>.hasFPowerSeriesAt
+
+end FPowerSeries
+
+section Inv
+
+variable (𝔸 : Type*)
+variable [NormedRing 𝔸] [NormedAlgebra ℚ 𝔸] [CompleteSpace 𝔸]
+
+lemma eventually_exp_log_eq : ∀ᶠ x in 𝓝 (1 : 𝔸), exp (log x) = x := by
+  suffices h : HasFPowerSeriesAt (exp (𝔸 := 𝔸) ∘ log (𝔸 := 𝔸)) (.id ℚ 𝔸 1) 1 by
+    filter_upwards [h.eventually_hasSum_sub] with x hx
+    apply hx.unique
+    have hs :
+        Function.support (fun n ↦ FormalMultilinearSeries.id ℚ 𝔸 1 n (fun _ ↦ x - 1))
+          ⊆ Set.Iic 1 := by
+      rw [← Set.compl_subset_compl, Set.compl_Iic, Function.compl_support, ← Set.Ioi_def,
+        Set.ofPred_subset_ofPred]
+      intro n hn
+      simp [id_apply_of_one_lt, hn]
+    rw [← hasSum_subtype_iff_of_support_subset hs]
+    convert hasSum_fintype (β := Set.Iic 1) _
+    simp [Finset.sum_set_coe
+      (f := fun n  ↦ FormalMultilinearSeries.id ℚ 𝔸 1 n (fun _ ↦ x - 1)),
+      show Finset.Iic 1 = {0, 1} by decide]
+  rw [← comp_expSeries_logSeries]
+  refine HasFPowerSeriesAt.comp ?_ (hasFPowerSeriesAt_log_one ℚ 𝔸)
+  convert exp_hasFPowerSeriesAt_zero (𝕂 := ℚ) (𝔸 := 𝔸)
+  simp
+
+lemma eventually_log_exp_eq : ∀ᶠ x in 𝓝 (0 : 𝔸), log (exp x) = x := by
+  suffices h : HasFPowerSeriesAt (log (𝔸 := 𝔸) ∘ exp (𝔸 := 𝔸)) (.id ℚ 𝔸 0) 0 by
+    filter_upwards [h.eventually_hasSum] with x hx
+    rw [zero_add] at hx
+    apply hx.unique
+    have hs :
+        Function.support (fun n ↦ FormalMultilinearSeries.id ℚ 𝔸 0 n (fun _ ↦ x))
+          ⊆ Set.Iic 1 := by
+      rw [← Set.compl_subset_compl, Set.compl_Iic, Function.compl_support, ← Set.Ioi_def,
+        Set.ofPred_subset_ofPred]
+      intro n hn
+      simp [id_apply_of_one_lt, hn]
+    rw [← hasSum_subtype_iff_of_support_subset hs]
+    convert hasSum_fintype (β := Set.Iic 1) _
+    simp [Finset.sum_set_coe
+      (f := fun n  ↦ FormalMultilinearSeries.id ℚ 𝔸 0 n (fun _ ↦ x)),
+      show Finset.Iic 1 = {0, 1} by decide]
+  rw [← comp_logSeries_expSeries]
+  refine HasFPowerSeriesAt.comp ?_ (exp_hasFPowerSeriesAt_zero (𝕂 := ℚ) (𝔸 := 𝔸))
+  convert hasFPowerSeriesAt_log_one ℚ 𝔸
+  simp
+
+end Inv
+
+example {E} [NormedAddCommGroup E] [NormedSpace ℝ E] [CompleteSpace E] :
+    ∀ᶠ x in 𝓝 (0 : E →L[ℝ] E), log (exp x) = x :=
+  have := NormedAlgebra.restrictScalars ℚ ℝ (E →L[ℝ] E)
+  eventually_log_exp_eq _
+
+example {E} [NormedAddCommGroup E] [NormedSpace ℝ E] [CompleteSpace E] :
+    ∀ᶠ x in 𝓝 (1 : E →L[ℝ] E), exp (log x) = x :=
+  have := NormedAlgebra.restrictScalars ℚ ℝ (E →L[ℝ] E)
+  eventually_exp_log_eq _
 
 end NormedSpace
 
