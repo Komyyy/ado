@@ -40,9 +40,9 @@ attribute [local instance 100] LieRing.ofAssociativeRing
 public lemma pbw_span : span R ((prod ∘ mapₗ (ι R ∘ B)) '' {l : List m | SortedLE l}) = ⊤ := by
   have ht : span R (range (prod ∘ mapₗ (ιₜ R ∘ B))) = ⊤
   · let Bₜ : Basis (List m) R (TensorAlgebra R L) :=
-      Basis.reindex (Basis.tensorAlgebra B) FreeMonoid.toList
+      Basis.reindex (Basis.tensorAlgebra B) FreeMonoid.toListEquiv
     have hbₜ l : Bₜ l = prod (mapₗ (ιₜ R ∘ B) l)
-    · simp [Bₜ, Basis.tensorAlgebra, FreeAlgebra.basisFreeMonoid,
+    · simp [Bₜ, Basis.tensorAlgebra, FreeAlgebra.basisFreeMonoid, FreeMonoid.toListEquiv,
         FreeAlgebra.equivMonoidAlgebraFreeMonoid, ← prod_hom, comp_def]
     convert Bₜ.span_eq
     ext l

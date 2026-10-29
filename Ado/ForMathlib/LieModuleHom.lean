@@ -84,7 +84,7 @@ lemma coe_restrict (f : M →ₗ⁅R,L⁆ M₂) {N : LieSubmodule R L M} {N₂ :
 
 @[simp]
 lemma isNilpotent_toLinearMap (f : M →ₗ⁅R,L⁆ M) : IsNilpotent (f : M →ₗ[R] M) ↔ IsNilpotent f := by
-  simp [IsNilpotent, DFunLike.ext_iff, Module.End.pow_apply, pow_apply_eq_iterate]
+  simp [IsNilpotent, DFunLike.ext_iff, pow_apply_eq_iterate]
 
 attribute [norm_cast] ker_toSubmodule toSubmodule_range isCompl_toSubmodule
   iSup_toSubmodule iInf_toSubmodule
